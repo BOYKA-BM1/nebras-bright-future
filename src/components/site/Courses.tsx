@@ -2,46 +2,59 @@ import { useMemo, useState } from "react";
 import { BookOpen, PlayCircle, Video, Clock, Check, Loader2 } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { courses, stages, tracks, type StageId, type TrackId, type Course } from "@/data/site";
+import { tracks, resolveImage, type TrackId, type CourseWithRelations } from "@/lib/catalog";
+import { useCourses } from "@/hooks/use-catalog";
 import { useAuth } from "@/hooks/use-auth";
 import { useBookings } from "@/hooks/use-bookings";
-
-const stageFilters: { id: StageId | "all"; label: string }[] = [
-  { id: "all", label: "كل المراحل" },
-  ...stages.map((s) => ({ id: s.id, label: s.short })),
-];
 
 export function Courses() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: courses = [], isLoading } = useCourses();
   const { bookedIds, book } = useBookings();
-  const [stage, setStage] = useState<StageId | "all">("all");
+  const [level, setLevel] = useState<string>("all");
   const [track, setTrack] = useState<TrackId>("all");
+
+  const stageFilters = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of courses) {
+      if (c.stage) seen.set(c.stage.level, c.stage.short ?? c.stage.name);
+    }
+    return [{ id: "all", label: "كل المراحل" }, ...[...seen].map(([id, label]) => ({ id, label }))];
+  }, [courses]);
 
   const filtered = useMemo(() => {
     return courses.filter((c) => {
-      if (stage !== "all" && c.stage !== stage) return false;
-      if (stage === "secondary" && track !== "all") {
+      if (level !== "all" && c.stage?.level !== level) return false;
+      if (level === "secondary" && track !== "all") {
         if (c.track !== track && c.track !== "all") return false;
       }
       return true;
     });
-  }, [stage, track]);
+  }, [courses, level, track]);
 
-  const handleBook = (course: Course) => {
+  const handleBook = (course: CourseWithRelations) => {
     if (!user) {
       toast.info("سجّل دخولك الأول عشان تحجز الدورة.");
       navigate({ to: "/auth" });
       return;
     }
-    book.mutate(course, {
-      onSuccess: () => toast.success(`تم حجز «${course.title}» بنجاح! 🎉`),
-      onError: (err) => {
-        const msg = err instanceof Error ? err.message : "";
-        if (/duplicate|unique/i.test(msg)) toast.info("أنت حاجز الدورة دي بالفعل.");
-        else toast.error("تعذّر الحجز، حاول مرة أخرى.");
+    book.mutate(
+      {
+        id: course.id,
+        title: course.title,
+        teacher_name: course.teacher?.name ?? null,
+        price: course.price,
       },
-    });
+      {
+        onSuccess: () => toast.success(`تم حجز «${course.title}» بنجاح! 🎉`),
+        onError: (err) => {
+          const msg = err instanceof Error ? err.message : "";
+          if (/duplicate|unique/i.test(msg)) toast.info("أنت حاجز الدورة دي بالفعل.");
+          else toast.error("تعذّر الحجز، حاول مرة أخرى.");
+        },
+      },
+    );
   };
 
   return (
@@ -64,11 +77,11 @@ export function Courses() {
             <button
               key={f.id}
               onClick={() => {
-                setStage(f.id);
+                setLevel(f.id);
                 if (f.id !== "secondary") setTrack("all");
               }}
               className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
-                stage === f.id
+                level === f.id
                   ? "bg-gradient-gold text-primary-foreground shadow-gold"
                   : "border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
@@ -79,7 +92,7 @@ export function Courses() {
         </div>
 
         {/* فلاتر الشُّعب للثانوي */}
-        {stage === "secondary" && (
+        {level === "secondary" && (
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {tracks.map((t) => (
               <button
@@ -97,95 +110,112 @@ export function Courses() {
           </div>
         )}
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((course) => {
-            const isBooked = bookedIds.has(course.id);
-            const isBooking = book.isPending && book.variables?.id === course.id;
-            return (
-              <article
-                key={course.id}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1.5 hover:border-primary/50"
-              >
-                <div className="relative flex items-center gap-3 border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-5">
-                  <img
-                    src={course.teacherImage}
-                    alt={course.teacher}
-                    loading="lazy"
-                    width={512}
-                    height={512}
-                    className="h-14 w-14 rounded-full border-2 border-primary/50 object-cover"
-                  />
-                  <div>
-                    <p className="text-sm font-bold text-foreground">{course.teacher}</p>
-                    <p className="text-xs text-muted-foreground">{course.subject}</p>
-                  </div>
-                  <span className="absolute left-4 top-4 rounded-full bg-gradient-gold px-3 py-1 text-xs font-bold text-primary-foreground">
-                    {course.badge}
-                  </span>
-                </div>
-
-                <div className="flex flex-1 flex-col p-5">
-                  <h3 className="text-lg font-bold leading-snug">{course.title}</h3>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                    {course.details}
-                  </p>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <span className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
-                      <Video className="h-3.5 w-3.5" />
-                      {course.liveSessions} حصة مباشرة
-                    </span>
-                    <span className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs font-semibold">
-                      <PlayCircle className="h-3.5 w-3.5 text-primary" />
-                      مسجّلة بالكامل
-                    </span>
-                  </div>
-
-                  <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      {course.lessons} درس
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <Clock className="h-4 w-4 text-primary" />
-                      {course.hours} ساعة
-                    </span>
-                  </div>
-
-                  <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
-                    <div className="flex flex-col">
-                      {course.oldPrice && (
-                        <span className="text-xs text-muted-foreground line-through">
-                          {course.oldPrice} ج.م
-                        </span>
-                      )}
-                      <span className="text-xl font-extrabold text-gradient-gold">
-                        {course.price} ج.م
-                      </span>
-                    </div>
-                    {isBooked ? (
-                      <span className="flex items-center gap-1.5 rounded-xl bg-primary/15 px-4 py-2 text-sm font-bold text-primary">
-                        <Check className="h-4 w-4" />
-                        محجوزة
-                      </span>
+        {isLoading ? (
+          <div className="mt-16 flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((course) => {
+              const isBooked = bookedIds.has(course.id);
+              const isBooking = book.isPending && book.variables?.id === course.id;
+              const teacherImg = resolveImage(course.teacher?.image_url);
+              return (
+                <article
+                  key={course.id}
+                  className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1.5 hover:border-primary/50"
+                >
+                  <div className="relative flex items-center gap-3 border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-5">
+                    {teacherImg ? (
+                      <img
+                        src={teacherImg}
+                        alt={course.teacher?.name ?? ""}
+                        loading="lazy"
+                        width={512}
+                        height={512}
+                        className="h-14 w-14 rounded-full border-2 border-primary/50 object-cover"
+                      />
                     ) : (
-                      <button
-                        onClick={() => handleBook(course)}
-                        disabled={isBooking}
-                        className="flex items-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.04] disabled:opacity-70"
-                      >
-                        {isBooking && <Loader2 className="h-4 w-4 animate-spin" />}
-                        احجز الآن
-                      </button>
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-primary/50 bg-primary/15 text-lg font-extrabold text-primary">
+                        {(course.teacher?.name ?? "؟").trim().charAt(0)}
+                      </span>
+                    )}
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{course.teacher?.name ?? "مدرّس"}</p>
+                      <p className="text-xs text-muted-foreground">{course.subject}</p>
+                    </div>
+                    {course.badge && (
+                      <span className="absolute left-4 top-4 rounded-full bg-gradient-gold px-3 py-1 text-xs font-bold text-primary-foreground">
+                        {course.badge}
+                      </span>
                     )}
                   </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
 
-        {filtered.length === 0 && (
+                  <div className="flex flex-1 flex-col p-5">
+                    <h3 className="text-lg font-bold leading-snug">{course.title}</h3>
+                    <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                      {course.description}
+                    </p>
+
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {course.live_sessions > 0 && (
+                        <span className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                          <Video className="h-3.5 w-3.5" />
+                          {course.live_sessions} حصة مباشرة
+                        </span>
+                      )}
+                      <span className="flex items-center gap-1.5 rounded-lg bg-secondary px-2.5 py-1 text-xs font-semibold">
+                        <PlayCircle className="h-3.5 w-3.5 text-primary" />
+                        مسجّلة بالكامل
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        {course.lessons_count} درس
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4 text-primary" />
+                        {course.hours} ساعة
+                      </span>
+                    </div>
+
+                    <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
+                      <div className="flex flex-col">
+                        {course.old_price && (
+                          <span className="text-xs text-muted-foreground line-through">
+                            {course.old_price} ج.م
+                          </span>
+                        )}
+                        <span className="text-xl font-extrabold text-gradient-gold">
+                          {course.price} ج.م
+                        </span>
+                      </div>
+                      {isBooked ? (
+                        <span className="flex items-center gap-1.5 rounded-xl bg-primary/15 px-4 py-2 text-sm font-bold text-primary">
+                          <Check className="h-4 w-4" />
+                          محجوزة
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleBook(course)}
+                          disabled={isBooking}
+                          className="flex items-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.04] disabled:opacity-70"
+                        >
+                          {isBooking && <Loader2 className="h-4 w-4 animate-spin" />}
+                          احجز الآن
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+
+        {!isLoading && filtered.length === 0 && (
           <p className="mt-12 text-center text-muted-foreground">
             مفيش دورات في الفلتر ده حاليًا، جرّب اختيار تاني.
           </p>
