@@ -79,7 +79,7 @@ function Dashboard() {
             icon={Video}
             label="حصص مباشرة متاحة"
             value={String(
-              bookings.reduce((s, b) => s + (courseById(b.course_id)?.liveSessions ?? 0), 0),
+              bookings.reduce((s, b) => s + (courseById(b.course_id)?.live_sessions ?? 0), 0),
             )}
           />
         </div>
