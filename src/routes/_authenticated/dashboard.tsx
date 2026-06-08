@@ -26,6 +26,7 @@ function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { bookings, isLoading, cancel } = useBookings();
+  const { isAdmin } = useRoles();
   const { data: courses = [] } = useCourses();
 
   const name =
