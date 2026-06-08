@@ -1,4 +1,4 @@
-import { Star, BookOpen } from "lucide-react";
+import { Star, BookOpen, Users } from "lucide-react";
 import { teachers } from "@/data/site";
 
 export function Teachers() {
@@ -8,10 +8,10 @@ export function Teachers() {
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-sm font-bold uppercase tracking-widest text-primary">المدرسون</span>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-            مدرّسونا <span className="text-gradient-gold">المتخصّصون</span>
+            نخبة <span className="text-gradient-gold">المدرّسين</span> في مصر
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            تعرّف على فريقنا من أفضل المدرّسين المتخصّصين في مختلف المواد الدراسية.
+            فريق من أفضل المدرّسين المتخصّصين في كل مادة لكل المراحل الدراسية.
           </p>
         </div>
 
@@ -35,9 +35,14 @@ export function Teachers() {
 
               <div className="p-6">
                 <h3 className="text-xl font-bold">{t.name}</h3>
-                <p className="mt-1 text-sm text-primary">{t.subject}</p>
+                <p className="mt-1 text-sm font-semibold text-primary">{t.subject}</p>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t.bio}</p>
 
-                <div className="mt-4 flex items-center justify-center gap-5 text-sm text-muted-foreground">
+                <div className="mt-5 flex items-center justify-center gap-5 border-t border-border/60 pt-4 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-primary" />
+                    {t.students}
+                  </span>
                   <span className="flex items-center gap-1.5">
                     <BookOpen className="h-4 w-4 text-primary" />
                     {t.courses} دورات
