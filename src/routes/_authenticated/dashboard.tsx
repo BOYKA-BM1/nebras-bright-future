@@ -9,6 +9,7 @@ import {
   CalendarClock,
   BookOpen,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
