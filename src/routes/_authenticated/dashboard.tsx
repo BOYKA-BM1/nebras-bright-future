@@ -124,11 +124,11 @@ function Dashboard() {
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         <Video className="h-4 w-4 text-primary" />
-                        {course.liveSessions} حصة مباشرة
+                        {course.live_sessions} حصة مباشرة
                       </span>
                       <span className="flex items-center gap-1.5">
                         <PlayCircle className="h-4 w-4 text-primary" />
-                        {course.videos} فيديو مسجّل
+                        {course.videos_count} فيديو مسجّل
                       </span>
                     </div>
                   )}
