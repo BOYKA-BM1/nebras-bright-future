@@ -13,8 +13,8 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useBookings } from "@/hooks/use-bookings";
+import { useCourses } from "@/hooks/use-catalog";
 import { Logo } from "@/components/site/Logo";
-import { courses } from "@/data/site";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -24,6 +24,7 @@ function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { bookings, isLoading, cancel } = useBookings();
+  const { data: courses = [] } = useCourses();
 
   const name =
     (user?.user_metadata?.full_name as string | undefined) ||
