@@ -22,12 +22,12 @@ export function Footer() {
           <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
             انضم إلى آلاف الطلاب الذين اختاروا نبراس لتحقيق أحلامهم التعليمية.
           </p>
-          <a
-            href="#courses"
+          <Link
+            to="/auth"
             className="mt-6 inline-block rounded-xl bg-gradient-gold px-8 py-3.5 text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
           >
             إنشاء حساب مجاني
-          </a>
+          </Link>
         </div>
       </div>
 
