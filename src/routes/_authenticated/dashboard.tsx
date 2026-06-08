@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useBookings } from "@/hooks/use-bookings";
+import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
 import { Logo } from "@/components/site/Logo";
 
