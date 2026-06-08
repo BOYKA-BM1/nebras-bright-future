@@ -34,8 +34,10 @@ function Index() {
       <Navbar />
       <main>
         <Hero />
+        <Stages />
         <About />
         <Courses />
+        <Lectures />
         <Teachers />
         <HelpCenter />
       </main>
