@@ -41,7 +41,7 @@ function Dashboard() {
     navigate({ to: "/" });
   };
 
-  const courseById = (id: number) => courses.find((c) => c.id === id);
+  const courseById = (id: string | null) => (id ? courses.find((c) => c.id === id) : undefined);
 
   return (
     <div className="min-h-screen bg-background">
