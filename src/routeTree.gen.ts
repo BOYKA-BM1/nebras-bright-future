@@ -17,6 +17,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedAdminTeachersRouteImport } from './routes/_authenticated/admin.teachers'
+import { Route as AuthenticatedAdminStagesRouteImport } from './routes/_authenticated/admin.stages'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -58,6 +59,12 @@ const AuthenticatedAdminTeachersRoute =
     path: '/teachers',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminStagesRoute =
+  AuthenticatedAdminStagesRouteImport.update({
+    id: '/stages',
+    path: '/stages',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/stages': typeof AuthenticatedAdminStagesRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/stages': typeof AuthenticatedAdminStagesRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -84,6 +93,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/admin/stages': typeof AuthenticatedAdminStagesRoute
   '/_authenticated/admin/teachers': typeof AuthenticatedAdminTeachersRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/dashboard'
+    | '/admin/stages'
     | '/admin/teachers'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/dashboard'
+    | '/admin/stages'
     | '/admin/teachers'
     | '/admin'
   id:
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/admin/stages'
     | '/_authenticated/admin/teachers'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -182,15 +195,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTeachersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/stages': {
+      id: '/_authenticated/admin/stages'
+      path: '/stages'
+      fullPath: '/admin/stages'
+      preLoaderRoute: typeof AuthenticatedAdminStagesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminStagesRoute: typeof AuthenticatedAdminStagesRoute
   AuthenticatedAdminTeachersRoute: typeof AuthenticatedAdminTeachersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminStagesRoute: AuthenticatedAdminStagesRoute,
   AuthenticatedAdminTeachersRoute: AuthenticatedAdminTeachersRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
