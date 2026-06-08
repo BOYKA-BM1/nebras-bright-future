@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard, LogOut } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { navLinks } from "@/data/site";
+import { useAuth } from "@/hooks/use-auth";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
@@ -25,18 +28,39 @@ export function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-2 sm:flex">
-          <a
-            href="#contact"
-            className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-accent"
-          >
-            تسجيل الدخول
-          </a>
-          <a
-            href="#courses"
-            className="rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
-          >
-            إنشاء حساب جديد
-          </a>
+          {user ? (
+            <>
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-accent"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                لوحة التحكم
+              </Link>
+              <button
+                onClick={() => signOut()}
+                className="flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-bold transition-colors hover:bg-accent"
+              >
+                <LogOut className="h-4 w-4" />
+                خروج
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/auth"
+                className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-accent"
+              >
+                تسجيل الدخول
+              </Link>
+              <Link
+                to="/auth"
+                className="rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
+              >
+                إنشاء حساب جديد
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -64,20 +88,43 @@ export function Navbar() {
             ))}
           </ul>
           <div className="mt-3 flex gap-2">
-            <a
-              href="#contact"
-              onClick={() => setOpen(false)}
-              className="flex-1 rounded-xl border border-border px-4 py-2 text-center text-sm font-bold"
-            >
-              تسجيل الدخول
-            </a>
-            <a
-              href="#courses"
-              onClick={() => setOpen(false)}
-              className="flex-1 rounded-xl bg-gradient-gold px-4 py-2 text-center text-sm font-bold text-primary-foreground"
-            >
-              إنشاء حساب
-            </a>
+            {user ? (
+              <>
+                <Link
+                  to="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-xl border border-border px-4 py-2 text-center text-sm font-bold"
+                >
+                  لوحة التحكم
+                </Link>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    signOut();
+                  }}
+                  className="flex-1 rounded-xl bg-secondary px-4 py-2 text-center text-sm font-bold"
+                >
+                  خروج
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-xl border border-border px-4 py-2 text-center text-sm font-bold"
+                >
+                  تسجيل الدخول
+                </Link>
+                <Link
+                  to="/auth"
+                  onClick={() => setOpen(false)}
+                  className="flex-1 rounded-xl bg-gradient-gold px-4 py-2 text-center text-sm font-bold text-primary-foreground"
+                >
+                  إنشاء حساب
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}
