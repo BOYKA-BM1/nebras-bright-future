@@ -9,12 +9,14 @@ import {
   CalendarClock,
   BookOpen,
   Wallet,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useBookings } from "@/hooks/use-bookings";
+import { useRoles } from "@/hooks/use-roles";
+import { useCourses } from "@/hooks/use-catalog";
 import { Logo } from "@/components/site/Logo";
-import { courses } from "@/data/site";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -24,6 +26,8 @@ function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { bookings, isLoading, cancel } = useBookings();
+  const { isAdmin } = useRoles();
+  const { data: courses = [] } = useCourses();
 
   const name =
     (user?.user_metadata?.full_name as string | undefined) ||
@@ -40,7 +44,7 @@ function Dashboard() {
     navigate({ to: "/" });
   };
 
-  const courseById = (id: number) => courses.find((c) => c.id === id);
+  const courseById = (id: string | null) => (id ? courses.find((c) => c.id === id) : undefined);
 
   return (
     <div className="min-h-screen bg-background">
@@ -48,6 +52,15 @@ function Dashboard() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                لوحة الإدارة
+              </Link>
+            )}
             <Link
               to="/"
               className="rounded-xl border border-border px-4 py-2 text-sm font-bold transition-colors hover:bg-accent"
@@ -78,7 +91,7 @@ function Dashboard() {
             icon={Video}
             label="حصص مباشرة متاحة"
             value={String(
-              bookings.reduce((s, b) => s + (courseById(b.course_id)?.liveSessions ?? 0), 0),
+              bookings.reduce((s, b) => s + (courseById(b.course_id)?.live_sessions ?? 0), 0),
             )}
           />
         </div>
@@ -123,11 +136,11 @@ function Dashboard() {
                     <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         <Video className="h-4 w-4 text-primary" />
-                        {course.liveSessions} حصة مباشرة
+                        {course.live_sessions} حصة مباشرة
                       </span>
                       <span className="flex items-center gap-1.5">
                         <PlayCircle className="h-4 w-4 text-primary" />
-                        {course.videos} فيديو مسجّل
+                        {course.videos_count} فيديو مسجّل
                       </span>
                     </div>
                   )}

@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import type { Course } from "@/data/site";
+import type { Course } from "@/lib/catalog";
 
 export type Booking = {
   id: string;
-  course_id: number;
+  course_id: string | null;
   course_title: string;
   teacher_name: string | null;
   price: number;
@@ -31,13 +31,13 @@ export function useBookings() {
   });
 
   const book = useMutation({
-    mutationFn: async (course: Course) => {
+    mutationFn: async (course: { id: string; title: string; teacher_name?: string | null; price: number }) => {
       if (!user) throw new Error("not-authenticated");
       const { error } = await supabase.from("bookings").insert({
         user_id: user.id,
         course_id: course.id,
         course_title: course.title,
-        teacher_name: course.teacher,
+        teacher_name: course.teacher_name ?? null,
         price: course.price,
         status: "confirmed",
       });
@@ -58,7 +58,9 @@ export function useBookings() {
     },
   });
 
-  const bookedIds = new Set((query.data ?? []).map((b) => b.course_id));
+  const bookedIds = new Set((query.data ?? []).map((b) => b.course_id).filter(Boolean) as string[]);
 
   return { ...query, bookings: query.data ?? [], bookedIds, book, cancel };
 }
+
+export type { Course };
