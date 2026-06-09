@@ -1,17 +1,14 @@
 import { useMemo, useState } from "react";
-import { BookOpen, PlayCircle, Video, Clock, Check, Loader2 } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
-import { toast } from "sonner";
-import { tracks, resolveImage, type TrackId, type CourseWithRelations } from "@/lib/catalog";
+import { BookOpen, PlayCircle, Video, Clock, Check, Loader2, ArrowLeft } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { tracks, resolveImage, type TrackId } from "@/lib/catalog";
 import { useCourses } from "@/hooks/use-catalog";
-import { useAuth } from "@/hooks/use-auth";
-import { useBookings } from "@/hooks/use-bookings";
+import { useMyEnrollments } from "@/hooks/use-content";
 
 export function Courses() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const { data: courses = [], isLoading } = useCourses();
-  const { bookedIds, book } = useBookings();
+  const { data: enrollments = [] } = useMyEnrollments();
+  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.course_id)), [enrollments]);
   const [level, setLevel] = useState<string>("all");
   const [track, setTrack] = useState<TrackId>("all");
 
@@ -32,30 +29,6 @@ export function Courses() {
       return true;
     });
   }, [courses, level, track]);
-
-  const handleBook = (course: CourseWithRelations) => {
-    if (!user) {
-      toast.info("سجّل دخولك الأول عشان تحجز الدورة.");
-      navigate({ to: "/auth" });
-      return;
-    }
-    book.mutate(
-      {
-        id: course.id,
-        title: course.title,
-        teacher_name: course.teacher?.name ?? null,
-        price: course.price,
-      },
-      {
-        onSuccess: () => toast.success(`تم حجز «${course.title}» بنجاح! 🎉`),
-        onError: (err) => {
-          const msg = err instanceof Error ? err.message : "";
-          if (/duplicate|unique/i.test(msg)) toast.info("أنت حاجز الدورة دي بالفعل.");
-          else toast.error("تعذّر الحجز، حاول مرة أخرى.");
-        },
-      },
-    );
-  };
 
   return (
     <section id="courses" className="relative py-24">
