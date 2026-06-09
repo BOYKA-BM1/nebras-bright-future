@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
