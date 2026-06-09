@@ -9,11 +9,49 @@ import teacher6 from "@/assets/teacher-6.jpg";
 export type Stage = Database["public"]["Tables"]["stages"]["Row"];
 export type Teacher = Database["public"]["Tables"]["teachers"]["Row"];
 export type Course = Database["public"]["Tables"]["courses"]["Row"];
+export type Section = Database["public"]["Tables"]["sections"]["Row"];
+export type Lesson = Database["public"]["Tables"]["lessons"]["Row"];
+export type Enrollment = Database["public"]["Tables"]["enrollments"]["Row"];
+export type LessonProgress = Database["public"]["Tables"]["lesson_progress"]["Row"];
+export type Quiz = Database["public"]["Tables"]["quizzes"]["Row"];
+export type Question = Database["public"]["Tables"]["questions"]["Row"];
+export type Coupon = Database["public"]["Tables"]["coupons"]["Row"];
+export type Payment = Database["public"]["Tables"]["payments"]["Row"];
 
 export type CourseWithRelations = Course & {
   teacher: Teacher | null;
   stage: Stage | null;
 };
+
+export type SectionWithLessons = Section & { lessons: Lesson[] };
+
+/** يحوّل رابط فيديو (Bunny / YouTube / mp4) لرابط مشغّل قابل للتضمين */
+export function toEmbedUrl(url?: string | null): { kind: "iframe" | "video" | "none"; src: string } {
+  if (!url) return { kind: "none", src: "" };
+  const u = url.trim();
+  // Bunny Stream: iframe.mediadelivery.net/embed/{libraryId}/{videoId} أو play link
+  if (/mediadelivery\.net|iframe\.mediadelivery/.test(u)) {
+    return { kind: "iframe", src: u.includes("/embed/") ? u : u };
+  }
+  // YouTube
+  const yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/);
+  if (yt) return { kind: "iframe", src: `https://www.youtube.com/embed/${yt[1]}` };
+  // Vimeo
+  const vm = u.match(/vimeo\.com\/(\d+)/);
+  if (vm) return { kind: "iframe", src: `https://player.vimeo.com/video/${vm[1]}` };
+  // ملف فيديو مباشر
+  if (/\.(mp4|webm|m3u8|mov)(\?|$)/i.test(u)) return { kind: "video", src: u };
+  // افتراضي: iframe
+  return { kind: "iframe", src: u };
+}
+
+export function priceAfterCoupon(price: number, coupon?: { discount_percent: number | null; discount_amount: number | null } | null): number {
+  if (!coupon) return price;
+  let p = price;
+  if (coupon.discount_percent) p = p - (p * coupon.discount_percent) / 100;
+  if (coupon.discount_amount) p = p - coupon.discount_amount;
+  return Math.max(0, Math.round(p));
+}
 
 /* خريطة الصور المدمجة (للبيانات الأولية) — أي قيمة تبدأ بـ http أو / تُستخدم كما هي */
 const BUNDLED_IMAGES: Record<string, string> = {

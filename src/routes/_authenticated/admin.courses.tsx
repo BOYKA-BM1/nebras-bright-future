@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -179,7 +179,10 @@ function AdminCourses() {
                     <span className="font-extrabold text-gradient-gold">{c.price} ج.م</span>
                     {c.old_price && <span className="text-xs text-muted-foreground line-through">{c.old_price}</span>}
                   </div>
-                  <div className="mt-3 flex gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Link to="/manage/$courseId" params={{ courseId: c.id }} className="flex items-center gap-1 rounded-lg bg-gradient-gold px-2.5 py-1 text-xs font-bold text-primary-foreground shadow-gold">
+                      <Settings2 className="h-3.5 w-3.5" /> المحتوى
+                    </Link>
                     <button onClick={() => openEdit(c)} className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-accent">
                       <Pencil className="h-3.5 w-3.5" /> تعديل
                     </button>
