@@ -251,7 +251,7 @@ export function useSectionAdmin(courseId: string | undefined) {
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: async ({ id, ...input }: SectionInput & { id: string }) => {
+    mutationFn: async ({ id, ...input }: Partial<SectionInput> & { id: string }) => {
       const { error } = await supabase.from("sections").update(input).eq("id", id);
       if (error) throw error;
     },
@@ -279,7 +279,7 @@ export function useLessonAdmin(courseId: string | undefined) {
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: async ({ id, ...input }: LessonInput & { id: string }) => {
+    mutationFn: async ({ id, ...input }: Partial<LessonInput> & { id: string }) => {
       const { error } = await supabase.from("lessons").update(input).eq("id", id);
       if (error) throw error;
     },
