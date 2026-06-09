@@ -39,6 +39,7 @@ type FormState = {
   rating: string;
   students_label: string;
   sort_order: string;
+  user_id: string;
 };
 
 const empty: FormState = {
@@ -50,6 +51,7 @@ const empty: FormState = {
   rating: "5.0",
   students_label: "",
   sort_order: "0",
+  user_id: "",
 };
 
 function AdminTeachers() {
@@ -79,6 +81,7 @@ function AdminTeachers() {
       rating: String(t.rating),
       students_label: t.students_label ?? "",
       sort_order: String(t.sort_order),
+      user_id: t.user_id ?? "",
     });
     setOpen(true);
   };
@@ -97,6 +100,7 @@ function AdminTeachers() {
       rating: Number(form.rating) || 5,
       students_label: form.students_label.trim() || null,
       sort_order: Number(form.sort_order) || 0,
+      user_id: form.user_id.trim() || null,
     };
     const onErr = () => toast.error("حصل خطأ، حاول تاني.");
     if (editing) {
@@ -180,6 +184,7 @@ function AdminTeachers() {
               <Field label="عدد الطلاب (نص)"><Input value={form.students_label} onChange={(e) => set("students_label", e.target.value)} placeholder="10k+" /></Field>
               <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
             </div>
+            <Field label="معرّف حساب المدرّس (User ID) — لربط لوحة المدرّس"><Input value={form.user_id} onChange={(e) => set("user_id", e.target.value)} placeholder="UUID من صفحة المستخدمين" dir="ltr" /></Field>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
