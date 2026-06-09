@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Users, GraduationCap, CheckCircle2, Loader2, Wallet, UserCheck, Ticket } from "lucide-react";
+import { BookOpen, Users, GraduationCap, CheckCircle2, Loader2, Wallet, UserCheck } from "lucide-react";
 import { useCourses, useTeachers, useStages } from "@/hooks/use-catalog";
 import { useAdminMetrics } from "@/hooks/use-admin";
 

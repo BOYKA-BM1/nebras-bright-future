@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, BookOpen, Users, Settings2, LogOut, Home, ShieldAlert, PlayCircle } from "lucide-react";
+import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
