@@ -90,8 +90,7 @@ export function Courses() {
         ) : (
           <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((course) => {
-              const isBooked = bookedIds.has(course.id);
-              const isBooking = book.isPending && book.variables?.id === course.id;
+              const isEnrolled = enrolledIds.has(course.id);
               const teacherImg = resolveImage(course.teacher?.image_url);
               return (
                 <article
