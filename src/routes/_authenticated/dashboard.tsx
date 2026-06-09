@@ -1,22 +1,14 @@
 import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2,
-  LogOut,
-  Trash2,
-  Video,
-  PlayCircle,
-  CalendarClock,
-  BookOpen,
-  Wallet,
-  ShieldCheck,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { useBookings } from "@/hooks/use-bookings";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
+import { useMyEnrollments, useFavorites } from "@/hooks/use-content";
 import { Logo } from "@/components/site/Logo";
+import { resolveImage } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -25,26 +17,23 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { bookings, isLoading, cancel } = useBookings();
-  const { isAdmin } = useRoles();
+  const { isAdmin, isTeacher } = useRoles();
   const { data: courses = [] } = useCourses();
+  const { data: enrollments = [], isLoading } = useMyEnrollments();
+  const { favoriteIds } = useFavorites();
 
   const name =
     (user?.user_metadata?.full_name as string | undefined) ||
     user?.email?.split("@")[0] ||
     "طالبنا العزيز";
 
-  const totalSpent = useMemo(
-    () => bookings.reduce((sum, b) => sum + (b.price || 0), 0),
-    [bookings],
+  const myCourses = useMemo(
+    () => enrollments.map((e) => courses.find((c) => c.id === e.course_id)).filter(Boolean) as typeof courses,
+    [enrollments, courses],
   );
+  const totalSpent = useMemo(() => myCourses.reduce((s, c) => s + (c.price || 0), 0), [myCourses]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate({ to: "/" });
-  };
-
-  const courseById = (id: string | null) => (id ? courses.find((c) => c.id === id) : undefined);
+  const handleSignOut = async () => { await signOut(); navigate({ to: "/" }); };
 
   return (
     <div className="min-h-screen bg-background">
@@ -53,118 +42,58 @@ function Dashboard() {
           <Logo />
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <Link
-                to="/admin"
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
-              >
-                <ShieldCheck className="h-4 w-4" />
-                لوحة الإدارة
+              <Link to="/admin" className="flex items-center gap-1.5 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]">
+                <ShieldCheck className="h-4 w-4" /> الإدارة
               </Link>
             )}
-            <Link
-              to="/"
-              className="rounded-xl border border-border px-4 py-2 text-sm font-bold transition-colors hover:bg-accent"
-            >
-              الدورات
-            </Link>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-bold transition-colors hover:bg-accent"
-            >
-              <LogOut className="h-4 w-4" />
-              خروج
+            {(isTeacher || isAdmin) && (
+              <Link to="/teacher" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <GraduationCap className="h-4 w-4" /> المدرّس
+              </Link>
+            )}
+            <Link to="/" className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">الدورات</Link>
+            <button onClick={handleSignOut} className="flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-bold hover:bg-accent">
+              <LogOut className="h-4 w-4" /> خروج
             </button>
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <h1 className="text-3xl font-extrabold">
-          أهلًا، <span className="text-gradient-gold">{name}</span> 👋
-        </h1>
-        <p className="mt-2 text-muted-foreground">دي لوحة التحكم بتاعتك — تابع دوراتك ومحاضراتك من هنا.</p>
+        <h1 className="text-3xl font-extrabold">أهلًا، <span className="text-gradient-gold">{name}</span> 👋</h1>
+        <p className="mt-2 text-muted-foreground">دي لوحة التحكم بتاعتك — كمّل تعلّمك من هنا.</p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <StatCard icon={BookOpen} label="عدد الدورات" value={String(bookings.length)} />
+          <StatCard icon={BookOpen} label="دوراتي" value={String(myCourses.length)} />
           <StatCard icon={Wallet} label="إجمالي القيمة" value={`${totalSpent} ج.م`} />
-          <StatCard
-            icon={Video}
-            label="حصص مباشرة متاحة"
-            value={String(
-              bookings.reduce((s, b) => s + (courseById(b.course_id)?.live_sessions ?? 0), 0),
-            )}
-          />
+          <StatCard icon={Heart} label="المفضّلة" value={String(favoriteIds.size)} />
         </div>
 
-        <h2 className="mt-12 text-xl font-extrabold">دوراتي المحجوزة</h2>
+        <h2 className="mt-12 text-xl font-extrabold">دوراتي</h2>
 
         {isLoading ? (
-          <div className="mt-8 flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        ) : bookings.length === 0 ? (
+          <div className="mt-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        ) : myCourses.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
-            <p className="text-muted-foreground">لسه محجزتش أي دورة.</p>
-            <Link
-              to="/"
-              hash="courses"
-              className="mt-4 inline-block rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold"
-            >
-              تصفّح الدورات
-            </Link>
+            <p className="text-muted-foreground">لسه ما اشتركتش في أي دورة.</p>
+            <Link to="/" hash="courses" className="mt-4 inline-block rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold">تصفّح الدورات</Link>
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            {bookings.map((b) => {
-              const course = courseById(b.course_id);
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {myCourses.map((c) => {
+              const img = resolveImage(c.image_url) ?? resolveImage(c.teacher?.image_url);
               return (
-                <article
-                  key={b.id}
-                  className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-card"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-bold leading-snug">{b.course_title}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{b.teacher_name}</p>
+                <article key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                  {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
+                  <div className="p-4">
+                    <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{c.teacher?.name}</p>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                      <PlayCircle className="h-3.5 w-3.5 text-primary" /> {c.lessons_count} درس
                     </div>
-                    <span className="shrink-0 rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary">
-                      مؤكّد
-                    </span>
-                  </div>
-
-                  {course && (
-                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Video className="h-4 w-4 text-primary" />
-                        {course.live_sessions} حصة مباشرة
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <PlayCircle className="h-4 w-4 text-primary" />
-                        {course.videos_count} فيديو مسجّل
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between border-t border-border/60 pt-4">
-                    <button
-                      className="flex items-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.03]"
-                      onClick={() => toast.info("هتقدر تدخل المحاضرة المباشرة قبل موعدها بدقائق.")}
-                    >
-                      <CalendarClock className="h-4 w-4" />
-                      دخول المحاضرة
-                    </button>
-                    <button
-                      onClick={() =>
-                        cancel.mutate(b.id, {
-                          onSuccess: () => toast.success("تم إلغاء الحجز."),
-                          onError: () => toast.error("تعذّر الإلغاء، حاول مرة أخرى."),
-                        })
-                      }
-                      className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:border-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      إلغاء
-                    </button>
+                    <Link to="/learn/$courseId" params={{ courseId: c.id }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
+                      <ArrowLeft className="h-4 w-4" /> كمّل التعلّم
+                    </Link>
                   </div>
                 </article>
               );
@@ -176,20 +105,10 @@ function Dashboard() {
   );
 }
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
+function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Icon className="h-5 w-5" />
-      </span>
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
       <div className="mt-4 text-2xl font-extrabold">{value}</div>
       <div className="text-sm text-muted-foreground">{label}</div>
     </div>
