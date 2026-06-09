@@ -164,20 +164,24 @@ export function Courses() {
                           {course.price} ج.م
                         </span>
                       </div>
-                      {isBooked ? (
-                        <span className="flex items-center gap-1.5 rounded-xl bg-primary/15 px-4 py-2 text-sm font-bold text-primary">
-                          <Check className="h-4 w-4" />
-                          محجوزة
-                        </span>
-                      ) : (
-                        <button
-                          onClick={() => handleBook(course)}
-                          disabled={isBooking}
-                          className="flex items-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.04] disabled:opacity-70"
+                      {isEnrolled ? (
+                        <Link
+                          to="/learn/$courseId"
+                          params={{ courseId: course.id }}
+                          className="flex items-center gap-1.5 rounded-xl bg-primary/15 px-4 py-2 text-sm font-bold text-primary"
                         >
-                          {isBooking && <Loader2 className="h-4 w-4 animate-spin" />}
-                          احجز الآن
-                        </button>
+                          <Check className="h-4 w-4" />
+                          ادخل الدورة
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/courses/$courseId"
+                          params={{ courseId: course.id }}
+                          className="flex items-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground transition-transform hover:scale-[1.04]"
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                          التفاصيل
+                        </Link>
                       )}
                     </div>
                   </div>
