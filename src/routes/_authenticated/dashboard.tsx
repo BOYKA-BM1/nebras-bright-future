@@ -17,10 +17,17 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { isAdmin, isTeacher } = useRoles();
+  const { isAdmin, isTeacher, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
+
+  // المدرّس (غير الأدمن) يتوجّه مباشرة للوحته
+  useEffect(() => {
+    if (!rolesLoading && isTeacher && !isAdmin) {
+      navigate({ to: "/teacher" });
+    }
+  }, [rolesLoading, isTeacher, isAdmin, navigate]);
 
   const name =
     (user?.user_metadata?.full_name as string | undefined) ||
