@@ -10,9 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StagesLevelRouteImport } from './routes/stages.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -30,6 +32,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -44,10 +51,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
-  id: '/courses/$courseId',
-  path: '/courses/$courseId',
+const StagesLevelRoute = StagesLevelRouteImport.update({
+  id: '/stages/$level',
+  path: '/stages/$level',
   getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
+  id: '/$courseId',
+  path: '/$courseId',
+  getParentRoute: () => CoursesRoute,
 } as any)
 const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
   id: '/teacher',
@@ -109,11 +121,13 @@ const AuthenticatedAdminCouponsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/stages/$level': typeof StagesLevelRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -125,10 +139,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/stages/$level': typeof StagesLevelRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -142,11 +158,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
+  '/stages/$level': typeof StagesLevelRoute
   '/_authenticated/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/_authenticated/admin/courses': typeof AuthenticatedAdminCoursesRoute
   '/_authenticated/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -160,11 +178,13 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/courses'
     | '/sitemap.xml'
     | '/admin'
     | '/dashboard'
     | '/teacher'
     | '/courses/$courseId'
+    | '/stages/$level'
     | '/admin/coupons'
     | '/admin/courses'
     | '/admin/stages'
@@ -176,10 +196,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/courses'
     | '/sitemap.xml'
     | '/dashboard'
     | '/teacher'
     | '/courses/$courseId'
+    | '/stages/$level'
     | '/admin/coupons'
     | '/admin/courses'
     | '/admin/stages'
@@ -192,11 +214,13 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/courses'
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
     | '/_authenticated/teacher'
     | '/courses/$courseId'
+    | '/stages/$level'
     | '/_authenticated/admin/coupons'
     | '/_authenticated/admin/courses'
     | '/_authenticated/admin/stages'
@@ -210,8 +234,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CoursesRoute: typeof CoursesRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
-  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
+  StagesLevelRoute: typeof StagesLevelRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -221,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -244,12 +276,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stages/$level': {
+      id: '/stages/$level'
+      path: '/stages/$level'
+      fullPath: '/stages/$level'
+      preLoaderRoute: typeof StagesLevelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/courses/$courseId': {
       id: '/courses/$courseId'
-      path: '/courses/$courseId'
+      path: '/$courseId'
       fullPath: '/courses/$courseId'
       preLoaderRoute: typeof CoursesCourseIdRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof CoursesRoute
     }
     '/_authenticated/teacher': {
       id: '/_authenticated/teacher'
@@ -362,23 +401,25 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface CoursesRouteChildren {
+  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
+}
+
+const CoursesRouteChildren: CoursesRouteChildren = {
+  CoursesCourseIdRoute: CoursesCourseIdRoute,
+}
+
+const CoursesRouteWithChildren =
+  CoursesRoute._addFileChildren(CoursesRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CoursesRoute: CoursesRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
-  CoursesCourseIdRoute: CoursesCourseIdRoute,
+  StagesLevelRoute: StagesLevelRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

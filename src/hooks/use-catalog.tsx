@@ -130,7 +130,7 @@ export function useCourseAdmin() {
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: async ({ id, ...input }: CourseInput & { id: string }) => {
+    mutationFn: async ({ id, ...input }: Partial<CourseInput> & { id: string }) => {
       const { error } = await supabase.from("courses").update(input).eq("id", id);
       if (error) throw error;
     },

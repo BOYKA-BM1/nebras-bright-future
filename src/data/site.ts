@@ -421,8 +421,7 @@ export const faqs = [
 export const navLinks = [
   { label: "الرئيسية", href: "/#home" },
   { label: "المراحل", href: "/#stages" },
-  { label: "الدورات", href: "/#courses" },
-  { label: "المدرسون", href: "/#teachers" },
+  { label: "الدورات", href: "/courses" },
   { label: "المحاضرات", href: "/#lectures" },
   { label: "المساعدة", href: "/#help" },
 ];

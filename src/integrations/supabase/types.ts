@@ -376,6 +376,50 @@ export type Database = {
           },
         ]
       }
+      live_sessions: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          embed_url: string | null
+          id: string
+          starts_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          embed_url?: string | null
+          id?: string
+          starts_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          embed_url?: string | null
+          id?: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "live_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
