@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart,
