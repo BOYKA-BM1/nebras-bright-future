@@ -1,5 +1,6 @@
 import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-react";
 import { useMemo } from "react";
+import { Link } from "@tanstack/react-router";
 import { useStages, useCourses } from "@/hooks/use-catalog";
 
 const iconMap = { GraduationCap, Library, BookA } as const;
@@ -83,12 +84,13 @@ export function Stages() {
                     </div>
                   )}
 
-                  <a
-                    href="#courses"
+                  <Link
+                    to="/stages/$level"
+                    params={{ level: stage.level }}
                     className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent"
                   >
-                    شوف دورات {stage.short ?? stage.name}
-                  </a>
+                    تفاصيل {stage.short ?? stage.name} ومدرّسينها
+                  </Link>
                 </article>
               );
             })}

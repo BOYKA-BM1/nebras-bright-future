@@ -34,16 +34,16 @@ export function Hero() {
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
             <a
-              href="#courses"
+              href="/courses"
               className="w-full rounded-xl bg-gradient-gold px-7 py-3.5 text-center text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03] sm:w-auto"
             >
               ابدأ التعلم الآن
             </a>
             <a
-              href="#teachers"
+              href="#stages"
               className="w-full rounded-xl border border-border bg-card/60 px-7 py-3.5 text-center text-base font-bold text-foreground transition-colors hover:bg-accent sm:w-auto"
             >
-              تعرّف على المدرسين
+              اختر مرحلتك
             </a>
           </div>
 

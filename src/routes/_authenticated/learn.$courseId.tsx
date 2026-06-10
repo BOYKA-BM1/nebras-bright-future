@@ -7,6 +7,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/site/Logo";
 import { useCourse, useCourseContent, useEnrollment, useProgress, useUpdateProgress } from "@/hooks/use-content";
+import { useLiveSessions } from "@/hooks/use-live";
 import { toEmbedUrl, type Lesson } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/learn/$courseId")({
@@ -20,6 +21,7 @@ function LearnPage() {
   const { sections, lessons, isLoading: contentLoading } = useCourseContent(courseId);
   const { isEnrolled, isLoading: enrollLoading } = useEnrollment(courseId);
   const { data: progress = [] } = useProgress(courseId);
+  const { data: liveSessions = [] } = useLiveSessions(courseId);
   const updateProgress = useUpdateProgress(courseId);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -64,6 +66,8 @@ function LearnPage() {
 
   const embed = active ? toEmbedUrl(active.video_url) : { kind: "none" as const, src: "" };
   const locked = active ? !canWatch(active) : false;
+  const liveNow = isEnrolled ? liveSessions.find((l) => l.status === "live") : undefined;
+  const liveEmbed = liveNow ? toEmbedUrl(liveNow.embed_url) : { kind: "none" as const, src: "" };
 
   return (
     <div className="min-h-screen bg-background">
@@ -75,6 +79,26 @@ function LearnPage() {
           </Link>
         </div>
       </header>
+
+      {liveNow && (
+        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+          <div className="overflow-hidden rounded-2xl border border-destructive/40 bg-card shadow-card">
+            <div className="flex items-center gap-2 border-b border-border/60 bg-destructive/10 px-5 py-3">
+              <span className="flex items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-0.5 text-xs font-bold text-destructive">🔴 مباشر الآن</span>
+              <span className="font-bold">{liveNow.title}</span>
+            </div>
+            <div className="aspect-video w-full bg-black">
+              {liveEmbed.kind === "iframe" ? (
+                <iframe src={liveEmbed.src} title={liveNow.title} className="h-full w-full" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen />
+              ) : liveEmbed.kind === "video" ? (
+                <video src={liveEmbed.src} controls autoPlay className="h-full w-full" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-muted-foreground">البث المباشر هيبدأ قريبًا.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-3">
         {/* المشغّل */}

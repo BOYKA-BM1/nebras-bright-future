@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Loader2, Star } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Plus, Pencil, Trash2, Loader2, Star, UserPlus, KeyRound, CheckCircle2, Copy } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -25,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useTeachers, useTeacherAdmin } from "@/hooks/use-catalog";
 import { resolveImage, type Teacher } from "@/lib/catalog";
+import { createTeacherAccount } from "@/lib/teacher-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/teachers")({
   component: AdminTeachers,
@@ -54,6 +57,14 @@ const empty: FormState = {
   user_id: "",
 };
 
+type AcctState = { name: string; subject: string; email: string; password: string; bio: string; image_url: string };
+const emptyAcct: AcctState = { name: "", subject: "", email: "", password: "", bio: "", image_url: "" };
+
+function genPassword() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$%";
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
 function AdminTeachers() {
   const { data: teachers = [], isLoading } = useTeachers();
   const { create, update, remove } = useTeacherAdmin();
@@ -62,7 +73,15 @@ function AdminTeachers() {
   const [form, setForm] = useState<FormState>(empty);
   const [toDelete, setToDelete] = useState<Teacher | null>(null);
 
+  // إنشاء حساب مدرّس
+  const callCreateAccount = useServerFn(createTeacherAccount);
+  const [acctOpen, setAcctOpen] = useState(false);
+  const [acct, setAcct] = useState<AcctState>(emptyAcct);
+  const [acctBusy, setAcctBusy] = useState(false);
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(null);
+
   const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const setA = (k: keyof AcctState, v: string) => setAcct((a) => ({ ...a, [k]: v }));
 
   const openCreate = () => {
     setEditing(null);
@@ -84,6 +103,12 @@ function AdminTeachers() {
       user_id: t.user_id ?? "",
     });
     setOpen(true);
+  };
+
+  const openAccount = () => {
+    setAcct({ ...emptyAcct, password: genPassword() });
+    setCreated(null);
+    setAcctOpen(true);
   };
 
   const handleSubmit = () => {
@@ -116,18 +141,54 @@ function AdminTeachers() {
     }
   };
 
+  const handleCreateAccount = async () => {
+    if (!acct.name.trim() || !acct.subject.trim() || !acct.email.trim() || acct.password.length < 8) {
+      toast.error("الاسم والمادة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
+      return;
+    }
+    setAcctBusy(true);
+    try {
+      await callCreateAccount({
+        data: {
+          email: acct.email.trim(),
+          password: acct.password,
+          name: acct.name.trim(),
+          subject: acct.subject.trim(),
+          bio: acct.bio.trim() || null,
+          image_url: acct.image_url.trim() || null,
+        },
+      });
+      setCreated({ email: acct.email.trim(), password: acct.password });
+      toast.success("تم إنشاء حساب المدرّس بنجاح 🎉");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذّر إنشاء الحساب.");
+    } finally {
+      setAcctBusy(false);
+    }
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold sm:text-3xl">المدرّسون</h1>
           <p className="mt-1 text-muted-foreground">{teachers.length} مدرّس</p>
         </div>
-        <Button onClick={openCreate} className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90">
-          <Plus className="h-4 w-4" />
-          إضافة مدرّس
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={openAccount} className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90">
+            <UserPlus className="h-4 w-4" />
+            إنشاء حساب مدرّس
+          </Button>
+          <Button onClick={openCreate} variant="outline" className="gap-2">
+            <Plus className="h-4 w-4" />
+            إضافة سجل فقط
+          </Button>
+        </div>
       </div>
+
+      <p className="mt-3 rounded-xl border border-border bg-card/50 p-3 text-sm text-muted-foreground">
+        💡 «إنشاء حساب مدرّس» ينشئ حساب دخول بالبريد وكلمة المرور ويفتح للمدرّس لوحته مباشرة بعد تسجيل الدخول. «إضافة سجل فقط» بيضيف بيانات عرض بدون حساب دخول.
+      </p>
 
       {isLoading ? (
         <div className="mt-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -151,6 +212,13 @@ function AdminTeachers() {
                     <Star className="h-3.5 w-3.5 fill-primary text-primary" /> {t.rating}
                     <span>· {t.experience_years} سنة خبرة</span>
                   </p>
+                  <p className="mt-1 flex items-center gap-1 text-xs">
+                    {t.user_id ? (
+                      <span className="flex items-center gap-1 text-primary"><CheckCircle2 className="h-3.5 w-3.5" /> له حساب دخول</span>
+                    ) : (
+                      <span className="text-muted-foreground">بدون حساب دخول</span>
+                    )}
+                  </p>
                   <div className="mt-3 flex gap-2">
                     <button onClick={() => openEdit(t)} className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-accent">
                       <Pencil className="h-3.5 w-3.5" /> تعديل
@@ -166,10 +234,11 @@ function AdminTeachers() {
         </div>
       )}
 
+      {/* تعديل/إضافة سجل */}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "تعديل المدرّس" : "إضافة مدرّس"}</DialogTitle>
+            <DialogTitle>{editing ? "تعديل المدرّس" : "إضافة سجل مدرّس"}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <Field label="الاسم"><Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="أ. محمد علي" /></Field>
@@ -193,6 +262,55 @@ function AdminTeachers() {
               حفظ
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* إنشاء حساب مدرّس */}
+      <Dialog open={acctOpen} onOpenChange={setAcctOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><KeyRound className="h-5 w-5 text-primary" /> إنشاء حساب مدرّس</DialogTitle>
+            <DialogDescription>
+              ادخل بيانات المدرّس وحدّد بريده وكلمة مروره، وهيقدر يسجّل دخوله وتفتح له لوحته مباشرة.
+            </DialogDescription>
+          </DialogHeader>
+
+          {created ? (
+            <div className="grid gap-4 py-2">
+              <div className="rounded-xl border border-primary/30 bg-primary/10 p-4 text-sm">
+                <p className="flex items-center gap-2 font-bold text-primary"><CheckCircle2 className="h-4 w-4" /> تم إنشاء الحساب</p>
+                <p className="mt-2 text-muted-foreground">سلّم بيانات الدخول للمدرّس — هيستخدمها في صفحة تسجيل الدخول.</p>
+              </div>
+              <CopyRow label="البريد الإلكتروني" value={created.email} />
+              <CopyRow label="كلمة المرور" value={created.password} />
+              <DialogFooter>
+                <Button onClick={() => setAcctOpen(false)} className="bg-gradient-gold text-primary-foreground">تم</Button>
+              </DialogFooter>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 py-2">
+                <Field label="الاسم"><Input value={acct.name} onChange={(e) => setA("name", e.target.value)} placeholder="أ. محمد علي" /></Field>
+                <Field label="المادة"><Input value={acct.subject} onChange={(e) => setA("subject", e.target.value)} placeholder="الرياضيات" /></Field>
+                <Field label="البريد الإلكتروني"><Input type="email" value={acct.email} onChange={(e) => setA("email", e.target.value)} placeholder="teacher@example.com" dir="ltr" /></Field>
+                <Field label="كلمة المرور">
+                  <div className="flex gap-2">
+                    <Input value={acct.password} onChange={(e) => setA("password", e.target.value)} dir="ltr" />
+                    <Button type="button" variant="outline" onClick={() => setA("password", genPassword())}>توليد</Button>
+                  </div>
+                </Field>
+                <Field label="النبذة (اختياري)"><Textarea value={acct.bio} onChange={(e) => setA("bio", e.target.value)} rows={2} /></Field>
+                <Field label="رابط الصورة (اختياري)"><Input value={acct.image_url} onChange={(e) => setA("image_url", e.target.value)} dir="ltr" placeholder="https://..." /></Field>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setAcctOpen(false)}>إلغاء</Button>
+                <Button onClick={handleCreateAccount} disabled={acctBusy} className="gap-2 bg-gradient-gold text-primary-foreground">
+                  {acctBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+                  إنشاء الحساب
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -222,6 +340,24 @@ function AdminTeachers() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+function CopyRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1.5">
+      <Label className="text-sm">{label}</Label>
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2">
+        <code className="flex-1 truncate text-sm" dir="ltr">{value}</code>
+        <button
+          onClick={() => { navigator.clipboard.writeText(value); toast.success("تم النسخ"); }}
+          className="rounded-lg p-1.5 hover:bg-accent"
+          title="نسخ"
+        >
+          <Copy className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 }

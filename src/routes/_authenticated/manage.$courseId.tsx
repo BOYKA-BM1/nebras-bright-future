@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2, Plus, Pencil, Trash2, ChevronRight, Video, FileText, Layers, GripVertical,
+  Radio, Play, Square, Eye, EyeOff, Tv,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -19,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useSectionAdmin, useLessonAdmin } from "@/hooks/use-content";
+import { useCourseAdmin } from "@/hooks/use-catalog";
+import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
 import { Logo } from "@/components/site/Logo";
 import type { Section, Lesson } from "@/lib/catalog";
 
@@ -33,6 +36,9 @@ function ManageCourse() {
   const { sections, isLoading } = useCourseContent(courseId);
   const sectionAdmin = useSectionAdmin(courseId);
   const lessonAdmin = useLessonAdmin(courseId);
+  const courseAdmin = useCourseAdmin();
+  const { data: liveSessions = [] } = useLiveSessions(courseId);
+  const liveAdmin = useLiveAdmin(courseId);
 
   const [secOpen, setSecOpen] = useState(false);
   const [editSec, setEditSec] = useState<Section | null>(null);
@@ -43,7 +49,11 @@ function ManageCourse() {
   const [lesSectionId, setLesSectionId] = useState<string | null>(null);
   const [lesForm, setLesForm] = useState<LessonForm>(emptyLesson);
 
-  const [delTarget, setDelTarget] = useState<{ type: "section" | "lesson"; id: string; name: string } | null>(null);
+  const [liveOpen, setLiveOpen] = useState(false);
+  const [editLive, setEditLive] = useState<LiveSession | null>(null);
+  const [liveForm, setLiveForm] = useState<LiveForm>(emptyLive);
+
+  const [delTarget, setDelTarget] = useState<{ type: "section" | "lesson" | "live"; id: string; name: string } | null>(null);
 
   if (rolesLoading) return <Center><Loader2 className="h-8 w-8 animate-spin text-primary" /></Center>;
   if (!isAdmin && !isTeacher) {
@@ -99,10 +109,47 @@ function ManageCourse() {
     }
   };
 
+  const openCreateLive = () => { setEditLive(null); setLiveForm(emptyLive); setLiveOpen(true); };
+  const openEditLive = (l: LiveSession) => {
+    setEditLive(l);
+    setLiveForm({ title: l.title, description: l.description ?? "", embed_url: l.embed_url ?? "" });
+    setLiveOpen(true);
+  };
+  const saveLive = () => {
+    if (!liveForm.title.trim()) { toast.error("عنوان البث مطلوب."); return; }
+    const payload = {
+      course_id: courseId,
+      title: liveForm.title.trim(),
+      description: liveForm.description.trim() || null,
+      embed_url: liveForm.embed_url.trim() || null,
+    };
+    const onErr = () => toast.error("حصل خطأ.");
+    if (editLive) {
+      liveAdmin.update.mutate({ id: editLive.id, ...payload }, { onSuccess: () => { toast.success("تم التحديث."); setLiveOpen(false); }, onError: onErr });
+    } else {
+      liveAdmin.create.mutate({ ...payload, status: "scheduled" }, { onSuccess: () => { toast.success("تمت إضافة البث."); setLiveOpen(false); }, onError: onErr });
+    }
+  };
+  const setLiveStatus = (l: LiveSession, status: string) => {
+    liveAdmin.update.mutate(
+      { id: l.id, status, ...(status === "live" && !l.starts_at ? { starts_at: new Date().toISOString() } : {}) },
+      { onSuccess: () => toast.success(status === "live" ? "بدأ البث المباشر 🔴" : "تم إنهاء البث."), onError: () => toast.error("تعذّر التحديث.") },
+    );
+  };
+
+  const togglePublish = () => {
+    if (!course) return;
+    courseAdmin.update.mutate(
+      { id: course.id, is_published: !course.is_published },
+      { onSuccess: () => toast.success(course.is_published ? "تم إخفاء الدورة." : "تم نشر الدورة ✅"), onError: () => toast.error("تعذّر التحديث.") },
+    );
+  };
+
   const confirmDelete = () => {
     if (!delTarget) return;
     const onErr = () => toast.error("تعذّر الحذف.");
     if (delTarget.type === "section") sectionAdmin.remove.mutate(delTarget.id, { onSuccess: () => toast.success("تم الحذف."), onError: onErr });
+    else if (delTarget.type === "live") liveAdmin.remove.mutate(delTarget.id, { onSuccess: () => toast.success("تم الحذف."), onError: onErr });
     else lessonAdmin.remove.mutate(delTarget.id, { onSuccess: () => toast.success("تم الحذف."), onError: onErr });
     setDelTarget(null);
   };
@@ -119,15 +166,75 @@ function ManageCourse() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">إدارة محتوى الدورة</p>
             <h1 className="text-2xl font-extrabold sm:text-3xl">{course?.title ?? "..."}</h1>
           </div>
-          <Button onClick={openCreateSec} className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90">
-            <Plus className="h-4 w-4" /> وحدة
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={togglePublish} variant="outline" disabled={courseAdmin.update.isPending} className="gap-2">
+              {course?.is_published ? <><EyeOff className="h-4 w-4" /> إخفاء</> : <><Eye className="h-4 w-4" /> نشر الدورة</>}
+            </Button>
+            <Button onClick={openCreateSec} className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90">
+              <Plus className="h-4 w-4" /> وحدة
+            </Button>
+          </div>
         </div>
+
+        <span className={`mt-3 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${course?.is_published ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+          {course?.is_published ? "منشورة — ظاهرة للطلاب" : "مسودّة — غير ظاهرة"}
+        </span>
+
+        {/* البث المباشر */}
+        <section className="mt-8 rounded-2xl border border-border bg-card shadow-card">
+          <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary/40 px-5 py-3">
+            <div className="flex items-center gap-2 font-bold">
+              <Radio className="h-4 w-4 text-primary" /> البث المباشر
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">{liveSessions.length}</span>
+            </div>
+            <Button size="sm" onClick={openCreateLive} className="gap-2 bg-gradient-gold text-primary-foreground">
+              <Plus className="h-4 w-4" /> محاضرة بث
+            </Button>
+          </div>
+          {liveSessions.length === 0 ? (
+            <p className="px-5 py-6 text-center text-sm text-muted-foreground">
+              لسه مفيش بثوث. اضغط «محاضرة بث» وضيف عنوان ورابط البث (Bunny Live / YouTube / Zoom)، وابدأ البث المباشر بضغطة.
+            </p>
+          ) : (
+            <ul className="divide-y divide-border/60">
+              {liveSessions.map((l) => {
+                const isLive = l.status === "live";
+                return (
+                  <li key={l.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
+                    <Tv className={`h-4 w-4 shrink-0 ${isLive ? "text-destructive" : "text-primary"}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-2 text-sm font-semibold">
+                        {l.title}
+                        {isLive && <span className="flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 text-xs font-bold text-destructive">🔴 مباشر الآن</span>}
+                        {l.status === "ended" && <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">منتهٍ</span>}
+                        {l.status === "scheduled" && <span className="rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">مجدول</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground" dir="ltr">{l.embed_url || "بدون رابط بث"}</p>
+                    </div>
+                    {isLive ? (
+                      <Button size="sm" variant="outline" onClick={() => setLiveStatus(l, "ended")} className="gap-1.5 text-destructive">
+                        <Square className="h-3.5 w-3.5" /> إنهاء
+                      </Button>
+                    ) : (
+                      <Button size="sm" onClick={() => setLiveStatus(l, "live")} className="gap-1.5 bg-gradient-gold text-primary-foreground">
+                        <Play className="h-3.5 w-3.5" /> ابدأ البث
+                      </Button>
+                    )}
+                    <IconBtn onClick={() => openEditLive(l)} title="تعديل"><Pencil className="h-4 w-4" /></IconBtn>
+                    <IconBtn onClick={() => setDelTarget({ type: "live", id: l.id, name: l.title })} title="حذف" danger><Trash2 className="h-4 w-4" /></IconBtn>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        <h2 className="mt-10 text-lg font-extrabold">وحدات ودروس الدورة</h2>
 
         {isLoading ? (
           <div className="mt-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -232,6 +339,27 @@ function ManageCourse() {
         </DialogContent>
       </Dialog>
 
+      {/* بث مباشر */}
+      <Dialog open={liveOpen} onOpenChange={setLiveOpen}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editLive ? "تعديل محاضرة البث" : "محاضرة بث جديدة"}</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-2">
+            <F label="عنوان المحاضرة"><Input value={liveForm.title} onChange={(e) => setLiveForm({ ...liveForm, title: e.target.value })} placeholder="مراجعة نهائية مباشرة" /></F>
+            <F label="رابط البث (Bunny Live / YouTube / Zoom / mp4)">
+              <Input value={liveForm.embed_url} onChange={(e) => setLiveForm({ ...liveForm, embed_url: e.target.value })} placeholder="https://..." dir="ltr" />
+            </F>
+            <F label="الوصف (اختياري)"><Textarea rows={3} value={liveForm.description} onChange={(e) => setLiveForm({ ...liveForm, description: e.target.value })} /></F>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLiveOpen(false)}>إلغاء</Button>
+            <Button onClick={saveLive} disabled={liveAdmin.create.isPending || liveAdmin.update.isPending} className="gap-2 bg-gradient-gold text-primary-foreground">
+              {(liveAdmin.create.isPending || liveAdmin.update.isPending) && <Loader2 className="h-4 w-4 animate-spin" />} حفظ
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       <AlertDialog open={!!delTarget} onOpenChange={(o) => !o && setDelTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -250,6 +378,9 @@ function ManageCourse() {
 
 type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean };
 const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false };
+
+type LiveForm = { title: string; description: string; embed_url: string };
+const emptyLive: LiveForm = { title: "", description: "", embed_url: "" };
 
 function Center({ children }: { children: React.ReactNode }) {
   return <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background">{children}</div>;

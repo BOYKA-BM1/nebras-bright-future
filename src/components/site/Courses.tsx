@@ -5,7 +5,7 @@ import { tracks, resolveImage, type TrackId } from "@/lib/catalog";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments } from "@/hooks/use-content";
 
-export function Courses() {
+export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
   const { data: courses = [], isLoading } = useCourses();
   const { data: enrollments = [] } = useMyEnrollments();
   const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.course_id)), [enrollments]);
@@ -34,15 +34,17 @@ export function Courses() {
     <section id="courses" className="relative py-24">
       <div className="pointer-events-none absolute inset-x-0 top-1/3 -z-10 mx-auto h-72 max-w-3xl rounded-full bg-primary/5 blur-3xl" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="text-sm font-bold uppercase tracking-widest text-primary">الدورات</span>
-          <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-            احجز <span className="text-gradient-gold">دورتك</span> دلوقتي
-          </h2>
-          <p className="mt-4 text-lg text-muted-foreground">
-            اختر مرحلتك وشعبتك، واحجز الدورة بحصصها المباشرة والمسجّلة.
-          </p>
-        </div>
+        {!hideHeader && (
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="text-sm font-bold uppercase tracking-widest text-primary">الدورات</span>
+            <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
+              احجز <span className="text-gradient-gold">دورتك</span> دلوقتي
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+              اختر مرحلتك وشعبتك، واحجز الدورة بحصصها المباشرة والمسجّلة.
+            </p>
+          </div>
+        )}
 
         {/* فلاتر المراحل */}
         <div className="mt-10 flex flex-wrap justify-center gap-2">
