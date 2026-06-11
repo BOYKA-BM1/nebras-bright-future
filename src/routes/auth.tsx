@@ -82,6 +82,13 @@ function AuthPage() {
     }
     setSubmitting(true);
     try {
+      // امنع البريد المحظور من التسجيل/الدخول
+      const { data: banned } = await supabase.rpc("is_email_banned", { _email: email });
+      if (banned) {
+        toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
+        setSubmitting(false);
+        return;
+      }
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,
@@ -101,7 +108,9 @@ function AuthPage() {
       navigate({ to: "/dashboard" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "حدث خطأ";
-      if (/invalid login/i.test(message)) {
+      if (/banned|blocked|محظور/i.test(message)) {
+        toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
+      } else if (/invalid login/i.test(message)) {
         toast.error("البريد أو كلمة المرور غير صحيحة.");
       } else if (/already registered|user already/i.test(message)) {
         toast.error("هذا البريد مسجّل بالفعل، سجّل دخولك.");
@@ -112,6 +121,7 @@ function AuthPage() {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-hero px-4 py-12">

@@ -1,13 +1,22 @@
-import { Star, Users, BookOpen, PlayCircle } from "lucide-react";
+import { Star, Users, BookOpen, PlayCircle, Eye } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
+import { usePlatformStats, useTrackVisit } from "@/hooks/use-stats";
 
-const stats = [
-  { value: "+50k", label: "طالب", icon: Users },
-  { value: "+200", label: "دورة", icon: BookOpen },
-  { value: "+3000", label: "فيديو", icon: PlayCircle },
-];
+function fmt(n: number) {
+  if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
 
 export function Hero() {
+  useTrackVisit();
+  const { data: s } = usePlatformStats();
+  const stats = [
+    { value: fmt(s?.students ?? 0), label: "طالب", icon: Users },
+    { value: fmt(s?.courses ?? 0), label: "دورة", icon: BookOpen },
+    { value: fmt(s?.lessons ?? 0), label: "فيديو", icon: PlayCircle },
+    { value: fmt(s?.visits ?? 0), label: "زيارة", icon: Eye },
+  ];
+
   return (
     <section id="home" className="relative overflow-hidden bg-hero pt-28 pb-20 sm:pt-36">
       {/* glow orbs */}
@@ -47,7 +56,7 @@ export function Hero() {
             </a>
           </div>
 
-          <div className="mt-10 grid grid-cols-3 gap-4">
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {stats.map((s) => (
               <div key={s.label} className="rounded-2xl border border-border bg-card/50 p-4 text-center">
                 <s.icon className="mx-auto mb-2 h-6 w-6 text-primary" />

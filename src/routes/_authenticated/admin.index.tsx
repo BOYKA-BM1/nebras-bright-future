@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Users, GraduationCap, CheckCircle2, Loader2, Wallet, UserCheck } from "lucide-react";
+import { BookOpen, Users, GraduationCap, CheckCircle2, Loader2, Wallet, UserCheck, Eye } from "lucide-react";
 import { useCourses, useTeachers, useStages } from "@/hooks/use-catalog";
 import { useAdminMetrics } from "@/hooks/use-admin";
+import { usePlatformStats } from "@/hooks/use-stats";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminOverview,
@@ -12,6 +13,7 @@ function AdminOverview() {
   const { data: teachers = [], isLoading: lt } = useTeachers();
   const { data: stages = [], isLoading: ls } = useStages();
   const { data: metrics, isLoading: lm } = useAdminMetrics();
+  const { data: platform } = usePlatformStats();
 
   const isLoading = lc || lt || ls || lm;
   const published = courses.filter((c) => c.is_published).length;
@@ -19,11 +21,14 @@ function AdminOverview() {
   const stats = [
     { label: "الإيرادات", value: `${metrics?.revenue ?? 0} ج.م`, icon: Wallet, to: "/admin/courses" },
     { label: "الاشتراكات", value: metrics?.enrollments ?? 0, icon: UserCheck, to: "/admin/courses" },
+    { label: "زيارات المنصة", value: platform?.visits ?? 0, icon: Eye, to: "/admin/accounts" },
+    { label: "إجمالي الطلاب", value: platform?.students ?? 0, icon: Users, to: "/admin/accounts" },
     { label: "إجمالي الدورات", value: courses.length, icon: BookOpen, to: "/admin/courses" },
     { label: "الدورات المنشورة", value: published, icon: CheckCircle2, to: "/admin/courses" },
     { label: "المدرّسون", value: teachers.length, icon: Users, to: "/admin/teachers" },
     { label: "المراحل الدراسية", value: stages.length, icon: GraduationCap, to: "/admin/stages" },
   ] as const;
+
 
   return (
     <div>

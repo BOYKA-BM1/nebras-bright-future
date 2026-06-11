@@ -26,6 +26,7 @@ import { Route as AuthenticatedAdminTeachersRouteImport } from './routes/_authen
 import { Route as AuthenticatedAdminStagesRouteImport } from './routes/_authenticated/admin.stages'
 import { Route as AuthenticatedAdminCoursesRouteImport } from './routes/_authenticated/admin.courses'
 import { Route as AuthenticatedAdminCouponsRouteImport } from './routes/_authenticated/admin.coupons'
+import { Route as AuthenticatedAdminAccountsRouteImport } from './routes/_authenticated/admin.accounts'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -117,6 +118,12 @@ const AuthenticatedAdminCouponsRoute =
     path: '/coupons',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminAccountsRoute =
+  AuthenticatedAdminAccountsRouteImport.update({
+    id: '/accounts',
+    path: '/accounts',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
+  '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -145,6 +153,7 @@ export interface FileRoutesByTo {
   '/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
+  '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -165,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
+  '/_authenticated/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/_authenticated/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/_authenticated/admin/courses': typeof AuthenticatedAdminCoursesRoute
   '/_authenticated/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -185,6 +195,7 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/courses/$courseId'
     | '/stages/$level'
+    | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
     | '/admin/stages'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/teacher'
     | '/courses/$courseId'
     | '/stages/$level'
+    | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
     | '/admin/stages'
@@ -221,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/teacher'
     | '/courses/$courseId'
     | '/stages/$level'
+    | '/_authenticated/admin/accounts'
     | '/_authenticated/admin/coupons'
     | '/_authenticated/admin/courses'
     | '/_authenticated/admin/stages'
@@ -360,10 +373,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCouponsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/accounts': {
+      id: '/_authenticated/admin/accounts'
+      path: '/accounts'
+      fullPath: '/admin/accounts'
+      preLoaderRoute: typeof AuthenticatedAdminAccountsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAccountsRoute: typeof AuthenticatedAdminAccountsRoute
   AuthenticatedAdminCouponsRoute: typeof AuthenticatedAdminCouponsRoute
   AuthenticatedAdminCoursesRoute: typeof AuthenticatedAdminCoursesRoute
   AuthenticatedAdminStagesRoute: typeof AuthenticatedAdminStagesRoute
@@ -372,6 +393,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAccountsRoute: AuthenticatedAdminAccountsRoute,
   AuthenticatedAdminCouponsRoute: AuthenticatedAdminCouponsRoute,
   AuthenticatedAdminCoursesRoute: AuthenticatedAdminCoursesRoute,
   AuthenticatedAdminStagesRoute: AuthenticatedAdminStagesRoute,

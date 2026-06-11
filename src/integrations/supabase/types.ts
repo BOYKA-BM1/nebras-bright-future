@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      banned_emails: {
+        Row: {
+          created_at: string
+          email: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           course_id: string | null
@@ -66,6 +84,7 @@ export type Database = {
           id: string
           is_active: boolean
           max_uses: number | null
+          teacher_id: string | null
           updated_at: string
           used_count: number
         }
@@ -79,6 +98,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_uses?: number | null
+          teacher_id?: string | null
           updated_at?: string
           used_count?: number
         }
@@ -92,6 +112,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           max_uses?: number | null
+          teacher_id?: string | null
           updated_at?: string
           used_count?: number
         }
@@ -101,6 +122,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
             referencedColumns: ["id"]
           },
         ]
@@ -194,6 +222,7 @@ export type Database = {
       }
       enrollments: {
         Row: {
+          code: string | null
           course_id: string
           created_at: string
           enrolled_at: string
@@ -204,6 +233,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          code?: string | null
           course_id: string
           created_at?: string
           enrolled_at?: string
@@ -214,6 +244,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          code?: string | null
           course_id?: string
           created_at?: string
           enrolled_at?: string
@@ -272,6 +303,7 @@ export type Database = {
           lesson_id: string
           updated_at: string
           user_id: string
+          watched_seconds: number
         }
         Insert: {
           completed?: boolean
@@ -282,6 +314,7 @@ export type Database = {
           lesson_id: string
           updated_at?: string
           user_id: string
+          watched_seconds?: number
         }
         Update: {
           completed?: boolean
@@ -292,6 +325,7 @@ export type Database = {
           lesson_id?: string
           updated_at?: string
           user_id?: string
+          watched_seconds?: number
         }
         Relationships: [
           {
@@ -512,30 +546,50 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           full_name: string | null
           grade: string | null
           id: string
+          level: string | null
+          onboarded: boolean
           phone: string | null
+          stage_id: string | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           grade?: string | null
           id: string
+          level?: string | null
+          onboarded?: boolean
           phone?: string | null
+          stage_id?: string | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           full_name?: string | null
           grade?: string | null
           id?: string
+          level?: string | null
+          onboarded?: boolean
           phone?: string | null
+          stage_id?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "stages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       questions: {
         Row: {
@@ -741,6 +795,24 @@ export type Database = {
           },
         ]
       }
+      site_metrics: {
+        Row: {
+          id: boolean
+          updated_at: string
+          visits: number
+        }
+        Insert: {
+          id?: boolean
+          updated_at?: string
+          visits?: number
+        }
+        Update: {
+          id?: boolean
+          updated_at?: string
+          visits?: number
+        }
+        Relationships: []
+      }
       stages: {
         Row: {
           created_at: string
@@ -848,6 +920,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      gen_enrollment_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -855,6 +928,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_visits: { Args: never; Returns: number }
+      is_email_banned: { Args: { _email: string }; Returns: boolean }
       is_enrolled: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
@@ -862,6 +937,16 @@ export type Database = {
       owns_course: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
+      }
+      platform_stats: {
+        Args: never
+        Returns: {
+          courses: number
+          lessons: number
+          students: number
+          teachers: number
+          visits: number
+        }[]
       }
     }
     Enums: {
