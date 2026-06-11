@@ -46,20 +46,12 @@ export function Navbar() {
               </button>
             </>
           ) : (
-            <>
-              <Link
-                to="/auth"
-                className="rounded-xl border border-border px-4 py-2 text-sm font-bold text-foreground transition-colors hover:bg-accent"
-              >
-                تسجيل الدخول
-              </Link>
-              <Link
-                to="/auth"
-                className="rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
-              >
-                إنشاء حساب جديد
-              </Link>
-            </>
+            <Link
+              to="/auth"
+              className="rounded-xl bg-gradient-gold px-5 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
+            >
+              تسجيل الدخول
+            </Link>
           )}
         </div>
 
