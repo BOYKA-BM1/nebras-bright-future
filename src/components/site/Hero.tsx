@@ -56,7 +56,7 @@ export function Hero() {
             </a>
           </div>
 
-          <div className="mt-10 grid grid-cols-3 gap-4">
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {stats.map((s) => (
               <div key={s.label} className="rounded-2xl border border-border bg-card/50 p-4 text-center">
                 <s.icon className="mx-auto mb-2 h-6 w-6 text-primary" />
