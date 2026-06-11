@@ -100,22 +100,13 @@ export function Navbar() {
                 </button>
               </>
             ) : (
-              <>
-                <Link
-                  to="/auth"
-                  onClick={() => setOpen(false)}
-                  className="flex-1 rounded-xl border border-border px-4 py-2 text-center text-sm font-bold"
-                >
-                  تسجيل الدخول
-                </Link>
-                <Link
-                  to="/auth"
-                  onClick={() => setOpen(false)}
-                  className="flex-1 rounded-xl bg-gradient-gold px-4 py-2 text-center text-sm font-bold text-primary-foreground"
-                >
-                  إنشاء حساب
-                </Link>
-              </>
+              <Link
+                to="/auth"
+                onClick={() => setOpen(false)}
+                className="flex-1 rounded-xl bg-gradient-gold px-4 py-2 text-center text-sm font-bold text-primary-foreground"
+              >
+                تسجيل الدخول
+              </Link>
             )}
           </div>
         </div>
