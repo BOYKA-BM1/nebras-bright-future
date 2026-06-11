@@ -1,5 +1,4 @@
 import { Mail, Phone, MessageCircle, MapPin } from "lucide-react";
-import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { navLinks } from "@/data/site";
 
@@ -13,25 +12,7 @@ const contacts = [
 export function Footer() {
   return (
     <footer id="contact" className="relative border-t border-border bg-card/40">
-      {/* CTA */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="-mt-16 mb-16 rounded-3xl border border-primary/30 bg-gradient-to-l from-primary/15 via-card to-card p-8 text-center shadow-card sm:p-12">
-          <h2 className="text-2xl font-extrabold sm:text-3xl">
-            جاهز تبدأ رحلتك نحو <span className="text-gradient-gold">التفوّق؟</span>
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-            انضم إلى آلاف الطلاب الذين اختاروا نبراس لتحقيق أحلامهم التعليمية.
-          </p>
-          <Link
-            to="/auth"
-            className="mt-6 inline-block rounded-xl bg-gradient-gold px-8 py-3.5 text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]"
-          >
-            إنشاء حساب مجاني
-          </Link>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-12 sm:px-6">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_2fr]">
           <div>
             <Logo />

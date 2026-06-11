@@ -1,23 +1,33 @@
 import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-react";
-import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import { useStages, useCourses } from "@/hooks/use-catalog";
+import { useStages } from "@/hooks/use-catalog";
 
 const iconMap = { GraduationCap, Library, BookA } as const;
 
+const gradesByLevel: Record<string, string[]> = {
+  primary: [
+    "الصف الأول الابتدائي",
+    "الصف الثاني الابتدائي",
+    "الصف الثالث الابتدائي",
+    "الصف الرابع الابتدائي",
+    "الصف الخامس الابتدائي",
+    "الصف السادس الابتدائي",
+  ],
+  prep: [
+    "الصف الأول الإعدادي",
+    "الصف الثاني الإعدادي",
+    "الصف الثالث الإعدادي",
+  ],
+  secondary: [
+    "الصف الأول الثانوي",
+    "الصف الثاني الثانوي",
+    "الصف الثالث الثانوي",
+  ],
+};
+
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
-  const { data: courses = [] } = useCourses();
 
-  const gradesByStage = useMemo(() => {
-    const map = new Map<string, Set<string>>();
-    for (const c of courses) {
-      if (!c.stage_id || !c.grade) continue;
-      if (!map.has(c.stage_id)) map.set(c.stage_id, new Set());
-      map.get(c.stage_id)!.add(c.grade);
-    }
-    return map;
-  }, [courses]);
 
   return (
     <section id="stages" className="relative py-24">
@@ -42,7 +52,7 @@ export function Stages() {
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {stages.map((stage) => {
               const Icon = iconMap[stage.icon as keyof typeof iconMap] ?? GraduationCap;
-              const grades = [...(gradesByStage.get(stage.id) ?? [])];
+              const grades = gradesByLevel[stage.level] ?? [];
               return (
                 <article
                   key={stage.id}

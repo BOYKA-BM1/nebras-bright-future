@@ -59,6 +59,7 @@ function AuthPage() {
     setSocial(provider);
     const result = await lovable.auth.signInWithOAuth(provider, {
       redirect_uri: window.location.origin + "/dashboard",
+      extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
     });
     if (result.error) {
       setSocial(null);
