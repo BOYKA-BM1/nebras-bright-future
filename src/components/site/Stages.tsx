@@ -52,7 +52,7 @@ export function Stages() {
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {stages.map((stage) => {
               const Icon = iconMap[stage.icon as keyof typeof iconMap] ?? GraduationCap;
-              const grades = [...(gradesByStage.get(stage.id) ?? [])];
+              const grades = gradesByLevel[stage.level] ?? [];
               return (
                 <article
                   key={stage.id}
