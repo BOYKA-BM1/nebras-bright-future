@@ -419,9 +419,8 @@ export const faqs = [
 ];
 
 export const navLinks = [
-  { label: "الرئيسية", href: "/#home" },
-  { label: "المراحل", href: "/#stages" },
-  { label: "الدورات", href: "/courses" },
-  { label: "المحاضرات", href: "/#lectures" },
-  { label: "المساعدة", href: "/#help" },
+  { label: "الرئيسية", href: "/#home", gated: false },
+  { label: "الدورات", href: "/courses", gated: true },
+  { label: "المحاضرات", href: "/lectures", gated: true },
+  { label: "المساعدة", href: "/#help", gated: false },
 ];
