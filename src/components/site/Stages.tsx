@@ -103,13 +103,12 @@ export function Stages() {
                     </div>
                   )}
 
-                  <Link
-                    to="/stages/$level"
-                    params={{ level: stage.level }}
+                  <button
+                    onClick={() => goStage(stage.level)}
                     className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent"
                   >
                     تفاصيل {stage.short ?? stage.name} ومدرّسينها
-                  </Link>
+                  </button>
                 </article>
               );
             })}
