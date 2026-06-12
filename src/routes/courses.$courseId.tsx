@@ -40,6 +40,7 @@ function CourseDetail() {
   const { isEnrolled } = useEnrollment(courseId);
   const enroll = useEnroll();
   const { favoriteIds, toggle } = useFavorites();
+  const { data: profile } = useProfile();
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
@@ -55,6 +56,12 @@ function CourseDetail() {
       router.navigate({ to: "/auth" });
       return;
     }
+    // لازم الطالب يكمّل ملفه الشخصي قبل الحجز
+    if (!profileCompletion(profile).complete) {
+      toast.info("أكمل بيانات ملفك الشخصي الأول علشان تقدر تحجز.");
+      router.navigate({ to: "/profile" });
+      return;
+    }
     enroll.mutate(
       { courseId: course.id, price: course.price },
       {
@@ -66,6 +73,7 @@ function CourseDetail() {
       },
     );
   };
+
 
   return (
     <div className="min-h-screen bg-background">
