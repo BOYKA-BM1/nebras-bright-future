@@ -1,12 +1,13 @@
 import { useEffect, useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments, useFavorites } from "@/hooks/use-content";
+import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
 import { resolveImage } from "@/lib/catalog";
 
@@ -21,6 +22,7 @@ function Dashboard() {
   const { data: courses = [] } = useCourses();
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
+  const { data: profile, isLoading: profileLoading } = useProfile();
 
   // المدرّس (غير الأدمن) يتوجّه مباشرة للوحته
   useEffect(() => {
@@ -29,7 +31,17 @@ function Dashboard() {
     }
   }, [rolesLoading, isTeacher, isAdmin, navigate]);
 
+  // الطالب اللي لسه ما اختارش مرحلته يروح للأونبوردنج
+  useEffect(() => {
+    if (!rolesLoading && !isAdmin && !isTeacher && !profileLoading && profile && !profile.onboarded) {
+      navigate({ to: "/onboarding" });
+    }
+  }, [rolesLoading, isAdmin, isTeacher, profileLoading, profile, navigate]);
+
+  const completion = profileCompletion(profile);
+
   const name =
+    profile?.full_name ||
     (user?.user_metadata?.full_name as string | undefined) ||
     user?.email?.split("@")[0] ||
     "طالبنا العزيز";
@@ -41,6 +53,7 @@ function Dashboard() {
   const totalSpent = useMemo(() => myCourses.reduce((s, c) => s + (c.price || 0), 0), [myCourses]);
 
   const handleSignOut = async () => { await signOut(); navigate({ to: "/" }); };
+
 
   return (
     <div className="min-h-screen bg-background">
