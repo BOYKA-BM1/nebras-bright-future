@@ -108,25 +108,34 @@ function StagePage() {
                   {teachers.map(({ teacher: t, count }) => {
                     const img = resolveImage(t.image_url);
                     return (
-                      <article key={t.id} className="flex gap-4 rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/50">
-                        {img ? (
-                          <img src={img} alt={t.name} loading="lazy" width={128} height={128} className="h-20 w-20 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
-                        ) : (
-                          <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/15 text-2xl font-extrabold text-primary">{t.name.trim().charAt(0)}</span>
-                        )}
-                        <div className="min-w-0">
-                          <h3 className="font-bold">{t.name}</h3>
-                          <p className="text-sm font-semibold text-primary">{t.subject}</p>
-                          <span className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-                            {stage?.name ?? levelLabel(level)}
-                          </span>
-                          {t.bio && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t.bio}</p>}
-                          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-primary text-primary" />{t.rating}</span>
-                            <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-primary" />{count} دورة</span>
-                            {t.students_label && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5 text-primary" />{t.students_label}</span>}
+                      <article key={t.id} className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/50">
+                        <div className="flex gap-4">
+                          {img ? (
+                            <img src={img} alt={t.name} loading="lazy" width={128} height={128} className="h-20 w-20 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
+                          ) : (
+                            <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary/15 text-2xl font-extrabold text-primary">{t.name.trim().charAt(0)}</span>
+                          )}
+                          <div className="min-w-0">
+                            <h3 className="font-bold">{t.name}</h3>
+                            <p className="text-sm font-semibold text-primary">{t.subject}</p>
+                            <span className="mt-1 inline-block rounded-full bg-secondary px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+                              {stage?.name ?? levelLabel(level)}
+                            </span>
+                            {t.bio && <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{t.bio}</p>}
+                            <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-primary text-primary" />{t.rating}</span>
+                              <span className="flex items-center gap-1"><BookOpen className="h-3.5 w-3.5 text-primary" />{count} دورة</span>
+                              {t.students_label && <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5 text-primary" />{t.students_label}</span>}
+                            </div>
                           </div>
                         </div>
+                        <Link
+                          to="/teachers/$teacherId"
+                          params={{ teacherId: t.id }}
+                          className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent"
+                        >
+                          تفاصيل المدرّس <ArrowLeft className="h-4 w-4" />
+                        </Link>
                       </article>
                     );
                   })}
