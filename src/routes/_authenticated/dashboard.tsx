@@ -60,7 +60,7 @@ function Dashboard() {
       <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isAdmin && (
               <Link to="/admin" className="flex items-center gap-1.5 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]">
                 <ShieldCheck className="h-4 w-4" /> الإدارة
@@ -71,9 +71,12 @@ function Dashboard() {
                 <GraduationCap className="h-4 w-4" /> المدرّس
               </Link>
             )}
-            <Link to="/" className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">الدورات</Link>
+            <Link to="/profile" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+              <UserCog className="h-4 w-4" /> <span className="hidden sm:inline">ملفي</span>
+            </Link>
+            <Link to="/courses" className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">الدورات</Link>
             <button onClick={handleSignOut} className="flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-bold hover:bg-accent">
-              <LogOut className="h-4 w-4" /> خروج
+              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
             </button>
           </div>
         </div>
@@ -82,6 +85,17 @@ function Dashboard() {
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <h1 className="text-3xl font-extrabold">أهلًا، <span className="text-gradient-gold">{name}</span> 👋</h1>
         <p className="mt-2 text-muted-foreground">دي لوحة التحكم بتاعتك — كمّل تعلّمك من هنا.</p>
+
+        {!completion.complete && (
+          <Link to="/profile" className="mt-6 flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 transition-colors hover:bg-primary/15">
+            <AlertCircle className="h-5 w-5 shrink-0 text-primary" />
+            <div className="flex-1">
+              <p className="font-bold">أكمل ملفك الشخصي ({completion.percent}%)</p>
+              <p className="text-sm text-muted-foreground">لازم تكمّل بياناتك علشان تقدر تحجز وتشترك في الدورات.</p>
+            </div>
+            <ArrowLeft className="h-4 w-4 text-primary" />
+          </Link>
+        )}
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <StatCard icon={BookOpen} label="دوراتي" value={String(myCourses.length)} />
