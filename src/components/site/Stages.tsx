@@ -1,6 +1,7 @@
 import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useStages } from "@/hooks/use-catalog";
+import { useAuth } from "@/hooks/use-auth";
 
 const iconMap = { GraduationCap, Library, BookA } as const;
 
