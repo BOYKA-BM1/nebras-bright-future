@@ -169,8 +169,8 @@ function CompletionRing({ percent }: { percent: number }) {
   return (
     <div className="relative h-16 w-16 shrink-0">
       <svg viewBox="0 0 64 64" className="h-16 w-16 -rotate-90">
-        <circle cx="32" cy="32" r={r} fill="none" stroke="hsl(var(--secondary))" strokeWidth="6" />
-        <circle cx="32" cy="32" r={r} fill="none" stroke="hsl(var(--primary))" strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} className="transition-all duration-500" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--secondary)" strokeWidth="6" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--primary)" strokeWidth="6" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} className="transition-all duration-500" />
       </svg>
       <span className="absolute inset-0 flex items-center justify-center text-sm font-extrabold">{percent}%</span>
     </div>
