@@ -28,6 +28,14 @@ const gradesByLevel: Record<string, string[]> = {
 
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const goStage = (level: string) => {
+    if (!user) { navigate({ to: "/auth" }); return; }
+    navigate({ to: "/stages/$level", params: { level } });
+  };
+
 
 
   return (
