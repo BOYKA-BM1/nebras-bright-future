@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Ban, ShieldCheck, Trash2, Search } from "lucide-react";
+import { Loader2, Ban, ShieldCheck, Trash2, Search, ShieldPlus, ShieldMinus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listAccounts, banAccount, unbanAccount, deleteAccount } from "@/lib/admin-accounts.functions";
+import { listAccounts, banAccount, unbanAccount, deleteAccount, setAdminRole } from "@/lib/admin-accounts.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/accounts")({
   component: AccountsPage,
