@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useCourse, useCourseContent, useEnrollment, useEnroll, useFavorites } from "@/hooks/use-content";
+import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
 
 export const Route = createFileRoute("/courses/$courseId")({
