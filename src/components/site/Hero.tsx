@@ -1,6 +1,8 @@
 import { Star, Users, BookOpen, PlayCircle, Eye } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { usePlatformStats, useTrackVisit } from "@/hooks/use-stats";
+import { useAuth } from "@/hooks/use-auth";
 
 function fmt(n: number) {
   if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "") + "k";
