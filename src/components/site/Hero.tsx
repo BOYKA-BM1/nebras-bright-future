@@ -12,6 +12,9 @@ function fmt(n: number) {
 export function Hero() {
   useTrackVisit();
   const { data: s } = usePlatformStats();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const startLearning = () => navigate({ to: user ? "/courses" : "/auth" });
   const stats = [
     { value: fmt(s?.students ?? 0), label: "طالب", icon: Users },
     { value: fmt(s?.courses ?? 0), label: "دورة", icon: BookOpen },
