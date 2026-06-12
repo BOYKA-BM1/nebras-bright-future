@@ -21,6 +21,7 @@ function AccountsPage() {
   const ban = useServerFn(banAccount);
   const unban = useServerFn(unbanAccount);
   const del = useServerFn(deleteAccount);
+  const setAdmin = useServerFn(setAdminRole);
   const qc = useQueryClient();
   const [q, setQ] = useState("");
 
@@ -42,9 +43,14 @@ function AccountsPage() {
     onError: (e: any) => toast.error(e?.message ?? "تعذّر رفع الحظر."),
   });
   const delM = useMutation({
-    mutationFn: (a: { userId: string; email: string; alsoBan: boolean }) => del({ data: a }),
+    mutationFn: (a: { userId: string; email: string }) => del({ data: { ...a, alsoBan: false } }),
     onSuccess: () => { toast.success("تم حذف الحساب."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر الحذف."),
+  });
+  const adminM = useMutation({
+    mutationFn: (a: { userId: string; makeAdmin: boolean }) => setAdmin({ data: a }),
+    onSuccess: (_d, v) => { toast.success(v.makeAdmin ? "تم منح صلاحية الأدمن." : "تمت إزالة صلاحية الأدمن."); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعديل الصلاحية."),
   });
 
   const filtered = accounts.filter(
