@@ -24,11 +24,11 @@ function Dashboard() {
   const { favoriteIds } = useFavorites();
   const { data: profile, isLoading: profileLoading } = useProfile();
 
-  // المدرّس (غير الأدمن) يتوجّه مباشرة للوحته
+  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته
   useEffect(() => {
-    if (!rolesLoading && isTeacher && !isAdmin) {
-      navigate({ to: "/teacher" });
-    }
+    if (rolesLoading) return;
+    if (isAdmin) { navigate({ to: "/admin" }); return; }
+    if (isTeacher) { navigate({ to: "/teacher" }); return; }
   }, [rolesLoading, isTeacher, isAdmin, navigate]);
 
   // الطالب اللي لسه ما اختارش مرحلته يروح للأونبوردنج
