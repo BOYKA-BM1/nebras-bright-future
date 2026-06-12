@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Plus, Trash2, Loader2, Ticket, Power } from "lucide-react";
 import { toast } from "sonner";
@@ -6,7 +6,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCoupons, useCouponAdmin } from "@/hooks/use-admin";
+import { useTeachers } from "@/hooks/use-catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/coupons")({
   component: AdminCoupons,
@@ -14,21 +16,29 @@ export const Route = createFileRoute("/_authenticated/admin/coupons")({
 
 function AdminCoupons() {
   const { data: coupons = [], isLoading } = useCoupons();
+  const { data: teachers = [] } = useTeachers();
   const { create, update, remove } = useCouponAdmin();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ code: "", discount_percent: "", discount_amount: "", max_uses: "" });
+  const [form, setForm] = useState({ code: "", discount_percent: "", discount_amount: "", max_uses: "", teacher_id: "" });
+
+  const teacherName = useMemo(() => {
+    const m = new Map(teachers.map((t) => [t.id, t.name]));
+    return (id: string | null) => (id ? m.get(id) ?? "—" : "كل المدرّسين");
+  }, [teachers]);
 
   const save = () => {
     if (!form.code.trim()) { toast.error("كود الخصم مطلوب."); return; }
+    if (!form.teacher_id) { toast.error("اختر المدرّس اللي هيشتغل عنده الكوبون."); return; }
     create.mutate(
       {
         code: form.code.trim().toUpperCase(),
         discount_percent: form.discount_percent ? Number(form.discount_percent) : null,
         discount_amount: form.discount_amount ? Number(form.discount_amount) : null,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
+        teacher_id: form.teacher_id,
       },
       {
-        onSuccess: () => { toast.success("تم إنشاء الكوبون."); setOpen(false); setForm({ code: "", discount_percent: "", discount_amount: "", max_uses: "" }); },
+        onSuccess: () => { toast.success("تم إنشاء الكوبون."); setOpen(false); setForm({ code: "", discount_percent: "", discount_amount: "", max_uses: "", teacher_id: "" }); },
         onError: (e) => toast.error(/duplicate|unique/i.test(String((e as Error).message)) ? "الكود موجود بالفعل." : "حصل خطأ."),
       },
     );
@@ -64,6 +74,7 @@ function AdminCoupons() {
               <p className="mt-3 text-lg font-extrabold text-gradient-gold">
                 {c.discount_percent ? `${c.discount_percent}%` : c.discount_amount ? `${c.discount_amount} ج.م` : "—"}
               </p>
+              <p className="mt-1 text-xs text-muted-foreground">المدرّس: {teacherName(c.teacher_id)}</p>
               <p className="mt-1 text-xs text-muted-foreground">
                 استُخدم {c.used_count}{c.max_uses ? ` / ${c.max_uses}` : ""} مرة
               </p>
@@ -85,6 +96,17 @@ function AdminCoupons() {
           <DialogHeader><DialogTitle>كوبون جديد</DialogTitle></DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="grid gap-1.5"><Label>الكود</Label><Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })} placeholder="SUMMER25" dir="ltr" /></div>
+            <div className="grid gap-1.5">
+              <Label>المدرّس</Label>
+              <Select value={form.teacher_id} onValueChange={(v) => setForm({ ...form, teacher_id: v })}>
+                <SelectTrigger><SelectValue placeholder="اختر المدرّس" /></SelectTrigger>
+                <SelectContent>
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name} — {t.subject}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-1.5"><Label>نسبة الخصم %</Label><Input type="number" value={form.discount_percent} onChange={(e) => setForm({ ...form, discount_percent: e.target.value })} placeholder="25" /></div>
               <div className="grid gap-1.5"><Label>أو قيمة (ج.م)</Label><Input type="number" value={form.discount_amount} onChange={(e) => setForm({ ...form, discount_amount: e.target.value })} placeholder="50" /></div>

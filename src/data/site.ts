@@ -363,8 +363,8 @@ export const courses: Course[] = [
 export const lectureFeatures = [
   {
     icon: "Video",
-    title: "حصص مباشرة عبر Zoom",
-    text: "بث مباشر تفاعلي مع المدرّس، تسأل وتشارك وتتفاعل لحظة بلحظة كأنك في الفصل.",
+    title: "حصص مباشرة عبر Zoom و Google Meet",
+    text: "بث مباشر تفاعلي مع المدرّس عبر Zoom و Google Meet، تسأل وتشارك لحظة بلحظة، وكل حصة تتسجّل بالكامل.",
   },
   {
     icon: "PlayCircle",
@@ -419,9 +419,8 @@ export const faqs = [
 ];
 
 export const navLinks = [
-  { label: "الرئيسية", href: "/#home" },
-  { label: "المراحل", href: "/#stages" },
-  { label: "الدورات", href: "/courses" },
-  { label: "المحاضرات", href: "/#lectures" },
-  { label: "المساعدة", href: "/#help" },
+  { label: "الرئيسية", href: "/#home", gated: false },
+  { label: "الدورات", href: "/courses", gated: true },
+  { label: "المحاضرات", href: "/lectures", gated: true },
+  { label: "المساعدة", href: "/#help", gated: false },
 ];

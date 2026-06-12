@@ -1,6 +1,7 @@
 import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-react";
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
 import { useStages } from "@/hooks/use-catalog";
+import { useAuth } from "@/hooks/use-auth";
 
 const iconMap = { GraduationCap, Library, BookA } as const;
 
@@ -27,6 +28,14 @@ const gradesByLevel: Record<string, string[]> = {
 
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const goStage = (level: string) => {
+    if (!user) { navigate({ to: "/auth" }); return; }
+    navigate({ to: "/stages/$level", params: { level } });
+  };
+
 
 
   return (
@@ -94,13 +103,12 @@ export function Stages() {
                     </div>
                   )}
 
-                  <Link
-                    to="/stages/$level"
-                    params={{ level: stage.level }}
+                  <button
+                    onClick={() => goStage(stage.level)}
                     className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent"
                   >
                     تفاصيل {stage.short ?? stage.name} ومدرّسينها
-                  </Link>
+                  </button>
                 </article>
               );
             })}

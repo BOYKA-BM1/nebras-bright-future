@@ -108,3 +108,30 @@ export const deleteAccount = createServerFn({ method: "POST" })
     if (error) throw new Error("تعذّر حذف الحساب.");
     return { ok: true };
   });
+
+export const setAdminRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ userId: z.string().uuid(), makeAdmin: z.boolean() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    if (data.userId === context.userId && !data.makeAdmin) {
+      throw new Error("لا يمكنك إزالة صلاحية الأدمن عن نفسك.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    if (data.makeAdmin) {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" });
+      if (error) throw new Error("تعذّر منح الصلاحية.");
+    } else {
+      const { error } = await supabaseAdmin
+        .from("user_roles")
+        .delete()
+        .eq("user_id", data.userId)
+        .eq("role", "admin");
+      if (error) throw new Error("تعذّر إزالة الصلاحية.");
+    }
+    return { ok: true };
+  });

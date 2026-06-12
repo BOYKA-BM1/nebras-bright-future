@@ -14,9 +14,13 @@ import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeachersTeacherIdRouteImport } from './routes/teachers.$teacherId'
 import { Route as StagesLevelRouteImport } from './routes/stages.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedLecturesRouteImport } from './routes/_authenticated/lectures'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -52,6 +56,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeachersTeacherIdRoute = TeachersTeacherIdRouteImport.update({
+  id: '/teachers/$teacherId',
+  path: '/teachers/$teacherId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StagesLevelRoute = StagesLevelRouteImport.update({
   id: '/stages/$level',
   path: '/stages/$level',
@@ -65,6 +74,21 @@ const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
 const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLecturesRoute = AuthenticatedLecturesRouteImport.update({
+  id: '/lectures',
+  path: '/lectures',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -132,9 +156,13 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/lectures': typeof AuthenticatedLecturesRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
+  '/teachers/$teacherId': typeof TeachersTeacherIdRoute
   '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
@@ -150,9 +178,13 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/lectures': typeof AuthenticatedLecturesRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
+  '/teachers/$teacherId': typeof TeachersTeacherIdRoute
   '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
@@ -171,9 +203,13 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
+  '/teachers/$teacherId': typeof TeachersTeacherIdRoute
   '/_authenticated/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/_authenticated/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/_authenticated/admin/courses': typeof AuthenticatedAdminCoursesRoute
@@ -192,9 +228,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/admin'
     | '/dashboard'
+    | '/lectures'
+    | '/onboarding'
+    | '/profile'
     | '/teacher'
     | '/courses/$courseId'
     | '/stages/$level'
+    | '/teachers/$teacherId'
     | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
@@ -210,9 +250,13 @@ export interface FileRouteTypes {
     | '/courses'
     | '/sitemap.xml'
     | '/dashboard'
+    | '/lectures'
+    | '/onboarding'
+    | '/profile'
     | '/teacher'
     | '/courses/$courseId'
     | '/stages/$level'
+    | '/teachers/$teacherId'
     | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
@@ -230,9 +274,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
+    | '/_authenticated/lectures'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/profile'
     | '/_authenticated/teacher'
     | '/courses/$courseId'
     | '/stages/$level'
+    | '/teachers/$teacherId'
     | '/_authenticated/admin/accounts'
     | '/_authenticated/admin/coupons'
     | '/_authenticated/admin/courses'
@@ -250,6 +298,7 @@ export interface RootRouteChildren {
   CoursesRoute: typeof CoursesRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StagesLevelRoute: typeof StagesLevelRoute
+  TeachersTeacherIdRoute: typeof TeachersTeacherIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -289,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teachers/$teacherId': {
+      id: '/teachers/$teacherId'
+      path: '/teachers/$teacherId'
+      fullPath: '/teachers/$teacherId'
+      preLoaderRoute: typeof TeachersTeacherIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/stages/$level': {
       id: '/stages/$level'
       path: '/stages/$level'
@@ -308,6 +364,27 @@ declare module '@tanstack/react-router' {
       path: '/teacher'
       fullPath: '/teacher'
       preLoaderRoute: typeof AuthenticatedTeacherRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lectures': {
+      id: '/_authenticated/lectures'
+      path: '/lectures'
+      fullPath: '/lectures'
+      preLoaderRoute: typeof AuthenticatedLecturesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -407,6 +484,9 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTeacherRoute: typeof AuthenticatedTeacherRoute
   AuthenticatedLearnCourseIdRoute: typeof AuthenticatedLearnCourseIdRoute
   AuthenticatedManageCourseIdRoute: typeof AuthenticatedManageCourseIdRoute
@@ -415,6 +495,9 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTeacherRoute: AuthenticatedTeacherRoute,
   AuthenticatedLearnCourseIdRoute: AuthenticatedLearnCourseIdRoute,
   AuthenticatedManageCourseIdRoute: AuthenticatedManageCourseIdRoute,
@@ -441,6 +524,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesRoute: CoursesRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StagesLevelRoute: StagesLevelRoute,
+  TeachersTeacherIdRoute: TeachersTeacherIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Ban, ShieldCheck, Trash2, Search } from "lucide-react";
+import { Loader2, Ban, ShieldCheck, Trash2, Search, ShieldPlus, ShieldMinus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listAccounts, banAccount, unbanAccount, deleteAccount } from "@/lib/admin-accounts.functions";
+import { listAccounts, banAccount, unbanAccount, deleteAccount, setAdminRole } from "@/lib/admin-accounts.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/accounts")({
   component: AccountsPage,
@@ -21,6 +21,7 @@ function AccountsPage() {
   const ban = useServerFn(banAccount);
   const unban = useServerFn(unbanAccount);
   const del = useServerFn(deleteAccount);
+  const setAdmin = useServerFn(setAdminRole);
   const qc = useQueryClient();
   const [q, setQ] = useState("");
 
@@ -42,9 +43,14 @@ function AccountsPage() {
     onError: (e: any) => toast.error(e?.message ?? "تعذّر رفع الحظر."),
   });
   const delM = useMutation({
-    mutationFn: (a: { userId: string; email: string; alsoBan: boolean }) => del({ data: a }),
+    mutationFn: (a: { userId: string; email: string }) => del({ data: { ...a, alsoBan: false } }),
     onSuccess: () => { toast.success("تم حذف الحساب."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر الحذف."),
+  });
+  const adminM = useMutation({
+    mutationFn: (a: { userId: string; makeAdmin: boolean }) => setAdmin({ data: a }),
+    onSuccess: (_d, v) => { toast.success(v.makeAdmin ? "تم منح صلاحية الأدمن." : "تمت إزالة صلاحية الأدمن."); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعديل الصلاحية."),
   });
 
   const filtered = accounts.filter(
@@ -126,10 +132,31 @@ function AccountsPage() {
                             <Ban className="h-3.5 w-3.5" /> حظر
                           </button>
                         )}
+                        {a.roles.includes("admin") ? (
+                          <button
+                            onClick={() => {
+                              if (confirm(`إزالة صلاحية الأدمن عن ${a.email}؟`))
+                                adminM.mutate({ userId: a.id, makeAdmin: false });
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold hover:bg-accent"
+                          >
+                            <ShieldMinus className="h-3.5 w-3.5" /> إزالة الأدمن
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              if (confirm(`منح ${a.email} صلاحية الأدمن؟`))
+                                adminM.mutate({ userId: a.id, makeAdmin: true });
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-primary/40 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
+                          >
+                            <ShieldPlus className="h-3.5 w-3.5" /> تعيين أدمن
+                          </button>
+                        )}
                         <button
                           onClick={() => {
-                            if (confirm(`حذف حساب ${a.email} نهائيًا وحظره؟`))
-                              delM.mutate({ userId: a.id, email: a.email, alsoBan: true });
+                            if (confirm(`حذف حساب ${a.email} نهائيًا؟ (لن يتم حظره)`))
+                              delM.mutate({ userId: a.id, email: a.email });
                           }}
                           className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10"
                         >
