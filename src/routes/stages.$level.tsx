@@ -99,7 +99,7 @@ function StagePage() {
               <h2 className="text-2xl font-extrabold sm:text-3xl">
                 مدرّسو <span className="text-gradient-gold">{stage?.short ?? levelLabel(level)}</span>
               </h2>
-              <p className="mt-2 text-muted-foreground">نخبة المدرّسين المتخصّصين لهذه المرحلة.</p>
+              <p className="mt-2 text-muted-foreground">المدرّسون المتخصّصون لهذه المرحلة.</p>
 
               {teachers.length === 0 ? (
                 <p className="mt-6 text-muted-foreground">لا يوجد مدرّسون مرتبطون بهذه المرحلة بعد.</p>
