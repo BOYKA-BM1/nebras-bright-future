@@ -132,10 +132,31 @@ function AccountsPage() {
                             <Ban className="h-3.5 w-3.5" /> حظر
                           </button>
                         )}
+                        {a.roles.includes("admin") ? (
+                          <button
+                            onClick={() => {
+                              if (confirm(`إزالة صلاحية الأدمن عن ${a.email}؟`))
+                                adminM.mutate({ userId: a.id, makeAdmin: false });
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold hover:bg-accent"
+                          >
+                            <ShieldMinus className="h-3.5 w-3.5" /> إزالة الأدمن
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              if (confirm(`منح ${a.email} صلاحية الأدمن؟`))
+                                adminM.mutate({ userId: a.id, makeAdmin: true });
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-primary/40 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
+                          >
+                            <ShieldPlus className="h-3.5 w-3.5" /> تعيين أدمن
+                          </button>
+                        )}
                         <button
                           onClick={() => {
-                            if (confirm(`حذف حساب ${a.email} نهائيًا وحظره؟`))
-                              delM.mutate({ userId: a.id, email: a.email, alsoBan: true });
+                            if (confirm(`حذف حساب ${a.email} نهائيًا؟ (لن يتم حظره)`))
+                              delM.mutate({ userId: a.id, email: a.email });
                           }}
                           className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10"
                         >
