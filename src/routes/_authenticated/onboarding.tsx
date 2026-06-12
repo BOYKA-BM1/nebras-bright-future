@@ -27,18 +27,16 @@ function Onboarding() {
   const [stageId, setStageId] = useState<string | null>(null);
   const [level, setLevel] = useState<Level | null>(null);
 
-  // الأدمن/المدرّس مالهومش علاقة بالأونبوردنج
-  if (!rolesLoading && (isAdmin || isTeacher)) {
-    navigate({ to: isAdmin ? "/admin" : "/teacher" });
-    return null;
-  }
-  // لو الطالب مكمّل بالفعل
-  if (!profileLoading && profile?.onboarded) {
-    navigate({ to: "/dashboard" });
-    return null;
-  }
+  // إعادة التوجيه حسب الدور/الحالة
+  useEffect(() => {
+    if (!rolesLoading && (isAdmin || isTeacher)) {
+      navigate({ to: isAdmin ? "/admin" : "/teacher" });
+    } else if (!profileLoading && profile?.onboarded) {
+      navigate({ to: "/dashboard" });
+    }
+  }, [rolesLoading, isAdmin, isTeacher, profileLoading, profile, navigate]);
 
-  if (rolesLoading || stagesLoading || profileLoading) {
+  if (rolesLoading || stagesLoading || profileLoading || isAdmin || isTeacher || profile?.onboarded) {
     return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
