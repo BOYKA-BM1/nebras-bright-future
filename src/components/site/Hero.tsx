@@ -53,12 +53,6 @@ export function Hero() {
             >
               ابدأ التعلم الآن
             </button>
-            <a
-              href="#stages"
-              className="w-full rounded-xl border border-border bg-card/60 px-7 py-3.5 text-center text-base font-bold text-foreground transition-colors hover:bg-accent sm:w-auto"
-            >
-              اختر مرحلتك
-            </a>
           </div>
 
           <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
