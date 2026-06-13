@@ -43,6 +43,7 @@ function CourseDetail() {
   const enroll = useEnroll();
   const { favoriteIds, toggle } = useFavorites();
   const { data: profile } = useProfile();
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
