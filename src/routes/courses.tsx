@@ -34,10 +34,10 @@ function CoursesPage() {
           الدورات
         </span>
         <h1 className="mx-auto mt-3 max-w-3xl px-4 text-3xl font-extrabold sm:text-5xl">
-          احجز <span className="text-gradient-gold">دورتك</span> دلوقتي
+          دورات <span className="text-gradient-gold">سنتك الدراسية</span>
         </h1>
         <p className="mx-auto mt-4 max-w-2xl px-4 text-lg text-muted-foreground">
-          اختر مرحلتك وشعبتك، واحجز الدورة بحصصها المباشرة والمسجّلة.
+          كل الدورات المتاحة لسنتك مع نخبة المدرّسين، حصص مباشرة عبر ZOOM و GOOGLE MEET ومحاضرات مسجّلة بالكامل.
         </p>
       </header>
       <main>

@@ -363,8 +363,8 @@ export const courses: Course[] = [
 export const lectureFeatures = [
   {
     icon: "Video",
-    title: "حصص مباشرة عبر Zoom و Google Meet",
-    text: "بث مباشر تفاعلي مع المدرّس عبر Zoom و Google Meet، تسأل وتشارك لحظة بلحظة، وكل حصة تتسجّل بالكامل.",
+    title: "حصص مباشرة عبر ZOOM و GOOGLE MEET",
+    text: "بث مباشر تفاعلي مع المدرّس عبر ZOOM و GOOGLE MEET، تسأل وتشارك لحظة بلحظة، وكل حصة تتسجّل بالكامل.",
   },
   {
     icon: "PlayCircle",
