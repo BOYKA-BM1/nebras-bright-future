@@ -169,10 +169,27 @@ function CourseDetail() {
                 <div className="flex h-44 w-full items-center justify-center bg-gradient-to-br from-primary/20 to-transparent"><BookOpen className="h-12 w-12 text-primary/50" /></div>
               )}
               <div className="p-5">
-                <div className="flex items-end gap-2">
-                  {course.old_price && <span className="text-sm text-muted-foreground line-through">{course.old_price} ج.م</span>}
-                  <span className="text-3xl font-extrabold text-gradient-gold">{course.price === 0 ? "مجانًا" : `${course.price} ج.م`}</span>
+                <div className="flex flex-wrap items-end gap-2">
+                  {(course.old_price || (coupon && finalPrice < course.price)) && (
+                    <span className="text-sm text-muted-foreground line-through">
+                      {course.old_price ?? course.price} ج.م
+                    </span>
+                  )}
+                  <span className="text-3xl font-extrabold text-gradient-gold">
+                    {finalPrice === 0 ? "مجانًا" : `${finalPrice} ج.م`}
+                  </span>
+                  {coupon && finalPrice < course.price && (
+                    <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-bold text-primary">
+                      وفّرت {course.price - finalPrice} ج.م
+                    </span>
+                  )}
                 </div>
+
+                {!isEnrolled && course.price > 0 && (
+                  <div className="mt-4">
+                    <CouponBox teacherId={course.teacher_id} onChange={setCoupon} />
+                  </div>
+                )}
 
                 {isEnrolled ? (
                   <Link
@@ -189,7 +206,7 @@ function CourseDetail() {
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
                   >
                     {enroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                    {course.price === 0 ? "اشترك مجانًا" : "اشترك الآن"}
+                    {finalPrice === 0 ? "اشترك مجانًا" : "اشترك الآن"}
                   </button>
                 )}
 
