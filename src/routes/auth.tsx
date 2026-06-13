@@ -156,40 +156,46 @@ function AuthPage() {
 
         <div className="rounded-3xl border border-border bg-card/80 p-7 shadow-card backdrop-blur-xl sm:p-9">
           <h1 className="text-center text-2xl font-extrabold">
-            {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+            {mode === "login" ? "تسجيل الدخول" : mode === "signup" ? "إنشاء حساب جديد" : "نسيت كلمة المرور؟"}
           </h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
             {mode === "login"
               ? "أهلًا بعودتك! سجّل دخولك لمتابعة دوراتك."
-              : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
+              : mode === "signup"
+              ? "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."
+              : "اكتب بريدك وهنبعتلك رابط لإعادة تعيين كلمة المرور."}
           </p>
 
-          <div className="mt-7 grid gap-3">
-            <button
-              onClick={() => handleSocial("google")}
-              disabled={!!social}
-              className="flex items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
-            >
-              {social === "google" ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
-              المتابعة باستخدام Google
-            </button>
-            <button
-              onClick={() => handleSocial("apple")}
-              disabled={!!social}
-              className="flex items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
-            >
-              {social === "apple" ? <Loader2 className="h-5 w-5 animate-spin" /> : <AppleIcon />}
-              المتابعة باستخدام Apple
-            </button>
-          </div>
+          {mode !== "reset" && (
+            <>
+              <div className="mt-7 grid gap-3">
+                <button
+                  onClick={() => handleSocial("google")}
+                  disabled={!!social}
+                  className="flex items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
+                >
+                  {social === "google" ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
+                  المتابعة باستخدام Google
+                </button>
+                <button
+                  onClick={() => handleSocial("apple")}
+                  disabled={!!social}
+                  className="flex items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
+                >
+                  {social === "apple" ? <Loader2 className="h-5 w-5 animate-spin" /> : <AppleIcon />}
+                  المتابعة باستخدام Apple
+                </button>
+              </div>
 
-          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            أو بالبريد الإلكتروني
-            <span className="h-px flex-1 bg-border" />
-          </div>
+              <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                أو بالبريد الإلكتروني
+                <span className="h-px flex-1 bg-border" />
+              </div>
+            </>
+          )}
 
-          <form onSubmit={handleEmail} className="grid gap-4">
+          <form onSubmit={mode === "reset" ? handleReset : handleEmail} className="mt-7 grid gap-4">
             {mode === "signup" && (
               <div className="relative">
                 <UserIcon className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -212,16 +218,28 @@ function AuthPage() {
                 className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
               />
             </div>
-            <div className="relative">
-              <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                placeholder="كلمة المرور (8 أحرف على الأقل)"
-                className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
-              />
-            </div>
+            {mode !== "reset" && (
+              <div className="relative">
+                <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type="password"
+                  placeholder="كلمة المرور (8 أحرف على الأقل)"
+                  className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
+                />
+              </div>
+            )}
+
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={() => setMode("reset")}
+                className="-mt-1 justify-self-start text-xs font-bold text-primary hover:underline"
+              >
+                نسيت كلمة السر؟
+              </button>
+            )}
 
             <button
               type="submit"
@@ -229,19 +247,27 @@ function AuthPage() {
               className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {mode === "login" ? "دخول" : "إنشاء الحساب"}
+              {mode === "login" ? "دخول" : mode === "signup" ? "إنشاء الحساب" : "إرسال رابط إعادة التعيين"}
               {!submitting && <ArrowRight className="h-4 w-4" />}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "login" ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{" "}
-            <button
-              onClick={() => setMode(mode === "login" ? "signup" : "login")}
-              className="font-bold text-primary hover:underline"
-            >
-              {mode === "login" ? "أنشئ حساب جديد" : "سجّل دخولك"}
-            </button>
+            {mode === "reset" ? (
+              <button onClick={() => setMode("login")} className="font-bold text-primary hover:underline">
+                ← الرجوع لتسجيل الدخول
+              </button>
+            ) : (
+              <>
+                {mode === "login" ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{" "}
+                <button
+                  onClick={() => setMode(mode === "login" ? "signup" : "login")}
+                  className="font-bold text-primary hover:underline"
+                >
+                  {mode === "login" ? "أنشئ حساب جديد" : "سجّل دخولك"}
+                </button>
+              </>
+            )}
           </p>
         </div>
 
