@@ -34,6 +34,7 @@ function TeacherDetail() {
   const { teacherId } = Route.useParams();
   const { data: teachers = [], isLoading: lt } = useTeachers();
   const { data: courses = [], isLoading: lc } = useCourses();
+  const [coupon, setCoupon] = useState<AppliedCoupon | null>(null);
 
   const teacher = useMemo(() => teachers.find((t) => t.id === teacherId) ?? null, [teachers, teacherId]);
   const teacherCourses = useMemo(() => courses.filter((c) => c.teacher_id === teacherId), [courses, teacherId]);
