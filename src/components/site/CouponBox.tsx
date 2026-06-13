@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ticket, Check, Loader2, X } from "lucide-react";
 import { useCoupon, type AppliedCoupon } from "@/hooks/use-coupon";
 
@@ -15,15 +15,10 @@ export function CouponBox({
   const { coupon, status, validate, clear } = useCoupon(teacherId);
   const [code, setCode] = useState("");
 
-  const apply = async () => {
-    await validate(code);
-  };
-
-  // أبلغ الأب بأي تغيير
-  if (onChange && coupon !== lastReported) {
-    lastReported = coupon;
-    onChange(coupon);
-  }
+  useEffect(() => {
+    onChange?.(coupon);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coupon]);
 
   return (
     <div className="rounded-2xl border border-dashed border-border bg-card/50 p-4">
@@ -37,13 +32,19 @@ export function CouponBox({
             setCode(e.target.value);
             if (status !== "idle") clear();
           }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              validate(code);
+            }
+          }}
           placeholder="اكتب الكود هنا"
           className="w-full rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary"
           dir="ltr"
         />
         <button
           type="button"
-          onClick={apply}
+          onClick={() => validate(code)}
           disabled={status === "loading" || !code.trim()}
           className="shrink-0 rounded-xl bg-secondary px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
         >
@@ -65,6 +66,3 @@ export function CouponBox({
     </div>
   );
 }
-
-// متغيّر بسيط لتفادي إعادة الإبلاغ بشكل متكرّر داخل نفس النسخة
-let lastReported: AppliedCoupon | null = null;
