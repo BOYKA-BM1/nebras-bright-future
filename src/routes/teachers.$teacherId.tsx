@@ -1,11 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import {
   Loader2, BookOpen, Clock, Video, Star, Users, Award, ArrowLeft, ChevronLeft, GraduationCap,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
+import { CouponBox } from "@/components/site/CouponBox";
 import { useTeachers, useCourses } from "@/hooks/use-catalog";
+import { applyDiscount, type AppliedCoupon } from "@/hooks/use-coupon";
 import { resolveImage } from "@/lib/catalog";
 
 export const Route = createFileRoute("/teachers/$teacherId")({
