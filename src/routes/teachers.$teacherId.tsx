@@ -122,8 +122,10 @@ function TeacherDetail() {
                       </div>
                       <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
                         <div className="flex flex-col">
-                          {course.old_price && <span className="text-xs text-muted-foreground line-through">{course.old_price} ج.م</span>}
-                          <span className="text-xl font-extrabold text-gradient-gold">{course.price === 0 ? "مجانًا" : `${course.price} ج.م`}</span>
+                          {(course.old_price || (coupon && finalPrice < course.price)) && (
+                            <span className="text-xs text-muted-foreground line-through">{course.old_price ?? course.price} ج.م</span>
+                          )}
+                          <span className="text-xl font-extrabold text-gradient-gold">{finalPrice === 0 ? "مجانًا" : `${finalPrice} ج.م`}</span>
                         </div>
                         <Link to="/courses/$courseId" params={{ courseId: course.id }} className="flex items-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.04]">
                           <ArrowLeft className="h-4 w-4" /> الاشتراك في الدورة
