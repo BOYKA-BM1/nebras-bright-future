@@ -42,7 +42,7 @@ function AppleIcon() {
 function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,6 +54,27 @@ function AuthPage() {
       navigate({ to: "/dashboard" });
     }
   }, [user, loading, navigate]);
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("اكتب بريدك الإلكتروني الأول.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + "/reset-password",
+      });
+      if (error) throw error;
+      toast.success("بعتنالك رابط إعادة تعيين كلمة المرور على بريدك 📩");
+      setMode("login");
+    } catch {
+      toast.error("تعذّر إرسال الرابط، حاول تاني.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSocial = async (provider: "google" | "apple") => {
     setSocial(provider);
