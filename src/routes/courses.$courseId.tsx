@@ -52,6 +52,7 @@ function CourseDetail() {
 
   const img = resolveImage(course.image_url) ?? resolveImage(course.teacher?.image_url);
   const isFav = favoriteIds.has(course.id);
+  const finalPrice = applyDiscount(course.price, coupon);
 
   const handleEnroll = () => {
     if (!user) {
@@ -66,7 +67,7 @@ function CourseDetail() {
       return;
     }
     enroll.mutate(
-      { courseId: course.id, price: course.price },
+      { courseId: course.id, price: finalPrice, couponId: coupon?.id },
       {
         onSuccess: () => {
           toast.success("تم تفعيل اشتراكك! 🎉");
