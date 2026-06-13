@@ -85,6 +85,12 @@ function TeacherDetail() {
           <h2 className="text-2xl font-extrabold">دورات {teacher.name}</h2>
           <p className="mt-1 text-muted-foreground">اختر دورتك واشترك فيها مباشرة.</p>
 
+          {teacherCourses.length > 0 && (
+            <div className="mt-5 max-w-md">
+              <CouponBox teacherId={teacher.id} onChange={setCoupon} />
+            </div>
+          )}
+
           {teacherCourses.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-muted-foreground">
               لا توجد دورات منشورة لهذا المدرّس حاليًا.
@@ -93,6 +99,7 @@ function TeacherDetail() {
             <div className="mt-6 grid gap-6 sm:grid-cols-2">
               {teacherCourses.map((course) => {
                 const cimg = resolveImage(course.image_url) ?? img;
+                const finalPrice = applyDiscount(course.price, coupon);
                 return (
                   <article key={course.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1 hover:border-primary/50">
                     {cimg ? (
