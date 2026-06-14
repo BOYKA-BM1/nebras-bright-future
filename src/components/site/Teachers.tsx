@@ -1,4 +1,5 @@
-import { Star, BookOpen, Users, Loader2 } from "lucide-react";
+import { Star, BookOpen, Users, Loader as Loader2, ArrowLeft } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { useTeachers } from "@/hooks/use-catalog";
 import { useCourses } from "@/hooks/use-catalog";
 import { resolveImage } from "@/lib/catalog";
@@ -81,6 +82,14 @@ export function Teachers() {
                         {t.rating}
                       </span>
                     </div>
+
+                    <Link
+                      to="/teachers/$teacherId"
+                      params={{ teacherId: t.id }}
+                      className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent"
+                    >
+                      التفاصيل <ArrowLeft className="h-4 w-4" />
+                    </Link>
                   </div>
                 </article>
               );
