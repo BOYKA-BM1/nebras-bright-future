@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react";
+import { Loader as Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/site/Logo";
+import { confirmUserEmail } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -111,7 +112,7 @@ function AuthPage() {
         return;
       }
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -120,17 +121,45 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("تم إنشاء حسابك بنجاح! 🎉");
+        // Auto-confirm email so the user can log in immediately
+        try {
+          await confirmUserEmail({ data: { email } });
+        } catch {
+          // Confirmation failed — the user was still created; they may need to verify later
+        }
+        // If signUp returned a session, user is already signed in
+        if (signUpData.session) {
+          toast.success("تم إنشاء حسابك بنجاح! 🎉");
+          navigate({ to: "/dashboard" });
+        } else {
+          // Auto-confirm done, now sign them in
+          const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
+          if (loginErr) {
+            toast.success("تم إنشاء حسابك! سجّل دخولك بالبريد وكلمة المرور.");
+            setMode("login");
+          } else {
+            toast.success("تم إنشاء حسابك بنجاح! 🎉");
+            navigate({ to: "/dashboard" });
+          }
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("أهلًا بعودتك! 👋");
+        navigate({ to: "/dashboard" });
       }
-      navigate({ to: "/dashboard" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "حدث خطأ";
       if (/banned|blocked|محظور/i.test(message)) {
         toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
+      } else if (/email not confirmed/i.test(message)) {
+        // Try to auto-confirm so user can retry login
+        try {
+          await confirmUserEmail({ data: { email } });
+          toast.success("تم تأكيد بريدك! حاول تسجيل الدخول مرة أخرى.");
+        } catch {
+          toast.error("بريدك الإلكتروني غير مؤكّد بعد. تحقّق من بريدك أو حاول تاني.");
+        }
       } else if (/invalid login/i.test(message)) {
         toast.error("البريد أو كلمة المرور غير صحيحة.");
       } else if (/already registered|user already/i.test(message)) {
