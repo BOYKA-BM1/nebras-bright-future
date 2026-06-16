@@ -95,12 +95,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "نبراس | أقوى منصة تعليمية في مصر" },
-      { name: "description", content: "Nibras is Egypt's strongest educational hub, offering comprehensive learning for all educational stages." },
-      { property: "og:description", content: "Nibras is Egypt's strongest educational hub, offering comprehensive learning for all educational stages." },
-      { name: "twitter:description", content: "Nibras is Egypt's strongest educational hub, offering comprehensive learning for all educational stages." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ebeca30a-53fb-4ff8-80cb-d9c6b639dec9/id-preview-5b16c1a2--c3919d93-8675-4ca3-9dd6-35829b724365.lovable.app-1781433777071.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ebeca30a-53fb-4ff8-80cb-d9c6b639dec9/id-preview-5b16c1a2--c3919d93-8675-4ca3-9dd6-35829b724365.lovable.app-1781433777071.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

@@ -1,23 +1,34 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { BookOpen, PlayCircle, Video, Clock, Check, Loader2, ArrowLeft } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { resolveImage } from "@/lib/catalog";
+import { tracks, resolveImage, type TrackId } from "@/lib/catalog";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments } from "@/hooks/use-content";
-import { useProfile } from "@/hooks/use-profile";
-import { filterCoursesForProfile } from "@/lib/course-filter";
 
 export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
   const { data: courses = [], isLoading } = useCourses();
   const { data: enrollments = [] } = useMyEnrollments();
-  const { data: profile } = useProfile();
   const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.course_id)), [enrollments]);
+  const [level, setLevel] = useState<string>("all");
+  const [track, setTrack] = useState<TrackId>("all");
 
-  // اعرض فقط دورات سنة/مرحلة الطالب
-  const filtered = useMemo(
-    () => filterCoursesForProfile(courses, profile),
-    [courses, profile],
-  );
+  const stageFilters = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const c of courses) {
+      if (c.stage) seen.set(c.stage.level, c.stage.short ?? c.stage.name);
+    }
+    return [{ id: "all", label: "كل المراحل" }, ...[...seen].map(([id, label]) => ({ id, label }))];
+  }, [courses]);
+
+  const filtered = useMemo(() => {
+    return courses.filter((c) => {
+      if (level !== "all" && c.stage?.level !== level) return false;
+      if (level === "secondary" && track !== "all") {
+        if (c.track !== track && c.track !== "all") return false;
+      }
+      return true;
+    });
+  }, [courses, level, track]);
 
   return (
     <section id="courses" className="relative py-24">
@@ -27,19 +38,50 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
           <div className="mx-auto max-w-2xl text-center">
             <span className="text-sm font-bold uppercase tracking-widest text-primary">الدورات</span>
             <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-              دورات <span className="text-gradient-gold">سنتك الدراسية</span>
+              احجز <span className="text-gradient-gold">دورتك</span> دلوقتي
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              كل الدورات المتاحة لسنتك مع أفضل المدرّسين، حصص مباشرة ومحاضرات مسجّلة بالكامل.
+              اختر مرحلتك وشعبتك، واحجز الدورة بحصصها المباشرة والمسجّلة.
             </p>
           </div>
         )}
 
-        {profile?.grade && (
-          <div className="mt-8 flex justify-center">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-5 py-2 text-sm font-bold text-primary">
-              <BookOpen className="h-4 w-4" /> {profile.grade}
-            </span>
+        {/* فلاتر المراحل */}
+        <div className="mt-10 flex flex-wrap justify-center gap-2">
+          {stageFilters.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => {
+                setLevel(f.id);
+                if (f.id !== "secondary") setTrack("all");
+              }}
+              className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
+                level === f.id
+                  ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                  : "border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* فلاتر الشُّعب للثانوي */}
+        {level === "secondary" && (
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {tracks.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTrack(t.id)}
+                className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                  track === t.id
+                    ? "border border-primary bg-primary/15 text-primary"
+                    : "border border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
         )}
 
@@ -73,17 +115,7 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
                       </span>
                     )}
                     <div>
-                      {course.teacher_id ? (
-                        <Link
-                          to="/teachers/$teacherId"
-                          params={{ teacherId: course.teacher_id }}
-                          className="text-sm font-bold text-foreground hover:text-primary"
-                        >
-                          {course.teacher?.name ?? "مدرّس"}
-                        </Link>
-                      ) : (
-                        <p className="text-sm font-bold text-foreground">{course.teacher?.name ?? "مدرّس"}</p>
-                      )}
+                      <p className="text-sm font-bold text-foreground">{course.teacher?.name ?? "مدرّس"}</p>
                       <p className="text-xs text-muted-foreground">{course.subject}</p>
                     </div>
                     {course.badge && (
@@ -131,7 +163,7 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
                           </span>
                         )}
                         <span className="text-xl font-extrabold text-gradient-gold">
-                          {course.price === 0 ? "مجانًا" : `${course.price} ج.م`}
+                          {course.price} ج.م
                         </span>
                       </div>
                       {isEnrolled ? (
@@ -163,7 +195,7 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
 
         {!isLoading && filtered.length === 0 && (
           <p className="mt-12 text-center text-muted-foreground">
-            مفيش دورات متاحة لسنتك دلوقتي، تابعنا قريبًا هنضيف المزيد 💪
+            مفيش دورات في الفلتر ده حاليًا، جرّب اختيار تاني.
           </p>
         )}
       </div>

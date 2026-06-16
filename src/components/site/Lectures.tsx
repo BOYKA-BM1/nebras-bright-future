@@ -27,7 +27,7 @@ export function Lectures() {
             المحاضرات التفاعلية
           </span>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-            حصص <span className="text-gradient-gold">مباشرة عبر ZOOM و GOOGLE MEET</span> + تسجيل كامل
+            حصص <span className="text-gradient-gold">مباشرة عبر MEET Zoom</span> + تسجيل كامل
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             احضر مباشرة وتفاعل مع المدرّس، ولو فاتتك الحصة شوفها مسجّلة بالكامل في أي وقت.
