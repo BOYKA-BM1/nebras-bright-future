@@ -71,12 +71,50 @@ function TeacherDetail() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        {teacher.bio && (
-          <section className="rounded-2xl border border-border bg-card p-6 shadow-card">
-            <h2 className="text-lg font-extrabold">نبذة عن المدرّس</h2>
-            <p className="mt-3 leading-relaxed text-muted-foreground">{teacher.bio}</p>
-          </section>
-        )}
+        {/* بيانات وتفاصيل المدرّس */}
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-card">
+          <h2 className="text-lg font-extrabold">بيانات المدرّس</h2>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4 text-center">
+              <BookOpen className="mx-auto h-5 w-5 text-primary" />
+              <p className="mt-1 text-xl font-extrabold">{teacher.subject}</p>
+              <p className="text-xs text-muted-foreground">التخصّص</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4 text-center">
+              <Star className="mx-auto h-5 w-5 fill-primary text-primary" />
+              <p className="mt-1 text-xl font-extrabold">{teacher.rating}</p>
+              <p className="text-xs text-muted-foreground">التقييم</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4 text-center">
+              <Users className="mx-auto h-5 w-5 text-primary" />
+              <p className="mt-1 text-xl font-extrabold">{teacher.students_label ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">الطلاب</p>
+            </div>
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4 text-center">
+              <Award className="mx-auto h-5 w-5 text-primary" />
+              <p className="mt-1 text-xl font-extrabold">{teacher.experience_years ? `${teacher.experience_years} سنة` : "—"}</p>
+              <p className="text-xs text-muted-foreground">الخبرة</p>
+            </div>
+          </div>
+
+          {teacher.bio && (
+            <div className="mt-6">
+              <h3 className="text-base font-extrabold">نبذة عن المدرّس</h3>
+              <p className="mt-2 leading-relaxed text-muted-foreground">{teacher.bio}</p>
+            </div>
+          )}
+
+          {/* زر الاشتراك تحت التفاصيل */}
+          {teacherCourses.length > 0 && (
+            <Link
+              to="/courses/$courseId"
+              params={{ courseId: teacherCourses[0].id }}
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-6 py-3.5 text-base font-extrabold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02]"
+            >
+              <ArrowLeft className="h-5 w-5" /> الاشتراك مع {teacher.name}
+            </Link>
+          )}
+        </section>
 
         <section className="mt-10">
           <h2 className="text-2xl font-extrabold">دورات {teacher.name}</h2>
