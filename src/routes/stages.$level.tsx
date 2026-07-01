@@ -108,7 +108,12 @@ function StagePage() {
                   {teachers.map(({ teacher: t, count }) => {
                     const img = resolveImage(t.image_url);
                     return (
-                      <article key={t.id} className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/50">
+                      <Link
+                        key={t.id}
+                        to="/teachers/$teacherId"
+                        params={{ teacherId: t.id }}
+                        className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-card transition-all hover:-translate-y-1 hover:border-primary/50"
+                      >
                         <div className="flex gap-4">
                           {img ? (
                             <img src={img} alt={t.name} loading="lazy" width={128} height={128} className="h-20 w-20 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
@@ -129,14 +134,10 @@ function StagePage() {
                             </div>
                           </div>
                         </div>
-                        <Link
-                          to="/teachers/$teacherId"
-                          params={{ teacherId: t.id }}
-                          className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent"
-                        >
-                          تفاصيل المدرّس <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                      </article>
+                        <span className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-border bg-background/40 px-4 py-2.5 text-sm font-bold transition-colors hover:bg-accent">
+                          عرض بيانات المدرّس <ArrowLeft className="h-4 w-4" />
+                        </span>
+                      </Link>
                     );
                   })}
                 </div>
