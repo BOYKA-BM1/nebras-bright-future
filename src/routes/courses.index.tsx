@@ -3,7 +3,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Courses } from "@/components/site/Courses";
 
-export const Route = createFileRoute("/courses")({
+export const Route = createFileRoute("/courses/")({
   head: () => ({
     meta: [
       { title: "الدورات والكورسات التعليمية | احجز دورتك على نبراس" },

@@ -10,10 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as TeachersTeacherIdRouteImport } from './routes/teachers.$teacherId'
 import { Route as StagesLevelRouteImport } from './routes/stages.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
@@ -37,11 +37,6 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CoursesRoute = CoursesRouteImport.update({
-  id: '/courses',
-  path: '/courses',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -56,6 +51,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CoursesIndexRoute = CoursesIndexRouteImport.update({
+  id: '/courses/',
+  path: '/courses/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeachersTeacherIdRoute = TeachersTeacherIdRouteImport.update({
   id: '/teachers/$teacherId',
   path: '/teachers/$teacherId',
@@ -67,9 +67,9 @@ const StagesLevelRoute = StagesLevelRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
-  id: '/$courseId',
-  path: '/$courseId',
-  getParentRoute: () => CoursesRoute,
+  id: '/courses/$courseId',
+  path: '/courses/$courseId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
   id: '/teacher',
@@ -152,7 +152,6 @@ const AuthenticatedAdminAccountsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -163,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
   '/teachers/$teacherId': typeof TeachersTeacherIdRoute
+  '/courses/': typeof CoursesIndexRoute
   '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
@@ -175,7 +175,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
@@ -185,6 +184,7 @@ export interface FileRoutesByTo {
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
   '/teachers/$teacherId': typeof TeachersTeacherIdRoute
+  '/courses': typeof CoursesIndexRoute
   '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
@@ -199,7 +199,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/courses': typeof CoursesRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -210,6 +209,7 @@ export interface FileRoutesById {
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
   '/teachers/$teacherId': typeof TeachersTeacherIdRoute
+  '/courses/': typeof CoursesIndexRoute
   '/_authenticated/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/_authenticated/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/_authenticated/admin/courses': typeof AuthenticatedAdminCoursesRoute
@@ -224,7 +224,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/courses'
     | '/sitemap.xml'
     | '/admin'
     | '/dashboard'
@@ -235,6 +234,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/stages/$level'
     | '/teachers/$teacherId'
+    | '/courses/'
     | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
@@ -247,7 +247,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/courses'
     | '/sitemap.xml'
     | '/dashboard'
     | '/lectures'
@@ -257,6 +256,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/stages/$level'
     | '/teachers/$teacherId'
+    | '/courses'
     | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
@@ -270,7 +270,6 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/courses'
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/dashboard'
@@ -281,6 +280,7 @@ export interface FileRouteTypes {
     | '/courses/$courseId'
     | '/stages/$level'
     | '/teachers/$teacherId'
+    | '/courses/'
     | '/_authenticated/admin/accounts'
     | '/_authenticated/admin/coupons'
     | '/_authenticated/admin/courses'
@@ -295,10 +295,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  CoursesRoute: typeof CoursesRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   StagesLevelRoute: typeof StagesLevelRoute
   TeachersTeacherIdRoute: typeof TeachersTeacherIdRoute
+  CoursesIndexRoute: typeof CoursesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -308,13 +309,6 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/courses': {
-      id: '/courses'
-      path: '/courses'
-      fullPath: '/courses'
-      preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -338,6 +332,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/courses/': {
+      id: '/courses/'
+      path: '/courses'
+      fullPath: '/courses/'
+      preLoaderRoute: typeof CoursesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teachers/$teacherId': {
       id: '/teachers/$teacherId'
       path: '/teachers/$teacherId'
@@ -354,10 +355,10 @@ declare module '@tanstack/react-router' {
     }
     '/courses/$courseId': {
       id: '/courses/$courseId'
-      path: '/$courseId'
+      path: '/courses/$courseId'
       fullPath: '/courses/$courseId'
       preLoaderRoute: typeof CoursesCourseIdRouteImport
-      parentRoute: typeof CoursesRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/teacher': {
       id: '/_authenticated/teacher'
@@ -506,25 +507,15 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface CoursesRouteChildren {
-  CoursesCourseIdRoute: typeof CoursesCourseIdRoute
-}
-
-const CoursesRouteChildren: CoursesRouteChildren = {
-  CoursesCourseIdRoute: CoursesCourseIdRoute,
-}
-
-const CoursesRouteWithChildren =
-  CoursesRoute._addFileChildren(CoursesRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  CoursesRoute: CoursesRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  CoursesCourseIdRoute: CoursesCourseIdRoute,
   StagesLevelRoute: StagesLevelRoute,
   TeachersTeacherIdRoute: TeachersTeacherIdRoute,
+  CoursesIndexRoute: CoursesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
