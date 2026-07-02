@@ -101,6 +101,7 @@ function AdminTeachers() {
       image_url: t.image_url ?? "",
       rating: String(t.rating),
       students_label: t.students_label ?? "",
+      profit_percentage: String((t as any).profit_percentage ?? 50),
       sort_order: String(t.sort_order),
       user_id: t.user_id ?? "",
     });
