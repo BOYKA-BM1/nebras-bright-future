@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, Home, Ticket, UsersRound } from "lucide-react";
+import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, Home, Ticket, UsersRound, Percent } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
@@ -10,12 +10,14 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const navItems = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
+  { to: "/admin/earnings", label: "دخل المدرّسين", icon: Percent, exact: false },
   { to: "/admin/courses", label: "الدورات", icon: BookOpen, exact: false },
   { to: "/admin/teachers", label: "المدرّسون", icon: Users, exact: false },
   { to: "/admin/accounts", label: "الحسابات", icon: UsersRound, exact: false },
   { to: "/admin/stages", label: "المراحل", icon: GraduationCap, exact: false },
   { to: "/admin/coupons", label: "الكوبونات", icon: Ticket, exact: false },
 ];
+
 
 
 function AdminLayout() {
