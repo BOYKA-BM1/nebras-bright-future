@@ -127,6 +127,7 @@ function AdminTeachers() {
       image_url: form.image_url.trim() || null,
       rating: Number(form.rating) || 5,
       students_label: form.students_label.trim() || null,
+      profit_percentage: Math.min(100, Math.max(0, Number(form.profit_percentage) || 0)),
       sort_order: Number(form.sort_order) || 0,
       user_id: form.user_id.trim() || null,
     };
