@@ -41,6 +41,7 @@ type FormState = {
   image_url: string;
   rating: string;
   students_label: string;
+  profit_percentage: string;
   sort_order: string;
   user_id: string;
 };
