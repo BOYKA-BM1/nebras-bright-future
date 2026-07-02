@@ -36,10 +36,13 @@ const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
 
 
 function roleLabel(roles: string[]) {
-  if (roles.includes("admin")) return { text: "أدمن", cls: "bg-primary/15 text-primary" };
-  if (roles.includes("teacher")) return { text: "مدرّس", cls: "bg-blue-500/15 text-blue-400" };
-  return { text: "طالب", cls: "bg-secondary text-muted-foreground" };
+  const order: AppRoleName[] = ["admin", "teacher", "customer_service", "secretary", "montage"];
+  for (const r of order) {
+    if (roles.includes(r)) return ROLE_META[r];
+  }
+  return ROLE_META.student;
 }
+
 
 function AccountsPage() {
   const fetchAccounts = useServerFn(listAccounts);
