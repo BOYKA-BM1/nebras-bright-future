@@ -162,27 +162,31 @@ function AccountsPage() {
                             <Ban className="h-3.5 w-3.5" /> حظر
                           </button>
                         )}
-                        {a.roles.includes("admin") ? (
-                          <button
-                            onClick={() => {
-                              if (confirm(`إزالة صلاحية الأدمن عن ${a.email}؟`))
-                                adminM.mutate({ userId: a.id, makeAdmin: false });
-                            }}
-                            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold hover:bg-accent"
-                          >
-                            <ShieldMinus className="h-3.5 w-3.5" /> إزالة الأدمن
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              if (confirm(`منح ${a.email} صلاحية الأدمن؟`))
-                                adminM.mutate({ userId: a.id, makeAdmin: true });
-                            }}
-                            className="flex items-center gap-1 rounded-lg border border-primary/40 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
-                          >
-                            <ShieldPlus className="h-3.5 w-3.5" /> تعيين أدمن
-                          </button>
-                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-1 rounded-lg border border-primary/40 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10">
+                              <UserCog className="h-3.5 w-3.5" /> تعيين
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="min-w-40">
+                            {ASSIGNABLE_ROLES.map((r) => (
+                              <DropdownMenuItem
+                                key={r}
+                                disabled={a.roles.includes(r) || (r !== "student" && a.roles.length === 0 && r === "student")}
+                                onClick={() => {
+                                  if (confirm(`تعيين ${a.email} كـ${ROLE_META[r].text}؟`))
+                                    roleM.mutate({ userId: a.id, role: r });
+                                }}
+                                className="cursor-pointer font-bold"
+                              >
+                                <span className={`ml-2 h-2 w-2 rounded-full ${ROLE_META[r].cls}`} />
+                                {ROLE_META[r].text}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
                         <button
                           onClick={() => {
                             if (confirm(`حذف حساب ${a.email} نهائيًا؟ (لن يتم حظره)`))
