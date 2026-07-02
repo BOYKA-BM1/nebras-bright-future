@@ -1,14 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Ban, ShieldCheck, Trash2, Search, ShieldPlus, ShieldMinus } from "lucide-react";
+import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listAccounts, banAccount, unbanAccount, deleteAccount, setAdminRole } from "@/lib/admin-accounts.functions";
+import {
+  listAccounts,
+  banAccount,
+  unbanAccount,
+  deleteAccount,
+  setUserRole,
+  ASSIGNABLE_ROLES,
+} from "@/lib/admin-accounts.functions";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/admin/accounts")({
   component: AccountsPage,
 });
+
+type AppRoleName = (typeof ASSIGNABLE_ROLES)[number];
+
+const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
+  admin: { text: "أدمن", cls: "bg-primary/15 text-primary" },
+  teacher: { text: "مدرّس", cls: "bg-blue-500/15 text-blue-400" },
+  student: { text: "طالب", cls: "bg-secondary text-muted-foreground" },
+  customer_service: { text: "خدمة عملاء", cls: "bg-emerald-500/15 text-emerald-400" },
+  secretary: { text: "سكرتير", cls: "bg-purple-500/15 text-purple-400" },
+  montage: { text: "مونتاج", cls: "bg-orange-500/15 text-orange-400" },
+};
+
 
 function roleLabel(roles: string[]) {
   if (roles.includes("admin")) return { text: "أدمن", cls: "bg-primary/15 text-primary" };
