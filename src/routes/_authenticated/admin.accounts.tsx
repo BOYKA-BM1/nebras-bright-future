@@ -49,7 +49,8 @@ function AccountsPage() {
   const ban = useServerFn(banAccount);
   const unban = useServerFn(unbanAccount);
   const del = useServerFn(deleteAccount);
-  const setAdmin = useServerFn(setAdminRole);
+  const assignRole = useServerFn(setUserRole);
+
   const qc = useQueryClient();
   const [q, setQ] = useState("");
 
