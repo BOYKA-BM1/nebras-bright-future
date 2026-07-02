@@ -76,11 +76,12 @@ function AccountsPage() {
     onSuccess: () => { toast.success("تم حذف الحساب."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر الحذف."),
   });
-  const adminM = useMutation({
-    mutationFn: (a: { userId: string; makeAdmin: boolean }) => setAdmin({ data: a }),
-    onSuccess: (_d, v) => { toast.success(v.makeAdmin ? "تم منح صلاحية الأدمن." : "تمت إزالة صلاحية الأدمن."); invalidate(); },
-    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعديل الصلاحية."),
+  const roleM = useMutation({
+    mutationFn: (a: { userId: string; role: AppRoleName }) => assignRole({ data: a }),
+    onSuccess: (_d, v) => { toast.success(`تم تعيين الحساب كـ${ROLE_META[v.role].text}.`); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعيين الصلاحية."),
   });
+
 
   const filtered = accounts.filter(
     (a) =>
