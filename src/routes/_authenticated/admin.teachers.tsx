@@ -54,6 +54,7 @@ const empty: FormState = {
   image_url: "",
   rating: "5.0",
   students_label: "",
+  profit_percentage: "50",
   sort_order: "0",
   user_id: "",
 };
