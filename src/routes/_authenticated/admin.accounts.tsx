@@ -1,27 +1,56 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Ban, ShieldCheck, Trash2, Search, ShieldPlus, ShieldMinus } from "lucide-react";
+import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { listAccounts, banAccount, unbanAccount, deleteAccount, setAdminRole } from "@/lib/admin-accounts.functions";
+import {
+  listAccounts,
+  banAccount,
+  unbanAccount,
+  deleteAccount,
+  setUserRole,
+  ASSIGNABLE_ROLES,
+} from "@/lib/admin-accounts.functions";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/admin/accounts")({
   component: AccountsPage,
 });
 
+type AppRoleName = (typeof ASSIGNABLE_ROLES)[number];
+
+const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
+  admin: { text: "أدمن", cls: "bg-primary/15 text-primary" },
+  teacher: { text: "مدرّس", cls: "bg-blue-500/15 text-blue-400" },
+  student: { text: "طالب", cls: "bg-secondary text-muted-foreground" },
+  customer_service: { text: "خدمة عملاء", cls: "bg-emerald-500/15 text-emerald-400" },
+  secretary: { text: "سكرتير", cls: "bg-purple-500/15 text-purple-400" },
+  montage: { text: "مونتاج", cls: "bg-orange-500/15 text-orange-400" },
+};
+
+
 function roleLabel(roles: string[]) {
-  if (roles.includes("admin")) return { text: "أدمن", cls: "bg-primary/15 text-primary" };
-  if (roles.includes("teacher")) return { text: "مدرّس", cls: "bg-blue-500/15 text-blue-400" };
-  return { text: "طالب", cls: "bg-secondary text-muted-foreground" };
+  const order: AppRoleName[] = ["admin", "teacher", "customer_service", "secretary", "montage"];
+  for (const r of order) {
+    if (roles.includes(r)) return ROLE_META[r];
+  }
+  return ROLE_META.student;
 }
+
 
 function AccountsPage() {
   const fetchAccounts = useServerFn(listAccounts);
   const ban = useServerFn(banAccount);
   const unban = useServerFn(unbanAccount);
   const del = useServerFn(deleteAccount);
-  const setAdmin = useServerFn(setAdminRole);
+  const assignRole = useServerFn(setUserRole);
+
   const qc = useQueryClient();
   const [q, setQ] = useState("");
 
@@ -47,11 +76,12 @@ function AccountsPage() {
     onSuccess: () => { toast.success("تم حذف الحساب."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر الحذف."),
   });
-  const adminM = useMutation({
-    mutationFn: (a: { userId: string; makeAdmin: boolean }) => setAdmin({ data: a }),
-    onSuccess: (_d, v) => { toast.success(v.makeAdmin ? "تم منح صلاحية الأدمن." : "تمت إزالة صلاحية الأدمن."); invalidate(); },
-    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعديل الصلاحية."),
+  const roleM = useMutation({
+    mutationFn: (a: { userId: string; role: AppRoleName }) => assignRole({ data: a }),
+    onSuccess: (_d, v) => { toast.success(`تم تعيين الحساب كـ${ROLE_META[v.role].text}.`); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعيين الصلاحية."),
   });
+
 
   const filtered = accounts.filter(
     (a) =>
@@ -132,27 +162,31 @@ function AccountsPage() {
                             <Ban className="h-3.5 w-3.5" /> حظر
                           </button>
                         )}
-                        {a.roles.includes("admin") ? (
-                          <button
-                            onClick={() => {
-                              if (confirm(`إزالة صلاحية الأدمن عن ${a.email}؟`))
-                                adminM.mutate({ userId: a.id, makeAdmin: false });
-                            }}
-                            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold hover:bg-accent"
-                          >
-                            <ShieldMinus className="h-3.5 w-3.5" /> إزالة الأدمن
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              if (confirm(`منح ${a.email} صلاحية الأدمن؟`))
-                                adminM.mutate({ userId: a.id, makeAdmin: true });
-                            }}
-                            className="flex items-center gap-1 rounded-lg border border-primary/40 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
-                          >
-                            <ShieldPlus className="h-3.5 w-3.5" /> تعيين أدمن
-                          </button>
-                        )}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="flex items-center gap-1 rounded-lg border border-primary/40 px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10">
+                              <UserCog className="h-3.5 w-3.5" /> تعيين
+                              <ChevronDown className="h-3 w-3" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="min-w-40">
+                            {ASSIGNABLE_ROLES.map((r) => (
+                              <DropdownMenuItem
+                                key={r}
+                                disabled={r === "student" ? a.roles.length === 0 : a.roles.includes(r)}
+                                onClick={() => {
+                                  if (confirm(`تعيين ${a.email} كـ${ROLE_META[r].text}؟`))
+                                    roleM.mutate({ userId: a.id, role: r });
+                                }}
+                                className="cursor-pointer font-bold"
+                              >
+                                <span className={`ml-2 h-2 w-2 rounded-full ${ROLE_META[r].cls}`} />
+                                {ROLE_META[r].text}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
                         <button
                           onClick={() => {
                             if (confirm(`حذف حساب ${a.email} نهائيًا؟ (لن يتم حظره)`))

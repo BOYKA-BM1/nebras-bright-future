@@ -866,6 +866,7 @@ export type Database = {
           id: string
           image_url: string | null
           name: string
+          profit_percentage: number
           rating: number
           sort_order: number
           students_label: string | null
@@ -880,6 +881,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name: string
+          profit_percentage?: number
           rating?: number
           sort_order?: number
           students_label?: string | null
@@ -894,6 +896,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           name?: string
+          profit_percentage?: number
           rating?: number
           sort_order?: number
           students_label?: string | null
@@ -959,7 +962,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "teacher" | "student"
+      app_role:
+        | "admin"
+        | "teacher"
+        | "student"
+        | "customer_service"
+        | "secretary"
+        | "montage"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1087,7 +1096,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "teacher", "student"],
+      app_role: [
+        "admin",
+        "teacher",
+        "student",
+        "customer_service",
+        "secretary",
+        "montage",
+      ],
     },
   },
 } as const

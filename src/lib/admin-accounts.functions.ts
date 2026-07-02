@@ -109,29 +109,39 @@ export const deleteAccount = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const setAdminRole = createServerFn({ method: "POST" })
+export const ASSIGNABLE_ROLES = [
+  "admin",
+  "teacher",
+  "student",
+  "customer_service",
+  "secretary",
+  "montage",
+] as const;
+
+export const setUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ userId: z.string().uuid(), makeAdmin: z.boolean() }).parse(d),
+    z
+      .object({
+        userId: z.string().uuid(),
+        role: z.enum(ASSIGNABLE_ROLES),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    if (data.userId === context.userId && !data.makeAdmin) {
-      throw new Error("لا يمكنك إزالة صلاحية الأدمن عن نفسك.");
+    if (data.userId === context.userId && data.role !== "admin") {
+      throw new Error("لا يمكنك تغيير صلاحيتك بنفسك.");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    if (data.makeAdmin) {
+    // "تعيين" يستبدل صلاحيات الحساب بالصلاحية المختارة
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    if (data.role !== "student") {
       const { error } = await supabaseAdmin
         .from("user_roles")
-        .upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" });
-      if (error) throw new Error("تعذّر منح الصلاحية.");
-    } else {
-      const { error } = await supabaseAdmin
-        .from("user_roles")
-        .delete()
-        .eq("user_id", data.userId)
-        .eq("role", "admin");
-      if (error) throw new Error("تعذّر إزالة الصلاحية.");
+        .insert({ user_id: data.userId, role: data.role });
+      if (error) throw new Error("تعذّر تعيين الصلاحية.");
     }
     return { ok: true };
   });
+

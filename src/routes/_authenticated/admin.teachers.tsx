@@ -41,6 +41,7 @@ type FormState = {
   image_url: string;
   rating: string;
   students_label: string;
+  profit_percentage: string;
   sort_order: string;
   user_id: string;
 };
@@ -53,6 +54,7 @@ const empty: FormState = {
   image_url: "",
   rating: "5.0",
   students_label: "",
+  profit_percentage: "50",
   sort_order: "0",
   user_id: "",
 };
@@ -99,6 +101,7 @@ function AdminTeachers() {
       image_url: t.image_url ?? "",
       rating: String(t.rating),
       students_label: t.students_label ?? "",
+      profit_percentage: String((t as any).profit_percentage ?? 50),
       sort_order: String(t.sort_order),
       user_id: t.user_id ?? "",
     });
@@ -124,6 +127,7 @@ function AdminTeachers() {
       image_url: form.image_url.trim() || null,
       rating: Number(form.rating) || 5,
       students_label: form.students_label.trim() || null,
+      profit_percentage: Math.min(100, Math.max(0, Number(form.profit_percentage) || 0)),
       sort_order: Number(form.sort_order) || 0,
       user_id: form.user_id.trim() || null,
     };
@@ -251,8 +255,10 @@ function AdminTeachers() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="عدد الطلاب (نص)"><Input value={form.students_label} onChange={(e) => set("students_label", e.target.value)} placeholder="10k+" /></Field>
-              <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
+              <Field label="نسبة ربح المدرّس (%)"><Input type="number" min="0" max="100" value={form.profit_percentage} onChange={(e) => set("profit_percentage", e.target.value)} placeholder="50" /></Field>
             </div>
+            <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
+
             <Field label="معرّف حساب المدرّس (User ID) — لربط لوحة المدرّس"><Input value={form.user_id} onChange={(e) => set("user_id", e.target.value)} placeholder="UUID من صفحة المستخدمين" dir="ltr" /></Field>
           </div>
           <DialogFooter>
