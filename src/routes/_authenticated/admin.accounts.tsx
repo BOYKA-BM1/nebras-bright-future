@@ -173,7 +173,7 @@ function AccountsPage() {
                             {ASSIGNABLE_ROLES.map((r) => (
                               <DropdownMenuItem
                                 key={r}
-                                disabled={a.roles.includes(r) || (r !== "student" && a.roles.length === 0 && r === "student")}
+                                disabled={r === "student" ? a.roles.length === 0 : a.roles.includes(r)}
                                 onClick={() => {
                                   if (confirm(`تعيين ${a.email} كـ${ROLE_META[r].text}؟`))
                                     roleM.mutate({ userId: a.id, role: r });
