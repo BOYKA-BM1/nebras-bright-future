@@ -354,6 +354,7 @@ export type Database = {
           is_free: boolean
           is_published: boolean
           pdf_url: string | null
+          review_status: string
           section_id: string | null
           sort_order: number
           title: string
@@ -370,6 +371,7 @@ export type Database = {
           is_free?: boolean
           is_published?: boolean
           pdf_url?: string | null
+          review_status?: string
           section_id?: string | null
           sort_order?: number
           title: string
@@ -386,6 +388,7 @@ export type Database = {
           is_free?: boolean
           is_published?: boolean
           pdf_url?: string | null
+          review_status?: string
           section_id?: string | null
           sort_order?: number
           title?: string
@@ -858,6 +861,45 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          responded_at: string | null
+          responded_by: string | null
+          response: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          response?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       teachers: {
         Row: {
           bio: string | null
@@ -946,6 +988,7 @@ export type Database = {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
       }
+      is_support_staff: { Args: { _user_id: string }; Returns: boolean }
       owns_course: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
