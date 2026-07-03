@@ -105,7 +105,18 @@ function ManageCourse() {
       lessonAdmin.update.mutate({ id: editLes.id, ...payload }, { onSuccess: () => { toast.success("تم التحديث."); setLesOpen(false); }, onError: onErr });
     } else {
       const count = sections.find((s) => s.id === (lesSectionId ?? "__orphan__"))?.lessons.length ?? 0;
-      lessonAdmin.create.mutate({ ...payload, sort_order: count }, { onSuccess: () => { toast.success("تمت الإضافة."); setLesOpen(false); }, onError: onErr });
+      // المدرّس: الدرس الذي يحتوي فيديو يذهب للمونتاج (قيد المراجعة). الأدمن ينشر مباشرة.
+      const review_status = !isAdmin && payload.video_url ? "pending" : "approved";
+      lessonAdmin.create.mutate(
+        { ...payload, sort_order: count, review_status },
+        {
+          onSuccess: () => {
+            toast.success(review_status === "pending" ? "تم الإرسال للمونتاج (قيد المراجعة) ⏳" : "تمت الإضافة.");
+            setLesOpen(false);
+          },
+          onError: onErr,
+        },
+      );
     }
   };
 
