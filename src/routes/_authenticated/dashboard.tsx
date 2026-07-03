@@ -1,12 +1,14 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments, useFavorites } from "@/hooks/use-content";
+import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
 import { resolveImage } from "@/lib/catalog";
