@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Loader2, Users, Search, Phone, MessageSquare, User as UserIcon, X, BookOpen, CheckCircle2, Award, Calendar,
+  Loader2, Users, Search, Phone, MessageSquare, User as UserIcon, BookOpen, CheckCircle2, Award, Calendar,
 } from "lucide-react";
 import { useStudents, useStudentDetail, type StudentRow } from "@/hooks/use-staff";
 import {
