@@ -274,7 +274,12 @@ function ManageCourse() {
                     <li key={l.id} className="flex items-center gap-3 px-5 py-3">
                       <Video className="h-4 w-4 shrink-0 text-primary" />
                       <div className="flex-1">
-                        <p className="text-sm font-semibold">{l.title}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold">{l.title}</p>
+                          {l.review_status === "pending" && (
+                            <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold text-orange-400">قيد المونتاج</span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground">
                           {l.duration_minutes}د {l.video_url ? "· فيديو" : "· بدون فيديو"} {l.pdf_url ? "· PDF" : ""} {l.is_free ? "· مجاني" : ""}
                         </p>
