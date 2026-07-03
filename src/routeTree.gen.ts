@@ -25,6 +25,7 @@ import { Route as AuthenticatedLecturesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedStaffStudentsRouteImport } from './routes/_authenticated/staff.students'
 import { Route as AuthenticatedStaffMontageRouteImport } from './routes/_authenticated/staff.montage'
 import { Route as AuthenticatedManageCourseIdRouteImport } from './routes/_authenticated/manage.$courseId'
 import { Route as AuthenticatedLearnCourseIdRouteImport } from './routes/_authenticated/learn.$courseId'
@@ -115,6 +116,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedStaffStudentsRoute =
+  AuthenticatedStaffStudentsRouteImport.update({
+    id: '/students',
+    path: '/students',
+    getParentRoute: () => AuthenticatedStaffRoute,
+  } as any)
 const AuthenticatedStaffMontageRoute =
   AuthenticatedStaffMontageRouteImport.update({
     id: '/montage',
@@ -201,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
+  '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesByTo {
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
   '/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
+  '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -256,6 +265,7 @@ export interface FileRoutesById {
   '/_authenticated/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/_authenticated/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/_authenticated/staff/montage': typeof AuthenticatedStaffMontageRoute
+  '/_authenticated/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
 export interface FileRouteTypes {
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/learn/$courseId'
     | '/manage/$courseId'
     | '/staff/montage'
+    | '/staff/students'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/learn/$courseId'
     | '/manage/$courseId'
     | '/staff/montage'
+    | '/staff/students'
     | '/admin'
   id:
     | '__root__'
@@ -339,6 +351,7 @@ export interface FileRouteTypes {
     | '/_authenticated/learn/$courseId'
     | '/_authenticated/manage/$courseId'
     | '/_authenticated/staff/montage'
+    | '/_authenticated/staff/students'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -467,6 +480,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/staff/students': {
+      id: '/_authenticated/staff/students'
+      path: '/students'
+      fullPath: '/staff/students'
+      preLoaderRoute: typeof AuthenticatedStaffStudentsRouteImport
+      parentRoute: typeof AuthenticatedStaffRoute
+    }
     '/_authenticated/staff/montage': {
       id: '/_authenticated/staff/montage'
       path: '/montage'
@@ -567,10 +587,12 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedStaffRouteChildren {
   AuthenticatedStaffMontageRoute: typeof AuthenticatedStaffMontageRoute
+  AuthenticatedStaffStudentsRoute: typeof AuthenticatedStaffStudentsRoute
 }
 
 const AuthenticatedStaffRouteChildren: AuthenticatedStaffRouteChildren = {
   AuthenticatedStaffMontageRoute: AuthenticatedStaffMontageRoute,
+  AuthenticatedStaffStudentsRoute: AuthenticatedStaffStudentsRoute,
 }
 
 const AuthenticatedStaffRouteWithChildren =
