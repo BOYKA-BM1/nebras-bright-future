@@ -1,12 +1,14 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments, useFavorites } from "@/hooks/use-content";
+import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
 import { resolveImage } from "@/lib/catalog";
@@ -18,25 +20,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { isAdmin, isTeacher, isLoading: rolesLoading } = useRoles();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
   const { data: profile, isLoading: profileLoading } = useProfile();
 
-  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته
+  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته، والطاقم للوحاتهم
   useEffect(() => {
     if (rolesLoading) return;
     if (isAdmin) { navigate({ to: "/admin" }); return; }
     if (isTeacher) { navigate({ to: "/teacher" }); return; }
-  }, [rolesLoading, isTeacher, isAdmin, navigate]);
+    if (isMontage) { navigate({ to: "/staff/montage" }); return; }
+    if (isCustomerService) { navigate({ to: "/staff/support" }); return; }
+    if (isSecretary) { navigate({ to: "/staff/students" }); return; }
+  }, [rolesLoading, isTeacher, isAdmin, isMontage, isCustomerService, isSecretary, navigate]);
+
+  const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary;
 
   // الطالب اللي لسه ما اختارش مرحلته يروح للأونبوردنج
   useEffect(() => {
-    if (!rolesLoading && !isAdmin && !isTeacher && !profileLoading && profile && !profile.onboarded) {
+    if (!rolesLoading && !isAdmin && !isStaffRole && !profileLoading && profile && !profile.onboarded) {
       navigate({ to: "/onboarding" });
     }
-  }, [rolesLoading, isAdmin, isTeacher, profileLoading, profile, navigate]);
+  }, [rolesLoading, isAdmin, isStaffRole, profileLoading, profile, navigate]);
 
   const completion = profileCompletion(profile);
 
@@ -134,8 +141,81 @@ function Dashboard() {
             })}
           </div>
         )}
+
+        <SupportSection />
       </main>
     </div>
+  );
+}
+
+function SupportSection() {
+  const { data: tickets = [] } = useMyTickets();
+  const createTicket = useCreateTicket();
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+
+  const submit = () => {
+    if (!subject.trim() || !message.trim()) { toast.error("اكتب الموضوع والرسالة."); return; }
+    createTicket.mutate(
+      { subject: subject.trim(), message: message.trim() },
+      { onSuccess: () => { toast.success("تم إرسال استفسارك، هيتم الرد عليك قريبًا ✅"); setSubject(""); setMessage(""); }, onError: () => toast.error("تعذّر الإرسال.") },
+    );
+  };
+
+  return (
+    <section className="mt-12">
+      <h2 className="flex items-center gap-2 text-xl font-extrabold"><MessageCircle className="h-5 w-5 text-primary" /> الدعم والاستفسارات</h2>
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+          <p className="text-sm font-bold">أرسل استفسار جديد</p>
+          <input
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="الموضوع"
+            className="mt-3 w-full rounded-xl border border-input bg-background/60 px-4 py-2.5 text-sm outline-none focus:border-primary"
+          />
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="اكتب استفسارك هنا..."
+            rows={3}
+            className="mt-3 w-full rounded-xl border border-input bg-background/60 px-4 py-2.5 text-sm outline-none focus:border-primary"
+          />
+          <button
+            onClick={submit}
+            disabled={createTicket.isPending}
+            className="mt-3 flex items-center gap-2 rounded-xl bg-gradient-gold px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-60"
+          >
+            {createTicket.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} إرسال
+          </button>
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+          <p className="text-sm font-bold">استفساراتي ({tickets.length})</p>
+          {tickets.length === 0 ? (
+            <p className="mt-3 text-sm text-muted-foreground">لا يوجد استفسارات بعد.</p>
+          ) : (
+            <div className="mt-3 space-y-3 max-h-72 overflow-y-auto">
+              {tickets.map((t) => (
+                <div key={t.id} className="rounded-xl border border-border/60 bg-background/40 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-bold">{t.subject}</p>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${t.status === "answered" ? "bg-green-500/15 text-green-500" : "bg-orange-500/15 text-orange-400"}`}>
+                      {t.status === "answered" ? "تم الرد" : "قيد المعالجة"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{t.message}</p>
+                  {t.response && (
+                    <div className="mt-2 rounded-lg bg-primary/10 p-2 text-xs">
+                      <span className="font-bold text-primary">الرد: </span>{t.response}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -26,6 +26,13 @@ export function useRoles() {
     roles,
     isAdmin: roles.includes("admin"),
     isTeacher: roles.includes("teacher"),
+    isCustomerService: roles.includes("customer_service"),
+    isSecretary: roles.includes("secretary"),
+    isMontage: roles.includes("montage"),
+    isStaff:
+      roles.includes("customer_service") ||
+      roles.includes("secretary") ||
+      roles.includes("montage"),
     isLoading: query.isLoading,
   };
 }
