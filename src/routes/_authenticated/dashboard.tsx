@@ -18,25 +18,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const { isAdmin, isTeacher, isLoading: rolesLoading } = useRoles();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
   const { data: profile, isLoading: profileLoading } = useProfile();
 
-  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته
+  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته، والطاقم للوحاتهم
   useEffect(() => {
     if (rolesLoading) return;
     if (isAdmin) { navigate({ to: "/admin" }); return; }
     if (isTeacher) { navigate({ to: "/teacher" }); return; }
-  }, [rolesLoading, isTeacher, isAdmin, navigate]);
+    if (isMontage) { navigate({ to: "/staff/montage" }); return; }
+    if (isCustomerService) { navigate({ to: "/staff/support" }); return; }
+    if (isSecretary) { navigate({ to: "/staff/students" }); return; }
+  }, [rolesLoading, isTeacher, isAdmin, isMontage, isCustomerService, isSecretary, navigate]);
+
+  const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary;
 
   // الطالب اللي لسه ما اختارش مرحلته يروح للأونبوردنج
   useEffect(() => {
-    if (!rolesLoading && !isAdmin && !isTeacher && !profileLoading && profile && !profile.onboarded) {
+    if (!rolesLoading && !isAdmin && !isStaffRole && !profileLoading && profile && !profile.onboarded) {
       navigate({ to: "/onboarding" });
     }
-  }, [rolesLoading, isAdmin, isTeacher, profileLoading, profile, navigate]);
+  }, [rolesLoading, isAdmin, isStaffRole, profileLoading, profile, navigate]);
 
   const completion = profileCompletion(profile);
 
