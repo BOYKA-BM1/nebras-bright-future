@@ -2,6 +2,8 @@ import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-reac
 import { useNavigate } from "@tanstack/react-router";
 import { useStages } from "@/hooks/use-catalog";
 import { useAuth } from "@/hooks/use-auth";
+import { useRoles } from "@/hooks/use-roles";
+import { useProfile } from "@/hooks/use-profile";
 
 const iconMap = { GraduationCap, Library, BookA } as const;
 
@@ -29,7 +31,17 @@ const gradesByLevel: Record<string, string[]> = {
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
   const { user } = useAuth();
+  const { isTeacher, isMontage, isAdmin } = useRoles();
+  const { data: profile } = useProfile();
   const navigate = useNavigate();
+
+  // المدرّس وحساب المونتاج لا يظهر لهم قسم المراحل الدراسية إطلاقًا
+  if (isTeacher || isMontage) return null;
+
+  // الطالب يشوف مرحلته فقط (وسنته فقط لو محدّدة)
+  const scoped = !isAdmin && !!profile?.stage_id;
+  const shownStages = scoped ? stages.filter((s) => s.id === profile!.stage_id) : stages;
+  const gradeFilter = scoped ? profile?.grade ?? null : null;
 
   const goStage = (level: string) => {
     if (!user) { navigate({ to: "/auth" }); return; }
@@ -38,30 +50,41 @@ export function Stages() {
 
 
 
+
+
   return (
     <section id="stages" className="relative py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-sm font-bold uppercase tracking-widest text-primary">
-            المراحل الدراسية
+            {scoped ? "مرحلتك الدراسية" : "المراحل الدراسية"}
           </span>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-            نغطّي <span className="text-gradient-gold">كل المراحل</span> وكل السنين
+            {scoped ? (
+              <>محتوى <span className="text-gradient-gold">مرحلتك</span> وسنتك الدراسية</>
+            ) : (
+              <>نغطّي <span className="text-gradient-gold">كل المراحل</span> وكل السنين</>
+            )}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            من الابتدائي للإعدادي للثانوي بكل الشُّعب — علمي علوم، علمي رياضة، وأدبي.
+            {scoped
+              ? "دخول سريع لمرحلتك ومدرّسينها والدورات الخاصة بسنتك الدراسية."
+              : "من الابتدائي للإعدادي للثانوي بكل الشُّعب — علمي علوم، علمي رياضة، وأدبي."}
           </p>
         </div>
+
 
         {isLoading ? (
           <div className="mt-16 flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {stages.map((stage) => {
+          <div className={`mt-14 grid gap-6 ${scoped ? "mx-auto max-w-md" : "lg:grid-cols-3"}`}>
+            {shownStages.map((stage) => {
               const Icon = iconMap[stage.icon as keyof typeof iconMap] ?? GraduationCap;
-              const grades = gradesByLevel[stage.level] ?? [];
+              const allGrades = gradesByLevel[stage.level] ?? [];
+              const grades = gradeFilter ? allGrades.filter((g) => g === gradeFilter) : allGrades;
+
               return (
                 <article
                   key={stage.id}

@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, Film, CheckCircle2, Clock, Video, FileText, ExternalLink, Save } from "lucide-react";
+import { Loader2, Film, CheckCircle2, Clock, Video, FileText, ExternalLink, Save, Download, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { useMontageQueue, useMontageActions, type MontageLesson } from "@/hooks/use-staff";
+import { useMontageQueue, useMontageActions, useUploadMontageVideo, type MontageLesson } from "@/hooks/use-staff";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -60,8 +60,21 @@ function MontagePage() {
 
 function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: boolean }) {
   const { publish, updateVideo } = useMontageActions();
+  const uploadVideo = useUploadMontageVideo();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [videoUrl, setVideoUrl] = useState(lesson.video_url ?? "");
   const dirty = videoUrl !== (lesson.video_url ?? "");
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("video/")) { toast.error("اختر ملف فيديو صالح."); return; }
+    uploadVideo.mutate(file, {
+      onSuccess: (url) => { setVideoUrl(url); toast.success("تم رفع الفيديو المعدّل بنفس الجودة ✅ اضغط نشر."); },
+      onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
+    });
+  };
 
   const handlePublish = () => {
     publish.mutate(
@@ -123,6 +136,18 @@ function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: 
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
+        <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={handleUpload} />
+        {lesson.video_url && (
+          <Button asChild variant="outline" className="gap-2">
+            <a href={lesson.video_url} target="_blank" rel="noreferrer" download>
+              <Download className="h-4 w-4" /> تحميل الفيديو الأصلي
+            </a>
+          </Button>
+        )}
+        <Button onClick={() => fileRef.current?.click()} variant="outline" disabled={uploadVideo.isPending} className="gap-2">
+          {uploadVideo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          {uploadVideo.isPending ? "جارٍ الرفع..." : "رفع الفيديو المعدّل"}
+        </Button>
         {dirty && (
           <Button onClick={handleSave} variant="outline" disabled={updateVideo.isPending} className="gap-2">
             <Save className="h-4 w-4" /> حفظ التعديل
@@ -134,6 +159,7 @@ function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: 
           </Button>
         )}
       </div>
+      <p className="mt-2 text-xs text-muted-foreground">حمّل الفيديو الأصلي، عدّله على جهازك (قص / إضافة)، ثم ارفعه هنا — يُحفظ بنفس الدقة والجودة بدون أي ضغط، وبعد الرفع اضغط «نشر الدرس».</p>
     </article>
   );
 }

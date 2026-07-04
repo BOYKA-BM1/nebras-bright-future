@@ -4,13 +4,30 @@ import { Link } from "@tanstack/react-router";
 import { tracks, resolveImage, type TrackId } from "@/lib/catalog";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments } from "@/hooks/use-content";
+import { useRoles } from "@/hooks/use-roles";
+import { useProfile } from "@/hooks/use-profile";
 
 export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
-  const { data: courses = [], isLoading } = useCourses();
+  const { data: allCourses = [], isLoading } = useCourses();
   const { data: enrollments = [] } = useMyEnrollments();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary } = useRoles();
+  const { data: profile } = useProfile();
   const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.course_id)), [enrollments]);
   const [level, setLevel] = useState<string>("all");
   const [track, setTrack] = useState<TrackId>("all");
+
+  // الطالب يشوف دورات مرحلته وسنته فقط
+  const isStudent = !isAdmin && !isTeacher && !isMontage && !isCustomerService && !isSecretary;
+  const scoped = isStudent && !!profile?.stage_id;
+  const courses = useMemo(() => {
+    if (!scoped) return allCourses;
+    return allCourses.filter(
+      (c) =>
+        c.stage_id === profile!.stage_id &&
+        (!profile!.grade || !c.grade || c.grade === profile!.grade),
+    );
+  }, [allCourses, scoped, profile]);
+
 
   const stageFilters = useMemo(() => {
     const seen = new Map<string, string>();
@@ -46,30 +63,34 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
           </div>
         )}
 
-        {/* فلاتر المراحل */}
-        <div className="mt-10 flex flex-wrap justify-center gap-2">
-          {stageFilters.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => {
-                setLevel(f.id);
-                if (f.id !== "secondary") setTrack("all");
-              }}
-              className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
-                level === f.id
-                  ? "bg-gradient-gold text-primary-foreground shadow-gold"
-                  : "border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {/* فلاتر المراحل — تُخفى للطالب لأنه يرى مرحلته فقط */}
+        {!scoped && (
+          <div className="mt-10 flex flex-wrap justify-center gap-2">
+            {stageFilters.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => {
+                  setLevel(f.id);
+                  if (f.id !== "secondary") setTrack("all");
+                }}
+                className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
+                  level === f.id
+                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                    : "border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        )}
+
 
         {/* فلاتر الشُّعب للثانوي */}
-        {level === "secondary" && (
+        {!scoped && level === "secondary" && (
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {tracks.map((t) => (
+
               <button
                 key={t.id}
                 onClick={() => setTrack(t.id)}
