@@ -80,6 +80,26 @@ export function useMontageActions() {
   return { publish, updateVideo };
 }
 
+/** رفع الفيديو المعدّل إلى التخزين بنفس الجودة (بدون إعادة ضغط) وإرجاع رابط موقّع طويل المدى */
+export function useUploadMontageVideo() {
+  return useMutation({
+    mutationFn: async (file: File): Promise<string> => {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "mp4";
+      const path = `edited/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      // يُرفع الملف كما هو بايت ببايت — لا يحدث أي إعادة ترميز فتظل الجودة الأصلية كاملة
+      const { error: upErr } = await supabase.storage
+        .from("lesson-videos")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error: signErr } = await supabase.storage
+        .from("lesson-videos")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      return data.signedUrl;
+    },
+  });
+}
+
 /* ============ بيانات الطلاب (خدمة العملاء + السكرتيرة) ============ */
 
 export type StudentRow = {
