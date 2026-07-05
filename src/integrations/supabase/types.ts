@@ -974,6 +974,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_quiz_answer: {
+        Args: { _answer: string; _question_id: string }
+        Returns: boolean
+      }
       gen_enrollment_code: { Args: never; Returns: string }
       has_role: {
         Args: {
