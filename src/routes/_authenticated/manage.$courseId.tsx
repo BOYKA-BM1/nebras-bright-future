@@ -40,6 +40,28 @@ function ManageCourse() {
   const courseAdmin = useCourseAdmin();
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const liveAdmin = useLiveAdmin(courseId);
+  const uploadVideo = useUploadMontageVideo();
+  const videoFileRef = useRef<HTMLInputElement>(null);
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("video/")) { toast.error("اختر ملف فيديو صالح."); return; }
+    const seconds = await getVideoDuration(file);
+    const minutes = seconds > 0 ? Math.max(1, Math.round(seconds / 60)) : 0;
+    uploadVideo.mutate(file, {
+      onSuccess: (url) => {
+        setLesForm((f) => ({
+          ...f,
+          video_url: url,
+          duration_minutes: minutes ? String(minutes) : f.duration_minutes,
+        }));
+        toast.success("تم رفع الفيديو بنفس الجودة ✅ واحتُسبت المدة تلقائيًا.");
+      },
+      onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
+    });
+  };
 
   const [secOpen, setSecOpen] = useState(false);
   const [editSec, setEditSec] = useState<Section | null>(null);
