@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2, Plus, Pencil, Trash2, ChevronRight, Video, FileText, Layers, GripVertical,
-  Radio, Play, Square, Eye, EyeOff, Tv,
+  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -22,6 +22,7 @@ import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useSectionAdmin, useLessonAdmin } from "@/hooks/use-content";
 import { useCourseAdmin } from "@/hooks/use-catalog";
 import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
+import { useUploadMontageVideo } from "@/hooks/use-staff";
 import { Logo } from "@/components/site/Logo";
 import type { Section, Lesson } from "@/lib/catalog";
 
@@ -39,6 +40,28 @@ function ManageCourse() {
   const courseAdmin = useCourseAdmin();
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const liveAdmin = useLiveAdmin(courseId);
+  const uploadVideo = useUploadMontageVideo();
+  const videoFileRef = useRef<HTMLInputElement>(null);
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("video/")) { toast.error("اختر ملف فيديو صالح."); return; }
+    const seconds = await getVideoDuration(file);
+    const minutes = seconds > 0 ? Math.max(1, Math.round(seconds / 60)) : 0;
+    uploadVideo.mutate(file, {
+      onSuccess: (url) => {
+        setLesForm((f) => ({
+          ...f,
+          video_url: url,
+          duration_minutes: minutes ? String(minutes) : f.duration_minutes,
+        }));
+        toast.success("تم رفع الفيديو بنفس الجودة ✅ واحتُسبت المدة تلقائيًا.");
+      },
+      onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
+    });
+  };
 
   const [secOpen, setSecOpen] = useState(false);
   const [editSec, setEditSec] = useState<Section | null>(null);
@@ -331,14 +354,34 @@ function ManageCourse() {
                 </SelectContent>
               </Select>
             </F>
-            <F label="رابط الفيديو (Bunny / YouTube / mp4)">
-              <Input value={lesForm.video_url} onChange={(e) => setLesForm({ ...lesForm, video_url: e.target.value })} placeholder="https://iframe.mediadelivery.net/embed/..." dir="ltr" />
+            <F label="فيديو المحاضرة">
+              <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => videoFileRef.current?.click()}
+                  disabled={uploadVideo.isPending}
+                  className="gap-2"
+                >
+                  {uploadVideo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploadVideo.isPending ? "جارٍ الرفع..." : lesForm.video_url ? "استبدال الفيديو" : "ارفع فيديو المحاضرة"}
+                </Button>
+                {lesForm.video_url && !uploadVideo.isPending && (
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
+                    <CheckCircle2 className="h-4 w-4" /> تم رفع الفيديو
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">ارفع الفيديو من اللاب أو الهاتف — يُحفظ بنفس الدقة والجودة، وتُحسب المدة تلقائيًا.</p>
             </F>
             <F label="رابط ملف PDF (اختياري)">
               <Input value={lesForm.pdf_url} onChange={(e) => setLesForm({ ...lesForm, pdf_url: e.target.value })} dir="ltr" />
             </F>
             <div className="grid grid-cols-2 gap-4">
-              <F label="المدة (دقائق)"><Input type="number" value={lesForm.duration_minutes} onChange={(e) => setLesForm({ ...lesForm, duration_minutes: e.target.value })} /></F>
+              <F label="المدة (تُحسب تلقائيًا)">
+                <Input value={Number(lesForm.duration_minutes) > 0 ? `${lesForm.duration_minutes} دقيقة` : "—"} readOnly disabled />
+              </F>
               <div className="flex items-end gap-3 pb-2">
                 <Switch checked={lesForm.is_free} onCheckedChange={(v) => setLesForm({ ...lesForm, is_free: v })} />
                 <Label>درس مجاني (معاينة)</Label>
@@ -390,6 +433,23 @@ function ManageCourse() {
       </AlertDialog>
     </div>
   );
+}
+
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    try {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src);
+        resolve(Number.isFinite(video.duration) ? video.duration : 0);
+      };
+      video.onerror = () => resolve(0);
+      video.src = URL.createObjectURL(file);
+    } catch {
+      resolve(0);
+    }
+  });
 }
 
 type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean };
