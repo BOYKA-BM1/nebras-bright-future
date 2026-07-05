@@ -435,6 +435,23 @@ function ManageCourse() {
   );
 }
 
+function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve) => {
+    try {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(video.src);
+        resolve(Number.isFinite(video.duration) ? video.duration : 0);
+      };
+      video.onerror = () => resolve(0);
+      video.src = URL.createObjectURL(file);
+    } catch {
+      resolve(0);
+    }
+  });
+}
+
 type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean };
 const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false };
 
