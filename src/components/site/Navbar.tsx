@@ -48,7 +48,7 @@ export function Navbar() {
         <Logo />
 
         <ul className="hidden items-center gap-1 lg:flex">
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <li key={link.href}>
               <button
                 onClick={() => handleNav(link.href, link.gated)}
@@ -105,7 +105,7 @@ export function Navbar() {
       {open && (
         <div className="border-t border-border/60 bg-background/95 px-4 py-4 lg:hidden">
           <ul className="flex flex-col gap-1">
-            {navLinks.map((link) => (
+            {links.map((link) => (
               <li key={link.href}>
                 <button
                   onClick={() => handleNav(link.href, link.gated)}
