@@ -22,6 +22,7 @@ import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useSectionAdmin, useLessonAdmin } from "@/hooks/use-content";
 import { useCourseAdmin } from "@/hooks/use-catalog";
 import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
+import { useUploadMontageVideo } from "@/hooks/use-staff";
 import { Logo } from "@/components/site/Logo";
 import type { Section, Lesson } from "@/lib/catalog";
 
