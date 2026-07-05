@@ -354,14 +354,34 @@ function ManageCourse() {
                 </SelectContent>
               </Select>
             </F>
-            <F label="رابط الفيديو (Bunny / YouTube / mp4)">
-              <Input value={lesForm.video_url} onChange={(e) => setLesForm({ ...lesForm, video_url: e.target.value })} placeholder="https://iframe.mediadelivery.net/embed/..." dir="ltr" />
+            <F label="فيديو المحاضرة">
+              <input ref={videoFileRef} type="file" accept="video/*" className="hidden" onChange={handleVideoUpload} />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => videoFileRef.current?.click()}
+                  disabled={uploadVideo.isPending}
+                  className="gap-2"
+                >
+                  {uploadVideo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploadVideo.isPending ? "جارٍ الرفع..." : lesForm.video_url ? "استبدال الفيديو" : "ارفع فيديو المحاضرة"}
+                </Button>
+                {lesForm.video_url && !uploadVideo.isPending && (
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
+                    <CheckCircle2 className="h-4 w-4" /> تم رفع الفيديو
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">ارفع الفيديو من اللاب أو الهاتف — يُحفظ بنفس الدقة والجودة، وتُحسب المدة تلقائيًا.</p>
             </F>
             <F label="رابط ملف PDF (اختياري)">
               <Input value={lesForm.pdf_url} onChange={(e) => setLesForm({ ...lesForm, pdf_url: e.target.value })} dir="ltr" />
             </F>
             <div className="grid grid-cols-2 gap-4">
-              <F label="المدة (دقائق)"><Input type="number" value={lesForm.duration_minutes} onChange={(e) => setLesForm({ ...lesForm, duration_minutes: e.target.value })} /></F>
+              <F label="المدة (تُحسب تلقائيًا)">
+                <Input value={lesForm.duration_minutes ? `${lesForm.duration_minutes} دقيقة` : "—"} readOnly disabled />
+              </F>
               <div className="flex items-end gap-3 pb-2">
                 <Switch checked={lesForm.is_free} onCheckedChange={(v) => setLesForm({ ...lesForm, is_free: v })} />
                 <Label>درس مجاني (معاينة)</Label>
