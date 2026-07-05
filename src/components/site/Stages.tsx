@@ -31,12 +31,17 @@ const gradesByLevel: Record<string, string[]> = {
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
   const { user } = useAuth();
-  const { isTeacher, isMontage, isAdmin } = useRoles();
+  const { isTeacher, isMontage, isAdmin, isCustomerService, isSecretary } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
 
   // المدرّس وحساب المونتاج لا يظهر لهم قسم المراحل الدراسية إطلاقًا
   if (isTeacher || isMontage) return null;
+
+  // الطالب لا يرى قسم المراحل الدراسية إطلاقًا مهما كانت مرحلته
+  const isStudent =
+    !!user && !isAdmin && !isTeacher && !isMontage && !isCustomerService && !isSecretary;
+  if (isStudent) return null;
 
   // الطالب يشوف مرحلته فقط (وسنته فقط لو محدّدة)
   const scoped = !isAdmin && !!profile?.stage_id;
