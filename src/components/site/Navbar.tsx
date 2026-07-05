@@ -11,9 +11,12 @@ import { resolveImage } from "@/lib/catalog";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { isAdmin, isTeacher } = useRoles();
+  const { isAdmin, isTeacher, isMontage } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
+
+  // المدرّس وحساب المونتاج لا يظهر لهم قسم الدورات (خاص بمراحل الطلاب)
+  const links = isTeacher || isMontage ? navLinks.filter((l) => l.href !== "/courses") : navLinks;
 
   // وجهة صورة المستخدم حسب الدور
   const accountTo = isAdmin ? "/admin" : isTeacher ? "/teacher" : "/profile";
@@ -45,7 +48,7 @@ export function Navbar() {
         <Logo />
 
         <ul className="hidden items-center gap-1 lg:flex">
-          {navLinks.map((link) => (
+          {links.map((link) => (
             <li key={link.href}>
               <button
                 onClick={() => handleNav(link.href, link.gated)}
@@ -102,7 +105,7 @@ export function Navbar() {
       {open && (
         <div className="border-t border-border/60 bg-background/95 px-4 py-4 lg:hidden">
           <ul className="flex flex-col gap-1">
-            {navLinks.map((link) => (
+            {links.map((link) => (
               <li key={link.href}>
                 <button
                   onClick={() => handleNav(link.href, link.gated)}
