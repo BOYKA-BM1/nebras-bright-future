@@ -380,7 +380,7 @@ function ManageCourse() {
             </F>
             <div className="grid grid-cols-2 gap-4">
               <F label="المدة (تُحسب تلقائيًا)">
-                <Input value={lesForm.duration_minutes ? `${lesForm.duration_minutes} دقيقة` : "—"} readOnly disabled />
+                <Input value={Number(lesForm.duration_minutes) > 0 ? `${lesForm.duration_minutes} دقيقة` : "—"} readOnly disabled />
               </F>
               <div className="flex items-end gap-3 pb-2">
                 <Switch checked={lesForm.is_free} onCheckedChange={(v) => setLesForm({ ...lesForm, is_free: v })} />
