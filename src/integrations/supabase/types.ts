@@ -772,6 +772,24 @@ export type Database = {
           },
         ]
       }
+      role_shares: {
+        Row: {
+          percentage: number
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string
+        }
+        Insert: {
+          percentage?: number
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Update: {
+          percentage?: number
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sections: {
         Row: {
           course_id: string
