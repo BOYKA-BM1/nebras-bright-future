@@ -186,33 +186,46 @@ function EditTeacherShareDialog({ teacher, onClose }: { teacher: TeacherEarning 
   );
 }
 
-function TeacherRow({ t, open, onToggle }: { t: TeacherEarning; open: boolean; onToggle: () => void }) {
+function TeacherRow({ t, open, onToggle, onEdit }: { t: TeacherEarning; open: boolean; onToggle: () => void; onEdit: () => void }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <button onClick={onToggle} className="flex w-full items-center gap-4 p-4 text-right hover:bg-accent/40">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-primary font-bold">
-          {t.image_url ? <img src={t.image_url} alt={t.name} className="h-full w-full object-cover" /> : t.name.charAt(0)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-bold">{t.name}</div>
-          <div className="truncate text-xs text-muted-foreground">
-            {t.subject ?? "—"} · {t.subscribers} مشترك
+      <div className="flex w-full items-center gap-4 p-4 text-right">
+        <button onClick={onToggle} className="flex min-w-0 flex-1 items-center gap-4 hover:opacity-80">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10 text-primary font-bold">
+            {t.image_url ? <img src={t.image_url} alt={t.name} className="h-full w-full object-cover" /> : t.name.charAt(0)}
+          </span>
+          <div className="min-w-0 flex-1 text-right">
+            <div className="truncate font-bold">{t.name}</div>
+            <div className="truncate text-xs text-muted-foreground">
+              {t.subject ?? "—"} · {t.subscribers} مشترك
+            </div>
           </div>
-        </div>
-        <div className="hidden text-center sm:block">
-          <div className="text-xs text-muted-foreground">الدخل</div>
-          <div className="font-extrabold">{money(t.income)}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-muted-foreground">النسبة</div>
-          <div className="font-extrabold text-primary">{t.profit_percentage}%</div>
-        </div>
-        <div className="text-center">
-          <div className="text-xs text-muted-foreground">الربح</div>
-          <div className="font-extrabold text-green-500">{money(t.profit)}</div>
-        </div>
-        <ChevronDown className={`h-5 w-5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
-      </button>
+          <div className="hidden text-center sm:block">
+            <div className="text-xs text-muted-foreground">الدخل</div>
+            <div className="font-extrabold">{money(t.income)}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground">النسبة</div>
+            <div className="font-extrabold text-primary">{t.profit_percentage}%</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-muted-foreground">الربح</div>
+            <div className="font-extrabold text-green-500">{money(t.profit)}</div>
+          </div>
+        </button>
+        <button
+          onClick={onEdit}
+          title="تعديل النسبة"
+          className="flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-accent"
+        >
+          <Pencil className="h-3.5 w-3.5" /> النسبة
+        </button>
+        <button onClick={onToggle} className="shrink-0">
+          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+        </button>
+      </div>
+
+
 
       {open && (
         <div className="border-t border-border/60 bg-background/40 p-4">
