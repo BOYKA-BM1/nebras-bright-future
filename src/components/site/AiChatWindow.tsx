@@ -37,6 +37,8 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimer = useRef<number | null>(null);
   const loadedFor = useRef<string | null | undefined>(undefined);
+  // لو المستخدم عمل سكرول لفوق بنفسه، نوقّف المتابعة التلقائية لحد ما يرجع لتحت
+  const stickToBottom = useRef(true);
 
   // مزامنة الرسائل عند تبديل المحادثة أو تحميلها من قاعدة البيانات
   useEffect(() => {
@@ -55,15 +57,20 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
 
   useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current); }, []);
 
+  // نتابع النزول فقط طالما المستخدم عايز يفضل تحت (stickToBottom)
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
-    // نتابع النزول التلقائي فقط لو المستخدم قريب من آخر الرسائل
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (nearBottom) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-    }
+    if (!el || !stickToBottom.current) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages, busy, typing]);
+
+  // متابعة سكرول المستخدم: يوقف التتبع لو طلع لفوق، ويرجّعه لو نزل لآخر الشات
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  };
+
 
   // إبقاء صندوق الكتابة نشطًا
   useEffect(() => {
@@ -98,6 +105,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
     if (!content || busy) return;
 
     const history: ChatMsg[] = [...messages, { role: "user", content }];
+    stickToBottom.current = true; // عند إرسال رسالة جديدة نرجع لآخر الشات
     setMessages(history);
     setInput("");
     setBusy(true);
@@ -150,7 +158,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* منطقة المحادثة القابلة للتمرير */}
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-4">
+      <div ref={scrollRef} onScroll={onScroll} className="flex-1 space-y-4 overflow-y-auto p-4">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-5 py-10 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary">
