@@ -68,7 +68,7 @@ function AiTutorPage() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, busy]);
+  }, [messages, busy, typing]);
 
   // تأثير الكتابة الحيّة: يظهر الرد حرفًا حرفًا زي شات جي بي تي
   const typeReply = (reply: string) =>
