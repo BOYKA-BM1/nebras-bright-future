@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Pencil, Trash2, Loader2, Star, UserPlus, KeyRound, CheckCircle2, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Star, UserPlus, KeyRound, CheckCircle2, Copy, Upload, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
