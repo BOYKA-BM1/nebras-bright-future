@@ -10,7 +10,6 @@ import {
   unbanAccount,
   deleteAccount,
   setUserRole,
-  resetAccountDevice,
   ASSIGNABLE_ROLES,
 } from "@/lib/admin-accounts.functions";
 import {
