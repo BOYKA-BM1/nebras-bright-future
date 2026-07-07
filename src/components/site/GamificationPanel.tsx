@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useMyXp, useLeaderboard } from "@/hooks/use-gamification";
 import { levelInfo, levelTitle, computeBadges } from "@/lib/gamification";
 
-export function GamificationPanel({ lessons = 0, courses = 0 }: { lessons?: number; courses?: number }) {
+export function GamificationPanel({ courses = 0 }: { courses?: number }) {
   const { user } = useAuth();
   const { data: xp = 0, isLoading: xpLoading } = useMyXp();
   const { data: board = [], isLoading: boardLoading } = useLeaderboard(10);
