@@ -251,22 +251,38 @@ function AdminCourses() {
               <Field label="السعر قبل الخصم (اختياري)"><Input type="number" value={form.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="عدد الدروس"><Input type="number" value={form.lessons_count} onChange={(e) => set("lessons_count", e.target.value)} /></Field>
-              <Field label="عدد الفيديوهات"><Input type="number" value={form.videos_count} onChange={(e) => set("videos_count", e.target.value)} /></Field>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="عدد الساعات"><Input type="number" value={form.hours} onChange={(e) => set("hours", e.target.value)} /></Field>
-              <Field label="الحصص المباشرة"><Input type="number" value={form.live_sessions} onChange={(e) => set("live_sessions", e.target.value)} /></Field>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <Field label="شارة (Badge)"><Input value={form.badge} onChange={(e) => set("badge", e.target.value)} placeholder="الأكثر طلبًا" /></Field>
               <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
             </div>
-            <Field label="رابط صورة الدورة (اختياري)"><Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." dir="ltr" /></Field>
+            <Field label="صورة الدورة (اختياري)">
+              <div className="flex items-center gap-3">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="" className="h-16 w-16 shrink-0 rounded-xl border border-border object-cover" />
+                ) : (
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground">
+                    <ImageIcon className="h-6 w-6" />
+                  </span>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" onChange={onPickImage} className="hidden" />
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploadImage.isPending} className="gap-2">
+                  {uploadImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {form.image_url ? "تغيير الصورة" : "تحميل صورة"}
+                </Button>
+                {form.image_url && (
+                  <Button type="button" variant="ghost" onClick={() => set("image_url", "")} className="text-destructive">
+                    إزالة
+                  </Button>
+                )}
+              </div>
+            </Field>
+            <p className="rounded-xl border border-border bg-card/50 p-3 text-xs text-muted-foreground">
+              💡 عدد الدروس والفيديوهات والساعات والحصص المباشرة بتتحسب تلقائيًا من محتوى الدورة الفعلي.
+            </p>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <Label className="text-sm">منشورة (تظهر للطلاب)</Label>
               <Switch checked={form.is_published} onCheckedChange={(v) => set("is_published", v)} />
             </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
