@@ -64,7 +64,7 @@ function Onboarding() {
       <header className="border-b border-border/60 bg-background/60 backdrop-blur-xl">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
-          <button onClick={() => signOut().then(() => navigate({ to: "/" }))} className="text-sm font-bold text-muted-foreground hover:text-foreground">خروج</button>
+          <button onClick={() => confirmSignOut(() => navigate({ to: "/" }))} className="text-sm font-bold text-muted-foreground hover:text-foreground">خروج</button>
         </div>
       </header>
 
