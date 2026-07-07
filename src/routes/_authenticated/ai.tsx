@@ -64,8 +64,8 @@ function AiLayout() {
       <div className="flex min-h-0 flex-1">
         {/* الشريط الجانبي: المحادثات */}
         <aside
-          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-300 md:static md:mt-0 ${
-            sidebarOpen ? "translate-x-0 md:w-72" : "translate-x-full md:w-0 md:translate-x-0 md:border-l-0"
+          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-300 sm:static sm:mt-0 ${
+            sidebarOpen ? "translate-x-0 sm:w-72" : "translate-x-full sm:w-0 sm:translate-x-0 sm:border-l-0"
           }`}
         >
           <div className="flex h-full flex-col p-3">
