@@ -215,17 +215,7 @@ function AccountsPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
 
-                        {a.device_registered_at && (
-                          <button
-                            onClick={() => {
-                              if (confirm(`إعادة تعيين جهاز ${a.email}؟ هيقدر يسجّل الدخول من جهاز جديد.`))
-                                resetDeviceM.mutate({ userId: a.id });
-                            }}
-                            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
-                          >
-                            <RotateCcw className="h-3.5 w-3.5" /> إعادة تعيين الجهاز
-                          </button>
-                        )}
+
 
 
 
