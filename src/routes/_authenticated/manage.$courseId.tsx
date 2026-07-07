@@ -126,6 +126,7 @@ function ManageCourse() {
     setLesForm({
       title: l.title, description: l.description ?? "", video_url: l.video_url ?? "",
       pdf_url: l.pdf_url ?? "", duration_minutes: String(l.duration_minutes), is_free: l.is_free,
+      transcript: l.transcript ?? "",
     });
     setLesOpen(true);
   };
@@ -140,6 +141,7 @@ function ManageCourse() {
       pdf_url: lesForm.pdf_url.trim() || null,
       duration_minutes: Number(lesForm.duration_minutes) || 0,
       is_free: lesForm.is_free,
+      transcript: lesForm.transcript.trim() || null,
     };
     const onErr = () => toast.error("حصل خطأ.");
     if (editLes) {
