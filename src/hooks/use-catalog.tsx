@@ -207,4 +207,28 @@ export function useCourseAdmin() {
   return { create, update, remove };
 }
 
+/** رفع صورة (دورة/مدرّس) من الجهاز إلى التخزين وإرجاع رابط موقّع طويل المدى */
+export function useUploadImage() {
+  return useMutation({
+    mutationFn: async (file: File): Promise<string> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("not_authenticated");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error: signErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      return data.signedUrl;
+    },
+  });
+}
+
 export type { Stage, Teacher, Course, CourseWithRelations };
+
