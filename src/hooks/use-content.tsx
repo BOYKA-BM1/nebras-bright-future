@@ -16,6 +16,10 @@ import type {
 type SectionInput = Database["public"]["Tables"]["sections"]["Insert"];
 type LessonInput = Database["public"]["Tables"]["lessons"]["Insert"];
 
+// أعمدة المدرّس العامة فقط (بدون نسبة الربح) — لأن جدول المدرّسين محمي على مستوى الأعمدة.
+const TEACHER_PUBLIC_COLUMNS =
+  "id,name,subject,bio,experience_years,image_url,rating,students_label,sort_order,created_at,updated_at,stage,grade";
+
 /* ===================== دورة واحدة ===================== */
 
 export function useCourse(courseId: string | undefined) {
@@ -25,7 +29,7 @@ export function useCourse(courseId: string | undefined) {
     queryFn: async (): Promise<CourseWithRelations | null> => {
       const { data, error } = await supabase
         .from("courses")
-        .select("*, teacher:teachers(*), stage:stages(*)")
+        .select(`*, teacher:teachers(${TEACHER_PUBLIC_COLUMNS}), stage:stages(*)`)
         .eq("id", courseId!)
         .maybeSingle();
       if (error) throw error;
