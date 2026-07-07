@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Loader2, BookOpen, Clock, Video, PlayCircle, Lock, Check, Heart,
-  ArrowRight, GraduationCap, ChevronLeft, FileText,
+  ArrowRight, GraduationCap, ChevronLeft, FileText, Ticket, X, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
-import { useCourse, useCourseContent, useEnrollment, useEnroll, useFavorites } from "@/hooks/use-content";
+import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
 
