@@ -69,7 +69,7 @@ function Dashboard() {
   );
   const totalSpent = useMemo(() => myCourses.reduce((s, c) => s + (c.price || 0), 0), [myCourses]);
 
-  const handleSignOut = async () => { await signOut(); navigate({ to: "/" }); };
+  const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
 
 
   return (
