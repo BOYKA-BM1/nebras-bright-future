@@ -23,6 +23,28 @@ export function useStages() {
   });
 }
 
+export type StageCount = { stage_id: string; teachers: number; students: number };
+
+export function useStageCounts() {
+  return useQuery({
+    queryKey: ["stage-counts"],
+    queryFn: async (): Promise<Record<string, StageCount>> => {
+      const { data, error } = await supabase.rpc("stage_counts");
+      if (error) throw error;
+      const map: Record<string, StageCount> = {};
+      for (const row of (data ?? []) as StageCount[]) {
+        map[row.stage_id] = {
+          stage_id: row.stage_id,
+          teachers: Number(row.teachers) || 0,
+          students: Number(row.students) || 0,
+        };
+      }
+      return map;
+    },
+  });
+}
+
+
 export function useTeachers() {
   return useQuery({
     queryKey: ["teachers"],
