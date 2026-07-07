@@ -66,6 +66,31 @@ function AiTutorPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
+  // تأثير الكتابة الحيّة: يظهر الرد حرفًا حرفًا زي شات جي بي تي
+  const typeReply = (reply: string) =>
+    new Promise<void>((resolve) => {
+      const chars = Array.from(reply);
+      // نضيف رسالة مساعد فاضية ونملاها تدريجيًا
+      setMessages((m) => [...m, { role: "assistant", content: "" }]);
+      let i = 0;
+      const step = () => {
+        // نكتب كذا حرف في المرة عشان السرعة تبقى طبيعية
+        i = Math.min(chars.length, i + 2);
+        const shown = chars.slice(0, i).join("");
+        setMessages((m) => {
+          const copy = [...m];
+          copy[copy.length - 1] = { role: "assistant", content: shown };
+          return copy;
+        });
+        if (i < chars.length) {
+          typingTimer.current = window.setTimeout(step, 16);
+        } else {
+          resolve();
+        }
+      };
+      step();
+    });
+
   const send = async (text: string) => {
     const content = text.trim();
     if (!content || busy) return;
@@ -74,15 +99,18 @@ function AiTutorPage() {
     setMessages(next);
     setInput("");
     setBusy(true);
+    setTyping(false);
     try {
       const { reply } = await callTutor({ data: { messages: next.slice(-12) } });
-      setMessages((m) => [...m, { role: "assistant", content: reply }]);
+      setTyping(true);
+      await typeReply(reply);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "حصل خطأ، حاول تاني.");
       setMessages((m) => m.slice(0, -1));
       setInput(content);
     } finally {
       setBusy(false);
+      setTyping(false);
     }
   };
 
