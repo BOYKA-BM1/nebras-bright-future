@@ -59,12 +59,12 @@ function AiLayout() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-background pt-[60px]">
       <Navbar />
-      <div className="flex min-h-0 flex-1 pt-16">
+      <div className="flex min-h-0 flex-1">
         {/* الشريط الجانبي: المحادثات */}
         <aside
-          className={`fixed inset-y-0 right-0 z-40 mt-16 w-72 shrink-0 border-l border-border bg-card transition-transform md:static md:mt-0 md:translate-x-0 ${
+          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 border-l border-border bg-card transition-transform md:static md:mt-0 md:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
           }`}
         >
