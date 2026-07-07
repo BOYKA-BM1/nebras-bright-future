@@ -63,7 +63,7 @@ export const createTeacherAccount = createServerFn({ method: "POST" })
     if (teacherId) {
       const { error: linkErr } = await supabaseAdmin
         .from("teachers")
-        .update({ user_id: newUserId })
+        .update({ user_id: newUserId, stage: data.stage, grade: data.grade })
         .eq("id", teacherId);
       if (linkErr) throw new Error("تعذّر ربط حساب المدرّس بالسجل.");
     } else {
@@ -72,6 +72,8 @@ export const createTeacherAccount = createServerFn({ method: "POST" })
         .insert({
           name: data.name,
           subject: data.subject,
+          stage: data.stage,
+          grade: data.grade,
           bio: data.bio ?? null,
           image_url: data.image_url ?? null,
           experience_years: data.experience_years ?? 0,
@@ -82,6 +84,14 @@ export const createTeacherAccount = createServerFn({ method: "POST" })
       if (insErr || !teacherRow) throw new Error("تعذّر إنشاء سجل المدرّس.");
       teacherId = teacherRow.id;
     }
+
+    // اضبط ملف المدرّس بالمرحلة والسنة عشان المساعد الذكي يفتح نسخته المخصّصة
+    await supabaseAdmin
+      .from("profiles")
+      .upsert(
+        { id: newUserId, full_name: data.name, grade: data.grade, level: data.stage, onboarded: true },
+        { onConflict: "id" },
+      );
 
     return { userId: newUserId, teacherId, email: data.email };
   });
