@@ -25,6 +25,15 @@ function Dashboard() {
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const unenroll = useUnenroll();
+
+  const handleUnenroll = (courseId: string, title: string) => {
+    if (!window.confirm(`متأكد إنك عايز تلغي اشتراكك في "${title}"؟`)) return;
+    unenroll.mutate(courseId, {
+      onSuccess: () => toast.success("تم إلغاء الاشتراك."),
+      onError: () => toast.error("تعذّر إلغاء الاشتراك، حاول تاني."),
+    });
+  };
 
   // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته، والطاقم للوحاتهم
   useEffect(() => {
