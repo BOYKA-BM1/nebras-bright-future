@@ -84,15 +84,35 @@ export const askTutor = createServerFn({ method: "POST" })
       ? (levelValue as "primary" | "prep" | "secondary")
       : levelFromGrade(grade);
 
-    // قاعدة المعرفة: محاضرات ومذكرات الطالب المتاحة له فقط (RLS)
+    // (1) قاعدة معرفة الأدمن: كتب ومذكرات مخصّصة لمرحلة الطالب وصفّه (أو العامة)
+    const { data: kdocs } = await (context.supabase.from as any)("knowledge_docs")
+      .select("title, subject, content, stage, grade")
+      .or(`stage.is.null,stage.eq.${stage}`)
+      .limit(80);
+
+    const blocks: string[] = [];
+    let budget = 42000;
+
+    for (const d of (kdocs ?? []) as Array<{
+      title: string; subject: string | null; content: string | null; grade: string | null;
+    }>) {
+      // فلترة الصف: لو الكتاب مخصّص لصف معيّن لازم يطابق صف الطالب
+      if (d.grade && d.grade !== grade) continue;
+      const body = (d.content?.trim() || "").slice(0, 12000);
+      if (!body) continue;
+      const block = `### كتاب/مذكرة: ${d.title}${d.subject ? ` — ${d.subject}` : ""}\n${body}`;
+      if (block.length > budget) break;
+      budget -= block.length;
+      blocks.push(block);
+    }
+
+    // (2) محاضرات ومذكرات الطالب المتاحة له (RLS)
     const { data: lessons } = await context.supabase
       .from("lessons")
       .select("title, description, transcript, courses(title, subject)")
       .or("transcript.not.is.null,description.not.is.null")
       .limit(120);
 
-    const blocks: string[] = [];
-    let budget = 42000;
     for (const l of lessons ?? []) {
       const course = (l as { courses?: { title?: string; subject?: string } }).courses;
       const body = (l.transcript?.trim() || l.description?.trim() || "").slice(0, 8000);
@@ -108,7 +128,7 @@ export const askTutor = createServerFn({ method: "POST" })
     if (!knowledge) {
       return {
         reply:
-          "مفيش محاضرات أو مذكرات متاحة في حسابك لحد دلوقتي، فمقدرش أجاوب من غيرها. اشترك في دوراتك أو استنى مدرّسك يرفع المحاضرات وارجعلي تاني. 📚",
+          "مفيش كتب أو محاضرات أو مذكرات متاحة لمرحلتك لحد دلوقتي، فمقدرش أجاوب من غيرها. اشترك في دوراتك أو استنى الإدارة/مدرّسك يضيفوا المحتوى وارجعلي تاني. 📚",
       };
     }
 
@@ -116,13 +136,13 @@ export const askTutor = createServerFn({ method: "POST" })
       "أنت «مساعد نجم باشا الذكي»، مساعد تعليمي عربي.",
       STAGE_PERSONA[stage],
       `الطالب في: ${grade} — ${STAGE_LABEL[stage]}.`,
-      "قاعدة صارمة: تجاوب فقط من محتوى المحاضرات والمذكرات المرفقة تحت. ممنوع تمامًا تستخدم أي معلومة من خارجها.",
-      "لو الإجابة مش موجودة في المحاضرات المرفقة، قل بالحرف: «المعلومة دي مش موجودة في محاضراتك المتاحة، ذاكر الدرس كويس أو اسأل مدرّسك.» ولا تخترع إجابة.",
+      "قاعدة صارمة: تجاوب فقط من محتوى الكتب والمحاضرات والمذكرات المرفقة تحت. ممنوع تمامًا تستخدم أي معلومة من خارجها.",
+      "لو الإجابة مش موجودة في المحتوى المرفق، قل بالحرف: «المعلومة دي مش موجودة في محتوى مرحلتك المتاح، ذاكر الدرس كويس أو اسأل مدرّسك.» ولا تخترع إجابة.",
       "أجب بالعربية بأسلوب منظّم: عناوين قصيرة ونقاط وخطوات مرقّمة عند الحل.",
       "",
-      "===== محاضرات ومذكرات الطالب =====",
+      "===== الكتب والمحاضرات والمذكرات =====",
       knowledge,
-      "===== نهاية المحاضرات =====",
+      "===== نهاية المحتوى =====",
     ].join("\n");
 
     const res = await fetch(GATEWAY, {

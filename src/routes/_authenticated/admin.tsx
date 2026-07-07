@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone } from "lucide-react";
+import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone, Database } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
@@ -17,6 +17,7 @@ const navItems = [
   { to: "/admin/accounts", label: "الحسابات", icon: UsersRound, exact: false },
   { to: "/admin/devices", label: "الأجهزة", icon: MonitorSmartphone, exact: false },
   { to: "/admin/stages", label: "المراحل", icon: GraduationCap, exact: false },
+  { to: "/admin/knowledge", label: "معرفة الذكاء", icon: Database, exact: false },
   { to: "/admin/coupons", label: "الكوبونات", icon: Ticket, exact: false },
 ];
 
