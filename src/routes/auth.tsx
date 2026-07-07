@@ -79,20 +79,6 @@ function AuthPage() {
   };
 
 
-  const handleSocial = async (provider: "google" | "apple") => {
-    setSocial(provider);
-    const result = await lovable.auth.signInWithOAuth(provider, {
-      redirect_uri: window.location.origin + "/dashboard",
-      extraParams: provider === "google" ? { prompt: "select_account" } : undefined,
-    });
-    if (result.error) {
-      setSocial(null);
-      toast.error("تعذّر تسجيل الدخول، حاول مرة أخرى.");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard" });
-  };
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault();
