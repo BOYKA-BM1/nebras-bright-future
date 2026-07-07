@@ -54,10 +54,30 @@ export function useTeachers() {
         .select("*")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      const teachers = (data ?? []) as Teacher[];
+
+      // عدد الطلاب الحقيقي لكل مدرّس
+      const { data: stats } = await (supabase.rpc as any)("teacher_stats");
+      const map = new Map<string, number>();
+      for (const row of (stats ?? []) as { teacher_id: string; students: number }[]) {
+        map.set(row.teacher_id, Number(row.students) || 0);
+      }
+      return teachers.map((t) => ({
+        ...t,
+        students_label: map.has(t.id) ? String(map.get(t.id)) : t.students_label,
+      }));
     },
   });
 }
+
+type CourseStat = {
+  course_id: string;
+  lessons: number;
+  videos: number;
+  hours: number;
+  live_sessions: number;
+  students: number;
+};
 
 export function useCourses() {
   return useQuery({
@@ -68,10 +88,29 @@ export function useCourses() {
         .select("*, teacher:teachers(*), stage:stages(*)")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as unknown as CourseWithRelations[];
+      const courses = (data ?? []) as unknown as CourseWithRelations[];
+
+      // إحصاءات فعلية (دروس/فيديوهات/ساعات/حصص مباشرة) محسوبة من البيانات
+      const { data: stats } = await (supabase.rpc as any)("course_stats");
+      const map = new Map<string, CourseStat>();
+      for (const row of (stats ?? []) as CourseStat[]) {
+        map.set(row.course_id, row);
+      }
+      return courses.map((c) => {
+        const s = map.get(c.id);
+        if (!s) return c;
+        return {
+          ...c,
+          lessons_count: Number(s.lessons) || 0,
+          videos_count: Number(s.videos) || 0,
+          hours: Number(s.hours) || 0,
+          live_sessions: Number(s.live_sessions) || 0,
+        };
+      });
     },
   });
 }
+
 
 /* ===================== طفرات الأدمن ===================== */
 
