@@ -2,8 +2,9 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Loader2, CheckCircle2, Circle, Lock, FileText, ChevronRight,
-  PlayCircle,
+  PlayCircle, Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/site/Logo";
 import { useCourse, useCourseContent, useEnrollment, useProgress, useUpdateProgress } from "@/hooks/use-content";
