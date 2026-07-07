@@ -123,15 +123,14 @@ function LearnPage() {
               <span className="flex items-center gap-1.5 rounded-full bg-destructive/20 px-2.5 py-0.5 text-xs font-bold text-destructive">🔴 مباشر الآن</span>
               <span className="font-bold">{liveNow.title}</span>
             </div>
-            <div className="aspect-video w-full bg-black">
-              {liveEmbed.kind === "iframe" ? (
-                <iframe src={liveEmbed.src} title={liveNow.title} className="h-full w-full" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen />
-              ) : liveEmbed.kind === "video" ? (
-                <video src={liveEmbed.src} controls autoPlay className="h-full w-full" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-muted-foreground">البث المباشر هيبدأ قريبًا.</div>
-              )}
-            </div>
+            <ProtectedVideo
+              embed={liveEmbed}
+              title={liveNow.title}
+              watermark={watermark}
+              autoPlay
+              obscured={obscured}
+              emptyLabel="البث المباشر هيبدأ قريبًا."
+            />
           </div>
         </div>
       )}
