@@ -29,7 +29,7 @@ export function useStageCounts() {
   return useQuery({
     queryKey: ["stage-counts"],
     queryFn: async (): Promise<Record<string, StageCount>> => {
-      const { data, error } = await supabase.rpc("stage_counts");
+      const { data, error } = await (supabase.rpc as any)("stage_counts");
       if (error) throw error;
       const map: Record<string, StageCount> = {};
       for (const row of (data ?? []) as StageCount[]) {
