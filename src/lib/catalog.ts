@@ -33,9 +33,13 @@ export function toEmbedUrl(url?: string | null): { kind: "iframe" | "video" | "n
   if (/mediadelivery\.net|iframe\.mediadelivery/.test(u)) {
     return { kind: "iframe", src: u.includes("/embed/") ? u : u };
   }
-  // YouTube
-  const yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/);
-  if (yt) return { kind: "iframe", src: `https://www.youtube.com/embed/${yt[1]}` };
+  // YouTube — يدعم: watch?v= / youtu.be / embed / live (البث المباشر) / shorts / v
+  const yt = u.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/|v\/))([\w-]{11})/,
+  );
+  if (yt) {
+    return { kind: "iframe", src: `https://www.youtube.com/embed/${yt[1]}?rel=0&playsinline=1` };
+  }
   // Vimeo
   const vm = u.match(/vimeo\.com\/(\d+)/);
   if (vm) return { kind: "iframe", src: `https://player.vimeo.com/video/${vm[1]}` };
@@ -44,6 +48,7 @@ export function toEmbedUrl(url?: string | null): { kind: "iframe" | "video" | "n
   // افتراضي: iframe
   return { kind: "iframe", src: u };
 }
+
 
 export function priceAfterCoupon(price: number, coupon?: { discount_percent: number | null; discount_amount: number | null } | null): number {
   if (!coupon) return price;
