@@ -165,12 +165,12 @@ function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: 
       <div className="mt-4 flex flex-wrap gap-2">
         <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={handleUpload} />
         {lesson.video_url && (
-          <Button asChild variant="outline" className="gap-2">
-            <a href={lesson.video_url} target="_blank" rel="noreferrer" download>
-              <Download className="h-4 w-4" /> تحميل الفيديو الأصلي
-            </a>
+          <Button onClick={handleDownload} variant="outline" disabled={downloading} className="gap-2">
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {downloading ? "جارٍ التحميل..." : "تحميل الفيديو الأصلي"}
           </Button>
         )}
+
         <Button onClick={() => fileRef.current?.click()} variant="outline" disabled={uploadVideo.isPending} className="gap-2">
           {uploadVideo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           {uploadVideo.isPending ? "جارٍ الرفع..." : "رفع الفيديو المعدّل"}
