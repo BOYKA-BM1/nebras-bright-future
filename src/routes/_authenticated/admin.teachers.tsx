@@ -83,6 +83,9 @@ function AdminTeachers() {
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [form, setForm] = useState<FormState>(empty);
   const [toDelete, setToDelete] = useState<Teacher | null>(null);
+  const uploadImage = useUploadImage();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const acctFileRef = useRef<HTMLInputElement>(null);
 
   // إنشاء حساب مدرّس
   const callCreateAccount = useServerFn(createTeacherAccount);
@@ -93,6 +96,19 @@ function AdminTeachers() {
 
   const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setA = (k: keyof AcctState, v: string) => setAcct((a) => ({ ...a, [k]: v }));
+
+  const uploadTo = async (file: File | undefined, apply: (url: string) => void) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة."); return; }
+    try {
+      const url = await uploadImage.mutateAsync(file);
+      apply(url);
+      toast.success("تم رفع الصورة.");
+    } catch {
+      toast.error("تعذّر رفع الصورة، حاول تاني.");
+    }
+  };
+
 
   const openCreate = () => {
     setEditing(null);
