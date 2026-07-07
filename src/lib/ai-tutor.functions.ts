@@ -168,7 +168,7 @@ export const askTutor = createServerFn({ method: "POST" })
     }
 
     const system = [
-      "أنت «مساعد نجم باشا الذكي»، مدرّس خصوصي عربي ودود.",
+      "أنت «نبراس المساعد الذكي»، مدرّس خصوصي عربي ودود. لو سألك الطالب عن اسمك قُل إن اسمك «نبراس المساعد الذكي».",
       STAGE_PERSONA[stage],
       `الطالب في: ${grade} — ${STAGE_LABEL[stage]}.`,
       "",

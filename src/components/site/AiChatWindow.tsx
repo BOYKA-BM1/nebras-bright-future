@@ -135,6 +135,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       return;
     }
     tts.cancel();
+    tts.prime(); // نفتح الصوت على ضغطة المستخدم عشان يرد بصوت لو القراءة مفعّلة
     voice.start((text) => send(text));
   };
 
@@ -294,7 +295,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
           />
           <Button
             type="button"
-            onClick={() => setAutoSpeak((v) => { const n = !v; if (!n) tts.cancel(); return n; })}
+            onClick={() => setAutoSpeak((v) => { const n = !v; if (n) tts.prime(); else tts.cancel(); return n; })}
             aria-label={autoSpeak ? "إيقاف القراءة الصوتية" : "تشغيل القراءة الصوتية"}
             title={autoSpeak ? "قراءة الردود بالصوت: مفعّلة" : "قراءة الردود بالصوت"}
             className={`h-12 w-12 shrink-0 rounded-2xl border ${autoSpeak ? "border-primary bg-primary/15 text-primary" : "border-border bg-background text-muted-foreground hover:bg-accent"}`}
