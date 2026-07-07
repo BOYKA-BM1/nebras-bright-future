@@ -422,7 +422,7 @@ export const navLinks = [
   { label: "الرئيسية", href: "/#home", gated: false },
   { label: "الدورات", href: "/courses", gated: true },
   { label: "المحاضرات", href: "/lectures", gated: true },
-  
+  { label: "المساعد الذكي", href: "/ai", gated: true },
   { label: "الاستفسارات", href: "/support", gated: false },
   { label: "المساعدة", href: "/#help", gated: false },
 ];

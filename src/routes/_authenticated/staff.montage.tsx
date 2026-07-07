@@ -63,6 +63,7 @@ function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: 
   const uploadVideo = useUploadMontageVideo();
   const fileRef = useRef<HTMLInputElement>(null);
   const [videoUrl, setVideoUrl] = useState(lesson.video_url ?? "");
+  const [downloading, setDownloading] = useState(false);
   const dirty = videoUrl !== (lesson.video_url ?? "");
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,6 +76,32 @@ function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: 
       onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
     });
   };
+
+  const handleDownload = async () => {
+    const url = lesson.video_url;
+    if (!url) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const ext = (url.split("?")[0].split(".").pop() || "mp4").slice(0, 5);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${lesson.title || "lesson"}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+      toast.success("جارٍ تحميل الفيديو الأصلي على جهازك ✅");
+    } catch {
+      toast.error("تعذّر تحميل الفيديو، افتح الرابط وحمّله يدويًا.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
 
   const handlePublish = () => {
     publish.mutate(
@@ -138,12 +165,12 @@ function MontageCard({ lesson, isPending }: { lesson: MontageLesson; isPending: 
       <div className="mt-4 flex flex-wrap gap-2">
         <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={handleUpload} />
         {lesson.video_url && (
-          <Button asChild variant="outline" className="gap-2">
-            <a href={lesson.video_url} target="_blank" rel="noreferrer" download>
-              <Download className="h-4 w-4" /> تحميل الفيديو الأصلي
-            </a>
+          <Button onClick={handleDownload} variant="outline" disabled={downloading} className="gap-2">
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            {downloading ? "جارٍ التحميل..." : "تحميل الفيديو الأصلي"}
           </Button>
         )}
+
         <Button onClick={() => fileRef.current?.click()} variant="outline" disabled={uploadVideo.isPending} className="gap-2">
           {uploadVideo.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           {uploadVideo.isPending ? "جارٍ الرفع..." : "رفع الفيديو المعدّل"}
