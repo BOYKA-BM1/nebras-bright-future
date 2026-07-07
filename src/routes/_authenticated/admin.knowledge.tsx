@@ -49,6 +49,7 @@ import {
 } from "@/hooks/use-knowledge";
 import { extractDocText } from "@/lib/knowledge.functions";
 import { gradesByLevel, type Level } from "@/data/grades";
+import { useTeachers } from "@/hooks/use-catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/knowledge")({
   component: AdminKnowledge,
@@ -67,6 +68,7 @@ type FormState = {
   stage: string; // "" or ALL means كل المراحل
   grade: string;
   subject: string;
+  teacher_id: string; // ALL means بدون مدرّس محدد
   content: string;
   file_url: string;
 };
@@ -76,6 +78,7 @@ const empty: FormState = {
   stage: ALL,
   grade: ALL,
   subject: "",
+  teacher_id: ALL,
   content: "",
   file_url: "",
 };
@@ -85,6 +88,7 @@ function AdminKnowledge() {
   const { create, update, remove } = useKnowledgeAdmin();
   const uploadFile = useUploadKnowledgeFile();
   const extract = useServerFn(extractDocText);
+  const { data: teachers = [] } = useTeachers();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<KnowledgeDoc | null>(null);
@@ -105,6 +109,7 @@ function AdminKnowledge() {
       stage: d.stage ?? ALL,
       grade: d.grade ?? ALL,
       subject: d.subject ?? "",
+      teacher_id: d.teacher_id ?? ALL,
       content: d.content ?? "",
       file_url: d.file_url ?? "",
     });
@@ -146,11 +151,14 @@ function AdminKnowledge() {
       toast.error("اكتب المحتوى أو ارفع ملف واستخرج نصه.");
       return;
     }
+    const teacher = teachers.find((t) => t.id === form.teacher_id);
     const payload = {
       title: form.title.trim(),
       stage: form.stage === ALL ? null : form.stage,
       grade: form.grade === ALL ? null : form.grade,
-      subject: form.subject.trim() || null,
+      subject: form.subject.trim() || teacher?.subject || null,
+      teacher_id: form.teacher_id === ALL ? null : form.teacher_id,
+      teacher_name: teacher?.name || null,
       content: form.content.trim(),
       file_url: form.file_url || null,
     };
@@ -173,6 +181,7 @@ function AdminKnowledge() {
     parts.push(d.stage ? stageLabel[d.stage] ?? d.stage : "كل المراحل");
     if (d.grade) parts.push(d.grade);
     if (d.subject) parts.push(d.subject);
+    if (d.teacher_name) parts.push(`أ/ ${d.teacher_name}`);
     return parts.join(" · ");
   };
 
@@ -270,9 +279,38 @@ function AdminKnowledge() {
               </Field>
             </div>
 
+            <Field label="مدرّس المادة">
+              <Select
+                value={form.teacher_id}
+                onValueChange={(v) => {
+                  const t = teachers.find((x) => x.id === v);
+                  setForm((f) => ({
+                    ...f,
+                    teacher_id: v,
+                    // نملأ المادة تلقائيًا من المدرّس لو المادة فاضية
+                    subject: f.subject.trim() ? f.subject : t?.subject ?? "",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="اختر المدرّس المسؤول" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>بدون مدرّس محدد</SelectItem>
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}{t.subject ? ` — ${t.subject}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                لما تختار المدرّس، المساعد الذكي هيعرف إنه هو مدرّس المادة دي ويقدر يقول اسمه لو الطالب سأل.
+              </p>
+            </Field>
+
             <Field label="المادة (اختياري)">
               <Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder="رياضيات / علوم / لغة عربية..." />
             </Field>
+
 
             <div className="rounded-xl border border-dashed border-border p-3">
               <div className="flex flex-wrap items-center gap-2">

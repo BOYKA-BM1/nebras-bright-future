@@ -86,25 +86,45 @@ export const askTutor = createServerFn({ method: "POST" })
 
     // (1) قاعدة معرفة الأدمن: كتب ومذكرات مخصّصة لمرحلة الطالب وصفّه (أو العامة)
     const { data: kdocs } = await (context.supabase.from as any)("knowledge_docs")
-      .select("title, subject, content, stage, grade")
+      .select("title, subject, content, stage, grade, teacher_name")
       .or(`stage.is.null,stage.eq.${stage}`)
       .limit(80);
 
     const blocks: string[] = [];
+    // سجل المدرّسين: مادة -> اسم المدرّس (نبنيه من الكتب/المذكرات ومن جدول المدرّسين)
+    const teacherBySubject = new Map<string, string>();
     let budget = 42000;
 
     for (const d of (kdocs ?? []) as Array<{
-      title: string; subject: string | null; content: string | null; grade: string | null;
+      title: string; subject: string | null; content: string | null; grade: string | null; teacher_name: string | null;
     }>) {
       // فلترة الصف: لو الكتاب مخصّص لصف معيّن لازم يطابق صف الطالب
       if (d.grade && d.grade !== grade) continue;
+      if (d.teacher_name && d.subject) teacherBySubject.set(d.subject.trim(), d.teacher_name.trim());
       const body = (d.content?.trim() || "").slice(0, 12000);
       if (!body) continue;
-      const block = `### كتاب/مذكرة: ${d.title}${d.subject ? ` — ${d.subject}` : ""}\n${body}`;
+      const who = d.teacher_name ? ` — المدرّس: أ/ ${d.teacher_name}` : "";
+      const block = `### كتاب/مذكرة: ${d.title}${d.subject ? ` — ${d.subject}` : ""}${who}\n${body}`;
       if (block.length > budget) break;
       budget -= block.length;
       blocks.push(block);
     }
+
+    // (1.5) سجل مدرّسي المنصة لمرحلة الطالب/صفّه (عشان يرد باسم مدرّس المادة)
+    const { data: teacherRoster } = await context.supabase
+      .from("teachers")
+      .select("name, subject, stage, grade")
+      .limit(200);
+
+    for (const t of teacherRoster ?? []) {
+      const tt = t as { name: string; subject: string | null; stage: string | null; grade: string | null };
+      if (tt.stage && tt.stage !== stage) continue;
+      if (tt.grade && tt.grade !== grade) continue;
+      if (tt.subject && !teacherBySubject.has(tt.subject.trim())) {
+        teacherBySubject.set(tt.subject.trim(), tt.name.trim());
+      }
+    }
+
 
     // (2) محاضرات ومذكرات الطالب المتاحة له (RLS)
     const { data: lessons } = await context.supabase
@@ -125,7 +145,11 @@ export const askTutor = createServerFn({ method: "POST" })
 
     const knowledge = blocks.join("\n\n");
 
-    if (!knowledge) {
+    const roster = Array.from(teacherBySubject.entries())
+      .map(([subject, name]) => `- ${subject}: الأستاذ ${name}`)
+      .join("\n");
+
+    if (!knowledge && !roster) {
       return {
         reply:
           "مفيش كتب أو محاضرات أو مذكرات متاحة لمرحلتك لحد دلوقتي، فمقدرش أجاوب من غيرها. اشترك في دوراتك أو استنى الإدارة/مدرّسك يضيفوا المحتوى وارجعلي تاني. 📚",
@@ -133,15 +157,21 @@ export const askTutor = createServerFn({ method: "POST" })
     }
 
     const system = [
-      "أنت «مساعد نجم باشا الذكي»، مساعد تعليمي عربي.",
+      "أنت «مساعد نجم باشا الذكي»، مدرّس خصوصي عربي ودود.",
       STAGE_PERSONA[stage],
       `الطالب في: ${grade} — ${STAGE_LABEL[stage]}.`,
-      "قاعدة صارمة: تجاوب فقط من محتوى الكتب والمحاضرات والمذكرات المرفقة تحت. ممنوع تمامًا تستخدم أي معلومة من خارجها.",
-      "لو الإجابة مش موجودة في المحتوى المرفق، قل بالحرف: «المعلومة دي مش موجودة في محتوى مرحلتك المتاح، ذاكر الدرس كويس أو اسأل مدرّسك.» ولا تخترع إجابة.",
-      "أجب بالعربية بأسلوب منظّم: عناوين قصيرة ونقاط وخطوات مرقّمة عند الحل.",
       "",
+      "أسلوب الكلام: اتكلم بشكل طبيعي جدًا وإنساني ودافئ، كأنك مدرّس حقيقي قاعد جنب الطالب. استخدم لهجة عربية بسيطة وودّية، رحّب بالطالب، شجّعه، واسأله أسئلة متابعة زي أي إنسان بيشرح. تجنّب الأسلوب الآلي أو الجاف.",
+      "",
+      "معلومات المدرّسين: عندك تحت قائمة بمدرّسي كل مادة. لو الطالب سأل «مين مدرّس مادة كذا؟» أو «اسم مدرّس المادة؟» رُدّ باسم المدرّس من القائمة دي بشكل طبيعي (مثال: «مدرّس الرياضيات بتاعك هو الأستاذ فلان 👨‍🏫»). لو المادة مش موجودة في القائمة قُل إنها لسه مش متسجّلة عندك.",
+      "",
+      "قاعدة المحتوى: في شرح الدروس والحل والمعلومات الدراسية، اعتمد فقط على محتوى الكتب والمحاضرات والمذكرات المرفقة تحت، وما تختراعش معلومات من برّه. لو الإجابة الدراسية مش موجودة في المحتوى المرفق، قُل بلطف: «المعلومة دي مش موجودة في محتوى مرحلتك المتاح، ذاكر الدرس كويس أو اسأل مدرّسك.» (لكن أسئلة أسماء المدرّسين تُجاب من قائمة المدرّسين حتى لو مش في المحتوى).",
+      "نظّم الشرح: عناوين قصيرة ونقاط وخطوات مرقّمة عند الحل، مع لمسة إنسانية.",
+      "",
+      "===== مدرّسو موادك =====",
+      roster || "— لا توجد بيانات مدرّسين متاحة —",
       "===== الكتب والمحاضرات والمذكرات =====",
-      knowledge,
+      knowledge || "— لا يوجد محتوى دراسي متاح —",
       "===== نهاية المحتوى =====",
     ].join("\n");
 
