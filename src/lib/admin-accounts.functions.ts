@@ -149,3 +149,18 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const resetAccountDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ device_id: null, device_label: null, device_registered_at: null })
+      .eq("id", data.userId);
+    if (error) throw new Error("تعذّر إعادة تعيين الجهاز.");
+    return { ok: true };
+  });
+
+
