@@ -109,6 +109,7 @@ function AdminKnowledge() {
       stage: d.stage ?? ALL,
       grade: d.grade ?? ALL,
       subject: d.subject ?? "",
+      teacher_id: d.teacher_id ?? ALL,
       content: d.content ?? "",
       file_url: d.file_url ?? "",
     });
