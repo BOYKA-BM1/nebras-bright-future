@@ -7,6 +7,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { lectureFeatures } from "@/data/site";
+import { useRoles } from "@/hooks/use-roles";
 
 const iconMap = {
   Video,
@@ -18,6 +19,12 @@ const iconMap = {
 } as const;
 
 export function Lectures() {
+  const { isTeacher, isMontage, isCustomerService, isSecretary } = useRoles();
+
+  // المدرّس والطاقم (مونتاج/دعم/سكرتارية) لا يظهر لهم قسم المحاضرات
+  if (isTeacher || isMontage || isCustomerService || isSecretary) return null;
+
+
   return (
     <section id="lectures" className="relative py-24">
       <div className="pointer-events-none absolute inset-x-0 top-1/4 -z-10 mx-auto h-80 max-w-4xl rounded-full bg-primary/5 blur-3xl" />
