@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+
+import { synthesizeSpeech } from "@/lib/tts.functions";
 
 /**
  * Voice AI — تفاعل صوتي مع المساعد الذكي.
  * - التعرّف على الكلام (Speech-to-Text) عبر Web Speech API باللهجة العربية.
- * - قراءة ردود المساعد بصوت عربي (Text-to-Speech) عبر SpeechSynthesis.
- * كل ده يعمل داخل المتصفح بدون أي تكلفة إضافية.
+ * - قراءة ردود المساعد بصوت طبيعي (Text-to-Speech) عبر بوابة Lovable AI
+ *   (نفس جودة صوت شات جي بي تي) وتشغيله في المتصفح.
  */
 
 type SpeechRecognitionLike = {
