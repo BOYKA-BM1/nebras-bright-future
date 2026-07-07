@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Loader2, GraduationCap } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
