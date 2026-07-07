@@ -353,6 +353,7 @@ export type Database = {
           id: string
           is_free: boolean
           is_published: boolean
+          pdf_files: Json
           pdf_url: string | null
           review_status: string
           section_id: string | null
@@ -371,6 +372,7 @@ export type Database = {
           id?: string
           is_free?: boolean
           is_published?: boolean
+          pdf_files?: Json
           pdf_url?: string | null
           review_status?: string
           section_id?: string | null
@@ -389,6 +391,7 @@ export type Database = {
           id?: string
           is_free?: boolean
           is_published?: boolean
+          pdf_files?: Json
           pdf_url?: string | null
           review_status?: string
           section_id?: string | null
