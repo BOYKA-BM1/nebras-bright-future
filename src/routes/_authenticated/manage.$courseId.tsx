@@ -26,7 +26,7 @@ import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-liv
 import { useUploadMontageVideo, useUploadLessonPdf } from "@/hooks/use-staff";
 import { transcribeVideo } from "@/lib/ai-tutor.functions";
 import { Logo } from "@/components/site/Logo";
-import type { Section, Lesson } from "@/lib/catalog";
+import { getLessonPdfs, type Section, type Lesson, type LessonPdf } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/manage/$courseId")({
   component: ManageCourse,
@@ -91,10 +91,11 @@ function ManageCourse() {
       toast.error("اختر ملف PDF صالح.");
       return;
     }
+    const defaultTitle = file.name.replace(/\.pdf$/i, "") || `ملف ${"جديد"}`;
     uploadPdf.mutate(file, {
       onSuccess: (url) => {
-        setLesForm((f) => ({ ...f, pdf_url: url }));
-        toast.success("تم رفع ملف الـ PDF ✅");
+        setLesForm((f) => ({ ...f, pdf_files: [...f.pdf_files, { title: defaultTitle, url }] }));
+        toast.success("تم رفع ملف الـ PDF ✅ — اكتب له عنوان.");
       },
       onError: () => toast.error("تعذّر رفع الملف، حاول تاني."),
     });
@@ -146,7 +147,7 @@ function ManageCourse() {
     setEditLes(l); setLesSectionId(l.section_id);
     setLesForm({
       title: l.title, description: l.description ?? "", video_url: l.video_url ?? "",
-      pdf_url: l.pdf_url ?? "", duration_minutes: String(l.duration_minutes), is_free: l.is_free,
+      pdf_files: getLessonPdfs(l), duration_minutes: String(l.duration_minutes), is_free: l.is_free,
       transcript: l.transcript ?? "",
     });
     setLesOpen(true);
@@ -159,7 +160,8 @@ function ManageCourse() {
       title: lesForm.title.trim(),
       description: lesForm.description.trim() || null,
       video_url: lesForm.video_url.trim() || null,
-      pdf_url: lesForm.pdf_url.trim() || null,
+      pdf_files: lesForm.pdf_files as unknown as Lesson["pdf_files"],
+      pdf_url: lesForm.pdf_files[0]?.url ?? null,
       duration_minutes: Number(lesForm.duration_minutes) || 0,
       is_free: lesForm.is_free,
       transcript: lesForm.transcript.trim() || null,
@@ -467,32 +469,46 @@ function ManageCourse() {
               </div>
             </F>
 
-            <F label="ملف PDF للمحاضرة (اختياري)">
+            <F label="ملفات PDF للمحاضرة (اختياري — تقدر ترفع أكتر من ملف)">
               <input ref={pdfFileRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={handlePdfUpload} />
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="grid gap-2">
+                {lesForm.pdf_files.map((pdf, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                    <FileText className="h-4 w-4 shrink-0 text-primary" />
+                    <Input
+                      value={pdf.title}
+                      onChange={(e) =>
+                        setLesForm((f) => ({
+                          ...f,
+                          pdf_files: f.pdf_files.map((p, idx) => (idx === i ? { ...p, title: e.target.value } : p)),
+                        }))
+                      }
+                      placeholder="عنوان الملف (مثال: جزء أول، ملخص، واجب...)"
+                      className="flex-1"
+                    />
+                    <IconBtn
+                      danger
+                      title="حذف الملف"
+                      onClick={() => setLesForm((f) => ({ ...f, pdf_files: f.pdf_files.filter((_, idx) => idx !== i) }))}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </IconBtn>
+                  </div>
+                ))}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => pdfFileRef.current?.click()}
                   disabled={uploadPdf.isPending}
-                  className="gap-2"
+                  className="gap-2 justify-self-start"
                 >
-                  {uploadPdf.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {uploadPdf.isPending ? "جارٍ الرفع..." : lesForm.pdf_url ? "استبدال ملف الـ PDF" : "ارفع ملف PDF"}
+                  {uploadPdf.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {uploadPdf.isPending ? "جارٍ الرفع..." : "أضف ملف PDF"}
                 </Button>
-                {lesForm.pdf_url && !uploadPdf.isPending && (
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
-                    <CheckCircle2 className="h-4 w-4" /> تم رفع الملف
-                  </span>
-                )}
-                {lesForm.pdf_url && !uploadPdf.isPending && (
-                  <Button type="button" size="sm" variant="ghost" className="gap-1 text-destructive" onClick={() => setLesForm((f) => ({ ...f, pdf_url: "" }))}>
-                    <Trash2 className="h-3.5 w-3.5" /> إزالة
-                  </Button>
-                )}
               </div>
-              <p className="text-xs text-muted-foreground">ارفع ملف الـ PDF من اللاب أو الهاتف مباشرة — هيظهر للطلاب المشتركين لتحميله على أجهزتهم.</p>
+              <p className="text-xs text-muted-foreground">ارفع ملفات الـ PDF من اللاب أو الهاتف مباشرة، واكتب لكل ملف عنوان — هتظهر للطلاب المشتركين لتحميلها على أجهزتهم.</p>
             </F>
+
 
             <div className="grid grid-cols-2 gap-4">
               <F label="المدة (تُحسب تلقائيًا)">
@@ -568,8 +584,8 @@ function getVideoDuration(file: File): Promise<number> {
   });
 }
 
-type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean; transcript: string };
-const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false, transcript: "" };
+type LessonForm = { title: string; description: string; video_url: string; pdf_files: LessonPdf[]; duration_minutes: string; is_free: boolean; transcript: string };
+const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_files: [], duration_minutes: "0", is_free: false, transcript: "" };
 
 type LiveForm = { title: string; description: string; embed_url: string };
 const emptyLive: LiveForm = { title: "", description: "", embed_url: "" };
