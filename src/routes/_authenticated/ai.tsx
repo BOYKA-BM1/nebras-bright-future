@@ -35,15 +35,32 @@ function stageLabel(grade?: string | null): string {
 
 function AiTutorPage() {
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const { user } = useAuth();
   const callTutor = useServerFn(askTutor);
+
+  // لو المستخدم مدرّس، نجيب مرحلته وسنته من سجل المدرّس كبديل عن ملف الطالب
+  const { data: teacherRow, isLoading: teacherLoading } = useQuery({
+    queryKey: ["my-teacher-grade", user?.id],
+    enabled: !!user && !profile?.grade,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("teachers")
+        .select("grade, stage")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const grade = profile?.grade?.trim() || "";
+  const grade = (profile?.grade?.trim() || teacherRow?.grade?.trim() || "");
   const hasGrade = !!grade;
+  const loading = profileLoading || teacherLoading;
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
