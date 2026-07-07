@@ -106,6 +106,8 @@ function AdminTeachers() {
     setForm({
       name: t.name,
       subject: t.subject,
+      stage: (t as any).stage ?? "",
+      grade: (t as any).grade ?? "",
       bio: t.bio ?? "",
       experience_years: String(t.experience_years),
       image_url: t.image_url ?? "",
