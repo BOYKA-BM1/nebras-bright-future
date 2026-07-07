@@ -55,7 +55,11 @@ function AiTutorPage() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimer = useRef<number | null>(null);
+
+  useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current); }, []);
 
   const grade = (teacherRow?.grade?.trim() || profile?.grade?.trim() || "");
   const hasGrade = !!grade;
@@ -64,7 +68,32 @@ function AiTutorPage() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, busy]);
+  }, [messages, busy, typing]);
+
+  // تأثير الكتابة الحيّة: يظهر الرد حرفًا حرفًا زي شات جي بي تي
+  const typeReply = (reply: string) =>
+    new Promise<void>((resolve) => {
+      const chars = Array.from(reply);
+      // نضيف رسالة مساعد فاضية ونملاها تدريجيًا
+      setMessages((m) => [...m, { role: "assistant", content: "" }]);
+      let i = 0;
+      const step = () => {
+        // نكتب كذا حرف في المرة عشان السرعة تبقى طبيعية
+        i = Math.min(chars.length, i + 2);
+        const shown = chars.slice(0, i).join("");
+        setMessages((m) => {
+          const copy = [...m];
+          copy[copy.length - 1] = { role: "assistant", content: shown };
+          return copy;
+        });
+        if (i < chars.length) {
+          typingTimer.current = window.setTimeout(step, 16);
+        } else {
+          resolve();
+        }
+      };
+      step();
+    });
 
   const send = async (text: string) => {
     const content = text.trim();
@@ -74,15 +103,18 @@ function AiTutorPage() {
     setMessages(next);
     setInput("");
     setBusy(true);
+    setTyping(false);
     try {
       const { reply } = await callTutor({ data: { messages: next.slice(-12) } });
-      setMessages((m) => [...m, { role: "assistant", content: reply }]);
+      setTyping(true);
+      await typeReply(reply);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "حصل خطأ، حاول تاني.");
       setMessages((m) => m.slice(0, -1));
       setInput(content);
     } finally {
       setBusy(false);
+      setTyping(false);
     }
   };
 
@@ -154,11 +186,14 @@ function AiTutorPage() {
                     </span>
                     <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-gradient-gold text-primary-foreground" : "border border-border bg-card"}`}>
                       {m.content}
+                      {typing && m.role === "assistant" && i === messages.length - 1 && (
+                        <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-primary align-middle" />
+                      )}
                     </div>
                   </div>
                 ))
               )}
-              {busy && (
+              {busy && !typing && (
                 <div className="flex gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-gold text-primary-foreground"><Bot className="h-4 w-4" /></span>
                   <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
