@@ -1,6 +1,6 @@
-import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-react";
+import { GraduationCap, Library, BookA, ChevronLeft, Loader2, Users, UserRound } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useStages } from "@/hooks/use-catalog";
+import { useStages, useStageCounts } from "@/hooks/use-catalog";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useProfile } from "@/hooks/use-profile";
@@ -30,6 +30,7 @@ const gradesByLevel: Record<string, string[]> = {
 
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
+  const { data: counts = {} } = useStageCounts();
   const { user } = useAuth();
   const { isTeacher, isMontage, isAdmin, isCustomerService, isSecretary } = useRoles();
   const { data: profile } = useProfile();
@@ -89,6 +90,7 @@ export function Stages() {
               const Icon = iconMap[stage.icon as keyof typeof iconMap] ?? GraduationCap;
               const allGrades = gradesByLevel[stage.level] ?? [];
               const grades = gradeFilter ? allGrades.filter((g) => g === gradeFilter) : allGrades;
+              const c = counts[stage.id];
 
               return (
                 <article
@@ -103,6 +105,18 @@ export function Stages() {
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                     {stage.description}
                   </p>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                      <Users className="h-3.5 w-3.5" />
+                      {(c?.teachers ?? 0).toLocaleString("ar-EG")} مدرّس في المرحلة
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-500">
+                      <UserRound className="h-3.5 w-3.5" />
+                      {(c?.students ?? 0).toLocaleString("ar-EG")} طالب مشترك
+                    </span>
+                  </div>
+
 
                   {grades.length > 0 && (
                     <ul className="mt-5 grid gap-2">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Loader2, GraduationCap } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, GraduationCap, Users, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -30,7 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useStages, useStageAdmin } from "@/hooks/use-catalog";
+import { useStages, useStageAdmin, useStageCounts } from "@/hooks/use-catalog";
 import { levels, levelLabel, type Stage } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/stages")({
@@ -59,6 +59,7 @@ const icons = ["GraduationCap", "Library", "BookA"];
 
 function AdminStages() {
   const { data: stages = [], isLoading } = useStages();
+  const { data: counts = {} } = useStageCounts();
   const { create, update, remove } = useStageAdmin();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Stage | null>(null);
@@ -125,6 +126,16 @@ function AdminStages() {
               </div>
               <h3 className="mt-4 font-bold">{s.name}</h3>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{s.description}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                  <Users className="h-3.5 w-3.5" />
+                  {(counts[s.id]?.teachers ?? 0).toLocaleString("ar-EG")} مدرّس
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-500">
+                  <UserRound className="h-3.5 w-3.5" />
+                  {(counts[s.id]?.students ?? 0).toLocaleString("ar-EG")} طالب
+                </span>
+              </div>
               <div className="mt-4 flex gap-2">
                 <button onClick={() => openEdit(s)} className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-accent">
                   <Pencil className="h-3.5 w-3.5" /> تعديل
