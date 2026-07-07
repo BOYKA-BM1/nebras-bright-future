@@ -91,10 +91,11 @@ function ManageCourse() {
       toast.error("اختر ملف PDF صالح.");
       return;
     }
+    const defaultTitle = file.name.replace(/\.pdf$/i, "") || `ملف ${"جديد"}`;
     uploadPdf.mutate(file, {
       onSuccess: (url) => {
-        setLesForm((f) => ({ ...f, pdf_url: url }));
-        toast.success("تم رفع ملف الـ PDF ✅");
+        setLesForm((f) => ({ ...f, pdf_files: [...f.pdf_files, { title: defaultTitle, url }] }));
+        toast.success("تم رفع ملف الـ PDF ✅ — اكتب له عنوان.");
       },
       onError: () => toast.error("تعذّر رفع الملف، حاول تاني."),
     });
