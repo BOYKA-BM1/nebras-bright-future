@@ -25,6 +25,23 @@ export type CourseWithRelations = Course & {
 
 export type SectionWithLessons = Section & { lessons: Lesson[] };
 
+/** ملف PDF مرفق بالمحاضرة: له عنوان ورابط تحميل */
+export type LessonPdf = { title: string; url: string };
+
+/** يقرأ قائمة ملفات الـ PDF من الدرس (مع دعم الحقل القديم pdf_url) */
+export function getLessonPdfs(lesson: { pdf_files?: unknown; pdf_url?: string | null }): LessonPdf[] {
+  const raw = lesson.pdf_files;
+  if (Array.isArray(raw)) {
+    const list = raw
+      .filter((f): f is Record<string, unknown> => !!f && typeof f === "object")
+      .map((f) => ({ title: String(f.title ?? "ملف"), url: String(f.url ?? "") }))
+      .filter((f) => f.url);
+    if (list.length) return list;
+  }
+  if (lesson.pdf_url) return [{ title: "ملف المحاضرة", url: lesson.pdf_url }];
+  return [];
+}
+
 /** يحوّل رابط فيديو (Bunny / YouTube / mp4) لرابط مشغّل قابل للتضمين */
 export function toEmbedUrl(url?: string | null): { kind: "iframe" | "video" | "none"; src: string } {
   if (!url) return { kind: "none", src: "" };
