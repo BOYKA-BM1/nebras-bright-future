@@ -358,6 +358,7 @@ export type Database = {
           section_id: string | null
           sort_order: number
           title: string
+          transcript: string | null
           updated_at: string
           video_id: string | null
           video_url: string | null
@@ -375,6 +376,7 @@ export type Database = {
           section_id?: string | null
           sort_order?: number
           title: string
+          transcript?: string | null
           updated_at?: string
           video_id?: string | null
           video_url?: string | null
@@ -392,6 +394,7 @@ export type Database = {
           section_id?: string | null
           sort_order?: number
           title?: string
+          transcript?: string | null
           updated_at?: string
           video_id?: string | null
           video_url?: string | null

@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, Plus, Pencil, Trash2, ChevronRight, Video, FileText, Layers, GripVertical,
-  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2,
+  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2, Wand2, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -23,6 +24,7 @@ import { useCourse, useCourseContent, useSectionAdmin, useLessonAdmin } from "@/
 import { useCourseAdmin } from "@/hooks/use-catalog";
 import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
 import { useUploadMontageVideo } from "@/hooks/use-staff";
+import { transcribeVideo } from "@/lib/ai-tutor.functions";
 import { Logo } from "@/components/site/Logo";
 import type { Section, Lesson } from "@/lib/catalog";
 
@@ -42,6 +44,21 @@ function ManageCourse() {
   const liveAdmin = useLiveAdmin(courseId);
   const uploadVideo = useUploadMontageVideo();
   const videoFileRef = useRef<HTMLInputElement>(null);
+  const callTranscribe = useServerFn(transcribeVideo);
+  const [transcribing, setTranscribing] = useState(false);
+
+  const runTranscription = async (url: string) => {
+    setTranscribing(true);
+    try {
+      const { transcript } = await callTranscribe({ data: { url } });
+      setLesForm((f) => ({ ...f, transcript }));
+      toast.success("تم تفريغ المحاضرة إلى نص تلقائيًا ✅ — المساعد الذكي هيجاوب الطلاب منها.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "تعذّر تفريغ الفيديو تلقائيًا.");
+    } finally {
+      setTranscribing(false);
+    }
+  };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,6 +75,7 @@ function ManageCourse() {
           duration_minutes: minutes ? String(minutes) : f.duration_minutes,
         }));
         toast.success("تم رفع الفيديو بنفس الجودة ✅ واحتُسبت المدة تلقائيًا.");
+        void runTranscription(url);
       },
       onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
     });
@@ -108,6 +126,7 @@ function ManageCourse() {
     setLesForm({
       title: l.title, description: l.description ?? "", video_url: l.video_url ?? "",
       pdf_url: l.pdf_url ?? "", duration_minutes: String(l.duration_minutes), is_free: l.is_free,
+      transcript: l.transcript ?? "",
     });
     setLesOpen(true);
   };
@@ -122,6 +141,7 @@ function ManageCourse() {
       pdf_url: lesForm.pdf_url.trim() || null,
       duration_minutes: Number(lesForm.duration_minutes) || 0,
       is_free: lesForm.is_free,
+      transcript: lesForm.transcript.trim() || null,
     };
     const onErr = () => toast.error("حصل خطأ.");
     if (editLes) {
@@ -372,9 +392,34 @@ function ManageCourse() {
                     <CheckCircle2 className="h-4 w-4" /> تم رفع الفيديو
                   </span>
                 )}
+                {transcribing && (
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
+                    <Loader2 className="h-4 w-4 animate-spin" /> جارٍ تفريغ المحاضرة إلى نص...
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground">ارفع الفيديو من اللاب أو الهاتف — يُحفظ بنفس الدقة والجودة، وتُحسب المدة تلقائيًا.</p>
+              <p className="text-xs text-muted-foreground">ارفع الفيديو من اللاب أو الهاتف — يُحفظ بنفس الدقة والجودة، وتُحسب المدة تلقائيًا، ويتحوّل الكلام إلى نص أوتوماتيك عشان المساعد الذكي يجاوب منه الطلاب.</p>
             </F>
+            <F label="نص المحاضرة (يُنشأ تلقائيًا — المساعد الذكي بيجاوب الطلاب منه)">
+              <div className="grid gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {lesForm.transcript ? (
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
+                      <Sparkles className="h-4 w-4" /> تم تفريغ المحاضرة ({lesForm.transcript.length} حرف)
+                    </span>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">لا يوجد نص بعد — ارفع فيديو ليتم تفريغه، أو اكتبه/الصقه يدويًا.</span>
+                  )}
+                  {lesForm.video_url && (
+                    <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={transcribing} onClick={() => runTranscription(lesForm.video_url)}>
+                      <Wand2 className="h-3.5 w-3.5" /> {lesForm.transcript ? "إعادة التفريغ" : "تفريغ الآن"}
+                    </Button>
+                  )}
+                </div>
+                <Textarea rows={5} value={lesForm.transcript} onChange={(e) => setLesForm({ ...lesForm, transcript: e.target.value })} placeholder="نص المحاضرة المكتوب..." />
+              </div>
+            </F>
+
             <F label="رابط ملف PDF (اختياري)">
               <Input value={lesForm.pdf_url} onChange={(e) => setLesForm({ ...lesForm, pdf_url: e.target.value })} dir="ltr" />
             </F>
@@ -452,8 +497,8 @@ function getVideoDuration(file: File): Promise<number> {
   });
 }
 
-type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean };
-const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false };
+type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean; transcript: string };
+const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false, transcript: "" };
 
 type LiveForm = { title: string; description: string; embed_url: string };
 const emptyLive: LiveForm = { title: "", description: "", embed_url: "" };
