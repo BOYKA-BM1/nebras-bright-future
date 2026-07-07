@@ -7,6 +7,8 @@ export type KnowledgeDoc = {
   stage: string | null;
   grade: string | null;
   subject: string | null;
+  teacher_id: string | null;
+  teacher_name: string | null;
   content: string;
   file_url: string | null;
   created_at: string;
@@ -18,6 +20,8 @@ export type KnowledgeInput = {
   stage: string | null;
   grade: string | null;
   subject: string | null;
+  teacher_id: string | null;
+  teacher_name: string | null;
   content: string;
   file_url: string | null;
 };
