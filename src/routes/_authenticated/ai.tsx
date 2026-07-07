@@ -1,12 +1,15 @@
 import { useRef, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Send, Loader2, Bot, User as UserIcon, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/site/Navbar";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/use-profile";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { askTutor } from "@/lib/ai-tutor.functions";
 
 export const Route = createFileRoute("/_authenticated/ai")({
