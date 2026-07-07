@@ -34,16 +34,7 @@ export const extractDocText = createServerFn({ method: "POST" })
     const fileRes = await fetch(data.url);
     if (!fileRes.ok) throw new Error("تعذّر تحميل الملف.");
 
-    const len = Number(fileRes.headers.get("content-length") || 0);
-    if (len && len > MAX_BYTES) {
-      throw new Error("الملف كبير على الاستخراج التلقائي (الحد 18 ميجا). اكتب أو الصق النص يدويًا.");
-    }
-
     const buf = new Uint8Array(await fileRes.arrayBuffer());
-    if (buf.byteLength > MAX_BYTES) {
-      throw new Error("الملف كبير على الاستخراج التلقائي (الحد 18 ميجا). اكتب أو الصق النص يدويًا.");
-    }
-
     const contentType = fileRes.headers.get("content-type") || "application/pdf";
     const base64 = Buffer.from(buf).toString("base64");
 
