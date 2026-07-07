@@ -50,20 +50,22 @@ export function Hero() {
             لتقديم تجربة تعليمية لا مثيل لها لكل المراحل الدراسية.
           </p>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
-            <button
-              onClick={startLearning}
-              className="w-full rounded-xl bg-gradient-gold px-7 py-3.5 text-center text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03] sm:w-auto"
-            >
-              ابدأ التعلم الآن
-            </button>
-            <a
-              href="#stages"
-              className="w-full rounded-xl border border-border bg-card/60 px-7 py-3.5 text-center text-base font-bold text-foreground transition-colors hover:bg-accent sm:w-auto"
-            >
-              اختر مرحلتك
-            </a>
-          </div>
+          {showCtas && (
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
+              <button
+                onClick={startLearning}
+                className="w-full rounded-xl bg-gradient-gold px-7 py-3.5 text-center text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03] sm:w-auto"
+              >
+                ابدأ التعلم الآن
+              </button>
+              <a
+                href="#stages"
+                className="w-full rounded-xl border border-border bg-card/60 px-7 py-3.5 text-center text-base font-bold text-foreground transition-colors hover:bg-accent sm:w-auto"
+              >
+                اختر مرحلتك
+              </a>
+            </div>
+          )}
 
           <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {stats.map((s) => (
