@@ -26,7 +26,7 @@ import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-liv
 import { useUploadMontageVideo, useUploadLessonPdf } from "@/hooks/use-staff";
 import { transcribeVideo } from "@/lib/ai-tutor.functions";
 import { Logo } from "@/components/site/Logo";
-import type { Section, Lesson } from "@/lib/catalog";
+import { getLessonPdfs, type Section, type Lesson, type LessonPdf } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/manage/$courseId")({
   component: ManageCourse,
