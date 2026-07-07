@@ -263,6 +263,12 @@ function AdminTeachers() {
           <div className="grid gap-4 py-2">
             <Field label="الاسم"><Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="أ. محمد علي" /></Field>
             <Field label="المادة"><Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder="الرياضيات" /></Field>
+            <StageGradeFields
+              stage={form.stage}
+              grade={form.grade}
+              onStage={(v) => setForm((f) => ({ ...f, stage: v, grade: "" }))}
+              onGrade={(v) => set("grade", v)}
+            />
             <Field label="النبذة التعريفية"><Textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={3} /></Field>
             <Field label="رابط الصورة (اختياري)"><Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." dir="ltr" /></Field>
             <div className="grid grid-cols-2 gap-4">
