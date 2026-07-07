@@ -111,7 +111,6 @@ function ManageCourse() {
     setLesForm({
       title: l.title, description: l.description ?? "", video_url: l.video_url ?? "",
       pdf_url: l.pdf_url ?? "", duration_minutes: String(l.duration_minutes), is_free: l.is_free,
-      transcript: l.transcript ?? "",
     });
     setLesOpen(true);
   };
