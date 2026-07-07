@@ -30,6 +30,7 @@ const gradesByLevel: Record<string, string[]> = {
 
 export function Stages() {
   const { data: stages = [], isLoading } = useStages();
+  const { data: counts = {} } = useStageCounts();
   const { user } = useAuth();
   const { isTeacher, isMontage, isAdmin, isCustomerService, isSecretary } = useRoles();
   const { data: profile } = useProfile();
