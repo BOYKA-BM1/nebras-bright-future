@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceRateLimit, getClientIp, getUserAgent, writeAudit } from "@/lib/security.server";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -48,6 +49,16 @@ export const askTutor = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("لم يتم تهيئة المساعد الذكي بعد.");
+
+    // حد المعدل: 25 رسالة كل 5 دقائق لكل طالب
+    const okRate = await enforceRateLimit(`ai:${context.userId}`, 25, 300);
+    if (!okRate) throw new Error("سألت كتير في وقت قصير، استنى شوية وكمّل معايا. 🙏");
+    await writeAudit({
+      userId: context.userId,
+      action: "ai_chat",
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
 
     // سجل المدرّس له الأولوية لو المستخدم مدرّس (لأنه ممكن يكون عنده ملف طالب قديم)
     const { data: teacher } = await context.supabase
@@ -205,6 +216,10 @@ export const transcribeVideo = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("لم يتم تهيئة خدمة التفريغ بعد.");
+
+    // حد المعدل: 12 عملية تفريغ كل 10 دقائق
+    const okRate = await enforceRateLimit(`transcribe:${context.userId}`, 12, 600);
+    if (!okRate) throw new Error("عمليات تفريغ كتير في وقت قصير، استنى شوية وحاول تاني.");
 
     // صلاحيات: مدرّس أو أدمن أو مونتاج فقط
     const { data: roles } = await context.supabase

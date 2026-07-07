@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { enforceRateLimit, getClientIp, getUserAgent, writeAudit } from "@/lib/security.server";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
@@ -25,7 +26,17 @@ export const extractDocText = createServerFn({ method: "POST" })
     const isAdmin = (roles ?? []).some((r) => r.role === "admin");
     if (!isAdmin) throw new Error("غير مصرّح لك.");
 
-    // حماية من SSRF: لازم يكون رابط تخزين المنصة
+    // حد المعدل: 15 عملية استخراج كل 10 دقائق
+    const okRate = await enforceRateLimit(`extract:${context.userId}`, 15, 600);
+    if (!okRate) throw new Error("عمليات استخراج كتير في وقت قصير، استنى شوية وحاول تاني.");
+    await writeAudit({
+      userId: context.userId,
+      action: "file_extract",
+      entity: "knowledge_doc",
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+
     const base = process.env.SUPABASE_URL ?? "";
     if (!base || !data.url.startsWith(`${base}/storage/`) || !data.url.includes("/lesson-pdfs/")) {
       throw new Error("رابط الملف غير صالح.");
