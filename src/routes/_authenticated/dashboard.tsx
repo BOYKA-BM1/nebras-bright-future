@@ -119,6 +119,11 @@ function Dashboard() {
           <StatCard icon={Heart} label="المفضّلة" value={String(favoriteIds.size)} />
         </div>
 
+        <h2 className="mt-12 text-xl font-extrabold">إنجازاتي ونقاطي</h2>
+        <div className="mt-4">
+          <GamificationPanel courses={myCourses.length} />
+        </div>
+
         <h2 className="mt-12 text-xl font-extrabold">دوراتي</h2>
 
         {isLoading ? (
