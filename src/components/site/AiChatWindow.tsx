@@ -56,7 +56,13 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current); }, []);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    const el = scrollRef.current;
+    if (!el) return;
+    // نتابع النزول التلقائي فقط لو المستخدم قريب من آخر الرسائل
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+    if (nearBottom) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    }
   }, [messages, busy, typing]);
 
   // إبقاء صندوق الكتابة نشطًا
