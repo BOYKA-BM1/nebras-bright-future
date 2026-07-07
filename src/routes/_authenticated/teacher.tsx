@@ -68,7 +68,7 @@ function TeacherDashboard() {
     );
   }
 
-  const handleSignOut = async () => { await signOut(); navigate({ to: "/" }); };
+  const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
 
   return (
     <div className="min-h-screen bg-background">
