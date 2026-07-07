@@ -44,7 +44,13 @@ export function useFinance() {
       const payments = (payRes.data ?? []).filter((p) => p.status === "paid");
       const enrollments = (enrRes.data ?? []).filter((e) => e.status === "active");
       const courses = courseRes.data ?? [];
-      const teachers = teacherRes.data ?? [];
+      const teachers = (teacherRes.data ?? []) as Array<{
+        id: string;
+        name: string;
+        subject: string | null;
+        image_url: string | null;
+        profit_percentage: number | null;
+      }>;
 
       const revenue = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
       const buyers = new Set(payments.map((p) => p.user_id)).size;
