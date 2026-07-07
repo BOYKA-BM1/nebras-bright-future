@@ -52,6 +52,9 @@ function CourseDetail() {
   const [couponCode, setCouponCode] = useState("");
   const [applying, setApplying] = useState(false);
   const [coupon, setCoupon] = useState<{ id: string; label: string; finalPrice: number } | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const { data: myRequests = [] } = useMyPaymentRequests();
+  const pendingRequest = myRequests.find((r) => r.course_id === courseId && r.status === "pending");
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
