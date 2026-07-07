@@ -1,11 +1,14 @@
 import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses, useTeachers } from "@/hooks/use-catalog";
 import { useCoupons } from "@/hooks/use-admin";
+import { getMyTeacherDashboard } from "@/lib/teacher.functions";
 import { Logo } from "@/components/site/Logo";
 import { resolveImage } from "@/lib/catalog";
 
