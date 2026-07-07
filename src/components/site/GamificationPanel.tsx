@@ -11,7 +11,7 @@ export function GamificationPanel({ courses = 0 }: { courses?: number }) {
 
   const myRank = useMemo(() => board.find((r) => r.user_id === user?.id)?.rank ?? null, [board, user?.id]);
   const lv = levelInfo(xp);
-  const badges = computeBadges({ xp, rank: myRank, lessons, courses });
+  const badges = computeBadges({ xp, rank: myRank, courses });
   const earned = badges.filter((b) => b.earned);
 
   const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
