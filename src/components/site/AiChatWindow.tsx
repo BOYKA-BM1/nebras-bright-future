@@ -272,13 +272,24 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
             placeholder="اكتب سؤالك هنا..."
             className="max-h-40 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/50"
           />
-          <Button
-            type="submit"
-            disabled={busy || !input.trim()}
-            className="h-12 w-12 shrink-0 rounded-2xl bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90"
-          >
-            {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-          </Button>
+          {busy ? (
+            <Button
+              type="button"
+              onClick={stop}
+              aria-label="إيقاف الرد"
+              className="h-12 w-12 shrink-0 rounded-2xl bg-destructive text-destructive-foreground hover:opacity-90"
+            >
+              <Square className="h-4 w-4 fill-current" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              disabled={!input.trim()}
+              className="h-12 w-12 shrink-0 rounded-2xl bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          )}
         </form>
       </div>
     </div>
