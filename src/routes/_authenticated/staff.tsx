@@ -15,7 +15,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 function StaffLayout() {
-  const { signOut } = useAuth();
+  const { confirmSignOut } = useAuth();
   const { isAdmin, isMontage, isCustomerService, isSecretary, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
