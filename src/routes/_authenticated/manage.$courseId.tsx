@@ -24,7 +24,7 @@ import { useCourse, useCourseContent, useSectionAdmin, useLessonAdmin } from "@/
 import { useCourseAdmin } from "@/hooks/use-catalog";
 import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
 import { useUploadMontageVideo } from "@/hooks/use-staff";
-import { transcribeVideo } from "@/lib/ai-tutor.functions";
+
 import { Logo } from "@/components/site/Logo";
 import type { Section, Lesson } from "@/lib/catalog";
 
