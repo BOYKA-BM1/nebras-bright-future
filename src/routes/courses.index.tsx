@@ -28,6 +28,17 @@ export const Route = createFileRoute("/courses/")({
 });
 
 function CoursesPage() {
+  const navigate = useNavigate();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading } = useRoles();
+
+  // المدرّس والطاقم لا يتصفحون دورات المراحل — يرجعون للرئيسية
+  const isStaffAccount = !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary);
+  useEffect(() => {
+    if (!isLoading && isStaffAccount) navigate({ to: "/" });
+  }, [isLoading, isStaffAccount, navigate]);
+
+  if (isStaffAccount) return null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
