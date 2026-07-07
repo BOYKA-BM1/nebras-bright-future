@@ -292,16 +292,34 @@ function AdminTeachers() {
               onGrade={(v) => set("grade", v)}
             />
             <Field label="النبذة التعريفية"><Textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={3} /></Field>
-            <Field label="رابط الصورة (اختياري)"><Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." dir="ltr" /></Field>
+            <Field label="صورة المدرّس (مطلوبة)">
+              <div className="flex items-center gap-3">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
+                ) : (
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+                    <ImageIcon className="h-6 w-6" />
+                  </span>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; uploadTo(f, (u) => set("image_url", u)); }} className="hidden" />
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploadImage.isPending} className="gap-2">
+                  {uploadImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {form.image_url ? "تغيير الصورة" : "تحميل صورة"}
+                </Button>
+              </div>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field label="سنوات الخبرة"><Input type="number" value={form.experience_years} onChange={(e) => set("experience_years", e.target.value)} /></Field>
               <Field label="التقييم (من 5)"><Input type="number" step="0.1" value={form.rating} onChange={(e) => set("rating", e.target.value)} /></Field>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="عدد الطلاب (نص)"><Input value={form.students_label} onChange={(e) => set("students_label", e.target.value)} placeholder="10k+" /></Field>
               <Field label="نسبة ربح المدرّس (%)"><Input type="number" min="0" max="100" value={form.profit_percentage} onChange={(e) => set("profit_percentage", e.target.value)} placeholder="50" /></Field>
+              <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
             </div>
-            <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
+            <p className="rounded-xl border border-border bg-card/50 p-3 text-xs text-muted-foreground">
+              💡 عدد الطلاب بيتحسب تلقائيًا من الطلاب المشتركين فعليًا في دورات المدرّس.
+            </p>
+
 
             <Field label="معرّف حساب المدرّس (User ID) — لربط لوحة المدرّس"><Input value={form.user_id} onChange={(e) => set("user_id", e.target.value)} placeholder="UUID من صفحة المستخدمين" dir="ltr" /></Field>
           </div>
