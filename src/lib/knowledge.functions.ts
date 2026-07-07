@@ -43,13 +43,14 @@ export const extractDocText = createServerFn({ method: "POST" })
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        max_tokens: 65536,
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "استخرج كل النص المكتوب في هذا الملف التعليمي (كتاب/مذكرة) إلى نص عربي منظّم في فقرات وعناوين، بدون أي إضافات أو تعليقات من عندك، فقط المحتوى كما هو.",
+                text: "استخرج كل النص المكتوب في هذا الملف التعليمي (كتاب/مذكرة) كاملًا من أول صفحة لآخر صفحة إلى نص عربي منظّم في فقرات وعناوين، بدون أي إضافات أو تعليقات أو تلخيص من عندك، فقط المحتوى كما هو بالكامل.",
               },
               { type: "image_url", image_url: { url: `data:${contentType};base64,${base64}` } },
             ],
