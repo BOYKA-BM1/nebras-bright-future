@@ -57,15 +57,20 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
 
   useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current); }, []);
 
+  // نتابع النزول فقط طالما المستخدم عايز يفضل تحت (stickToBottom)
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el) return;
-    // نتابع النزول التلقائي فقط لو المستخدم قريب من آخر الرسائل
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (nearBottom) {
-      el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-    }
+    if (!el || !stickToBottom.current) return;
+    el.scrollTop = el.scrollHeight;
   }, [messages, busy, typing]);
+
+  // متابعة سكرول المستخدم: يوقف التتبع لو طلع لفوق، ويرجّعه لو نزل لآخر الشات
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+  };
+
 
   // إبقاء صندوق الكتابة نشطًا
   useEffect(() => {
