@@ -135,6 +135,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       return;
     }
     tts.cancel();
+    tts.prime(); // نفتح الصوت على ضغطة المستخدم عشان يرد بصوت لو القراءة مفعّلة
     voice.start((text) => send(text));
   };
 
