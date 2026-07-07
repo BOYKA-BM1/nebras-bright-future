@@ -926,12 +926,14 @@ export type Database = {
           bio: string | null
           created_at: string
           experience_years: number
+          grade: string | null
           id: string
           image_url: string | null
           name: string
           profit_percentage: number
           rating: number
           sort_order: number
+          stage: string | null
           students_label: string | null
           subject: string
           updated_at: string
@@ -941,12 +943,14 @@ export type Database = {
           bio?: string | null
           created_at?: string
           experience_years?: number
+          grade?: string | null
           id?: string
           image_url?: string | null
           name: string
           profit_percentage?: number
           rating?: number
           sort_order?: number
+          stage?: string | null
           students_label?: string | null
           subject: string
           updated_at?: string
@@ -956,12 +960,14 @@ export type Database = {
           bio?: string | null
           created_at?: string
           experience_years?: number
+          grade?: string | null
           id?: string
           image_url?: string | null
           name?: string
           profit_percentage?: number
           rating?: number
           sort_order?: number
+          stage?: string | null
           students_label?: string | null
           subject?: string
           updated_at?: string
