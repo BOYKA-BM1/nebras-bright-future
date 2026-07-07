@@ -493,6 +493,102 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_methods: {
+        Row: {
+          id: string
+          instructions: string | null
+          is_active: boolean
+          key: string
+          label: string
+          number: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          key: string
+          label: string
+          number?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          instructions?: string | null
+          is_active?: boolean
+          key?: string
+          label?: string
+          number?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_requests: {
+        Row: {
+          amount: number
+          coupon_id: string | null
+          course_id: string
+          created_at: string
+          id: string
+          method: string
+          note: string | null
+          receipt_url: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sender_reference: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          coupon_id?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          method: string
+          note?: string | null
+          receipt_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_reference: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          coupon_id?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          method?: string
+          note?: string | null
+          receipt_url?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sender_reference?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_requests_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_requests_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
@@ -555,6 +651,9 @@ export type Database = {
           avatar_url: string | null
           birthdate: string | null
           created_at: string
+          device_id: string | null
+          device_label: string | null
+          device_registered_at: string | null
           full_name: string | null
           grade: string | null
           id: string
@@ -570,6 +669,9 @@ export type Database = {
           avatar_url?: string | null
           birthdate?: string | null
           created_at?: string
+          device_id?: string | null
+          device_label?: string | null
+          device_registered_at?: string | null
           full_name?: string | null
           grade?: string | null
           id: string
@@ -585,6 +687,9 @@ export type Database = {
           avatar_url?: string | null
           birthdate?: string | null
           created_at?: string
+          device_id?: string | null
+          device_label?: string | null
+          device_registered_at?: string | null
           full_name?: string | null
           grade?: string | null
           id?: string
@@ -1001,6 +1106,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bind_device: {
+        Args: { _device_id: string; _label: string }
+        Returns: string
+      }
       check_quiz_answer: {
         Args: { _answer: string; _question_id: string }
         Returns: boolean
@@ -1033,6 +1142,11 @@ export type Database = {
           teachers: number
           visits: number
         }[]
+      }
+      reset_device: { Args: { _user_id: string }; Returns: undefined }
+      review_payment_request: {
+        Args: { _approve: boolean; _id: string; _note?: string }
+        Returns: undefined
       }
     }
     Enums: {
