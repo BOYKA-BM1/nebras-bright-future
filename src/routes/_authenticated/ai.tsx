@@ -112,7 +112,18 @@ function AiLayout() {
         </aside>
 
         {sidebarOpen && (
-          <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 z-30 bg-black/40 sm:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* لسان جانبي عائم للهاتف يفتح المحادثات (زي شات جي بي تي) */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed right-0 top-1/2 z-30 flex -translate-y-1/2 items-center gap-1 rounded-l-xl bg-gradient-gold py-3 pl-2 pr-1.5 text-primary-foreground shadow-gold sm:hidden"
+            aria-label="فتح المحادثات"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
         )}
 
         {/* العمود الرئيسي */}
