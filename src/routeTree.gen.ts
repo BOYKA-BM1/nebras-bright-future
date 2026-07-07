@@ -38,6 +38,7 @@ import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminStagesRouteImport } from './routes/_authenticated/admin.stages'
 import { Route as AuthenticatedAdminPaymentsRouteImport } from './routes/_authenticated/admin.payments'
 import { Route as AuthenticatedAdminEarningsRouteImport } from './routes/_authenticated/admin.earnings'
+import { Route as AuthenticatedAdminDevicesRouteImport } from './routes/_authenticated/admin.devices'
 import { Route as AuthenticatedAdminCoursesRouteImport } from './routes/_authenticated/admin.courses'
 import { Route as AuthenticatedAdminCouponsRouteImport } from './routes/_authenticated/admin.coupons'
 import { Route as AuthenticatedAdminAccountsRouteImport } from './routes/_authenticated/admin.accounts'
@@ -196,6 +197,12 @@ const AuthenticatedAdminEarningsRoute =
     path: '/earnings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminDevicesRoute =
+  AuthenticatedAdminDevicesRouteImport.update({
+    id: '/devices',
+    path: '/devices',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminCoursesRoute =
   AuthenticatedAdminCoursesRouteImport.update({
     id: '/courses',
@@ -235,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
+  '/admin/devices': typeof AuthenticatedAdminDevicesRoute
   '/admin/earnings': typeof AuthenticatedAdminEarningsRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -266,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/admin/courses': typeof AuthenticatedAdminCoursesRoute
+  '/admin/devices': typeof AuthenticatedAdminDevicesRoute
   '/admin/earnings': typeof AuthenticatedAdminEarningsRoute
   '/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -301,6 +310,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/accounts': typeof AuthenticatedAdminAccountsRoute
   '/_authenticated/admin/coupons': typeof AuthenticatedAdminCouponsRoute
   '/_authenticated/admin/courses': typeof AuthenticatedAdminCoursesRoute
+  '/_authenticated/admin/devices': typeof AuthenticatedAdminDevicesRoute
   '/_authenticated/admin/earnings': typeof AuthenticatedAdminEarningsRoute
   '/_authenticated/admin/payments': typeof AuthenticatedAdminPaymentsRoute
   '/_authenticated/admin/stages': typeof AuthenticatedAdminStagesRoute
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
+    | '/admin/devices'
     | '/admin/earnings'
     | '/admin/payments'
     | '/admin/stages'
@@ -367,6 +378,7 @@ export interface FileRouteTypes {
     | '/admin/accounts'
     | '/admin/coupons'
     | '/admin/courses'
+    | '/admin/devices'
     | '/admin/earnings'
     | '/admin/payments'
     | '/admin/stages'
@@ -401,6 +413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/accounts'
     | '/_authenticated/admin/coupons'
     | '/_authenticated/admin/courses'
+    | '/_authenticated/admin/devices'
     | '/_authenticated/admin/earnings'
     | '/_authenticated/admin/payments'
     | '/_authenticated/admin/stages'
@@ -632,6 +645,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminEarningsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/devices': {
+      id: '/_authenticated/admin/devices'
+      path: '/devices'
+      fullPath: '/admin/devices'
+      preLoaderRoute: typeof AuthenticatedAdminDevicesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/courses': {
       id: '/_authenticated/admin/courses'
       path: '/courses'
@@ -660,6 +680,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAccountsRoute: typeof AuthenticatedAdminAccountsRoute
   AuthenticatedAdminCouponsRoute: typeof AuthenticatedAdminCouponsRoute
   AuthenticatedAdminCoursesRoute: typeof AuthenticatedAdminCoursesRoute
+  AuthenticatedAdminDevicesRoute: typeof AuthenticatedAdminDevicesRoute
   AuthenticatedAdminEarningsRoute: typeof AuthenticatedAdminEarningsRoute
   AuthenticatedAdminPaymentsRoute: typeof AuthenticatedAdminPaymentsRoute
   AuthenticatedAdminStagesRoute: typeof AuthenticatedAdminStagesRoute
@@ -672,6 +693,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAccountsRoute: AuthenticatedAdminAccountsRoute,
   AuthenticatedAdminCouponsRoute: AuthenticatedAdminCouponsRoute,
   AuthenticatedAdminCoursesRoute: AuthenticatedAdminCoursesRoute,
+  AuthenticatedAdminDevicesRoute: AuthenticatedAdminDevicesRoute,
   AuthenticatedAdminEarningsRoute: AuthenticatedAdminEarningsRoute,
   AuthenticatedAdminPaymentsRoute: AuthenticatedAdminPaymentsRoute,
   AuthenticatedAdminStagesRoute: AuthenticatedAdminStagesRoute,

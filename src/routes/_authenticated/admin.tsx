@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, Home, Ticket, UsersRound, Percent, Wallet } from "lucide-react";
+import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
