@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle } from "lucide-react";
+import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
-import { useCourses } from "@/hooks/use-catalog";
+import { useCourses, useTeachers } from "@/hooks/use-catalog";
+import { useCoupons } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
 import { resolveImage } from "@/lib/catalog";
 
