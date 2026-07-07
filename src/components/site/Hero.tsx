@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { usePlatformStats, useTrackVisit } from "@/hooks/use-stats";
 import { useAuth } from "@/hooks/use-auth";
+import { useRoles } from "@/hooks/use-roles";
 
 function fmt(n: number) {
   if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "") + "k";
@@ -13,8 +14,11 @@ export function Hero() {
   useTrackVisit();
   const { data: s } = usePlatformStats();
   const { user } = useAuth();
+  const { isAdmin, isTeacher, isStaff } = useRoles();
   const navigate = useNavigate();
   const startLearning = () => navigate({ to: user ? "/courses" : "/auth" });
+  // الزرين يظهروا للزوّار والطلاب والأدمن فقط — مش لحسابات المدرّس أو الطاقم
+  const showCtas = !user || isAdmin || (!isTeacher && !isStaff);
   const stats = [
     { value: fmt(s?.students ?? 0), label: "طالب", icon: Users },
     { value: fmt(s?.courses ?? 0), label: "دورة", icon: BookOpen },
