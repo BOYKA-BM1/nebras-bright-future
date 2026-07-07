@@ -54,10 +54,30 @@ export function useTeachers() {
         .select("*")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return data ?? [];
+      const teachers = (data ?? []) as Teacher[];
+
+      // عدد الطلاب الحقيقي لكل مدرّس
+      const { data: stats } = await (supabase.rpc as any)("teacher_stats");
+      const map = new Map<string, number>();
+      for (const row of (stats ?? []) as { teacher_id: string; students: number }[]) {
+        map.set(row.teacher_id, Number(row.students) || 0);
+      }
+      return teachers.map((t) => ({
+        ...t,
+        students_label: map.has(t.id) ? String(map.get(t.id)) : t.students_label,
+      }));
     },
   });
 }
+
+type CourseStat = {
+  course_id: string;
+  lessons: number;
+  videos: number;
+  hours: number;
+  live_sessions: number;
+  students: number;
+};
 
 export function useCourses() {
   return useQuery({
@@ -68,10 +88,29 @@ export function useCourses() {
         .select("*, teacher:teachers(*), stage:stages(*)")
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      return (data ?? []) as unknown as CourseWithRelations[];
+      const courses = (data ?? []) as unknown as CourseWithRelations[];
+
+      // إحصاءات فعلية (دروس/فيديوهات/ساعات/حصص مباشرة) محسوبة من البيانات
+      const { data: stats } = await (supabase.rpc as any)("course_stats");
+      const map = new Map<string, CourseStat>();
+      for (const row of (stats ?? []) as CourseStat[]) {
+        map.set(row.course_id, row);
+      }
+      return courses.map((c) => {
+        const s = map.get(c.id);
+        if (!s) return c;
+        return {
+          ...c,
+          lessons_count: Number(s.lessons) || 0,
+          videos_count: Number(s.videos) || 0,
+          hours: Number(s.hours) || 0,
+          live_sessions: Number(s.live_sessions) || 0,
+        };
+      });
     },
   });
 }
+
 
 /* ===================== طفرات الأدمن ===================== */
 
@@ -168,4 +207,28 @@ export function useCourseAdmin() {
   return { create, update, remove };
 }
 
+/** رفع صورة (دورة/مدرّس) من الجهاز إلى التخزين وإرجاع رابط موقّع طويل المدى */
+export function useUploadImage() {
+  return useMutation({
+    mutationFn: async (file: File): Promise<string> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("not_authenticated");
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${user.id}/img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data, error: signErr } = await supabase.storage
+        .from("avatars")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      return data.signedUrl;
+    },
+  });
+}
+
 export type { Stage, Teacher, Course, CourseWithRelations };
+

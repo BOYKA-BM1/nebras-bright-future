@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Pencil, Trash2, Loader2, Star, UserPlus, KeyRound, CheckCircle2, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Star, UserPlus, KeyRound, CheckCircle2, Copy, Upload, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useTeachers, useTeacherAdmin } from "@/hooks/use-catalog";
+import { useTeachers, useTeacherAdmin, useUploadImage } from "@/hooks/use-catalog";
 import { resolveImage, type Teacher } from "@/lib/catalog";
 import { createTeacherAccount } from "@/lib/teacher-admin.functions";
 import { stages } from "@/data/site";
@@ -43,7 +43,6 @@ type FormState = {
   experience_years: string;
   image_url: string;
   rating: string;
-  students_label: string;
   profit_percentage: string;
   sort_order: string;
   user_id: string;
@@ -58,11 +57,11 @@ const empty: FormState = {
   experience_years: "0",
   image_url: "",
   rating: "5.0",
-  students_label: "",
   profit_percentage: "50",
   sort_order: "0",
   user_id: "",
 };
+
 
 type AcctState = { name: string; subject: string; stage: string; grade: string; email: string; password: string; bio: string; image_url: string };
 const emptyAcct: AcctState = { name: "", subject: "", stage: "", grade: "", email: "", password: "", bio: "", image_url: "" };
@@ -84,6 +83,9 @@ function AdminTeachers() {
   const [editing, setEditing] = useState<Teacher | null>(null);
   const [form, setForm] = useState<FormState>(empty);
   const [toDelete, setToDelete] = useState<Teacher | null>(null);
+  const uploadImage = useUploadImage();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const acctFileRef = useRef<HTMLInputElement>(null);
 
   // إنشاء حساب مدرّس
   const callCreateAccount = useServerFn(createTeacherAccount);
@@ -94,6 +96,19 @@ function AdminTeachers() {
 
   const set = (k: keyof FormState, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setA = (k: keyof AcctState, v: string) => setAcct((a) => ({ ...a, [k]: v }));
+
+  const uploadTo = async (file: File | undefined, apply: (url: string) => void) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة."); return; }
+    try {
+      const url = await uploadImage.mutateAsync(file);
+      apply(url);
+      toast.success("تم رفع الصورة.");
+    } catch {
+      toast.error("تعذّر رفع الصورة، حاول تاني.");
+    }
+  };
+
 
   const openCreate = () => {
     setEditing(null);
@@ -112,7 +127,6 @@ function AdminTeachers() {
       experience_years: String(t.experience_years),
       image_url: t.image_url ?? "",
       rating: String(t.rating),
-      students_label: t.students_label ?? "",
       profit_percentage: String((t as any).profit_percentage ?? 50),
       sort_order: String(t.sort_order),
       user_id: t.user_id ?? "",
@@ -131,6 +145,10 @@ function AdminTeachers() {
       toast.error("الاسم والمادة مطلوبان.");
       return;
     }
+    if (!form.image_url.trim()) {
+      toast.error("صورة المدرّس مطلوبة.");
+      return;
+    }
     const payload = {
       name: form.name.trim(),
       subject: form.subject.trim(),
@@ -140,11 +158,11 @@ function AdminTeachers() {
       experience_years: Number(form.experience_years) || 0,
       image_url: form.image_url.trim() || null,
       rating: Number(form.rating) || 5,
-      students_label: form.students_label.trim() || null,
       profit_percentage: Math.min(100, Math.max(0, Number(form.profit_percentage) || 0)),
       sort_order: Number(form.sort_order) || 0,
       user_id: form.user_id.trim() || null,
     };
+
     const onErr = () => toast.error("حصل خطأ، حاول تاني.");
     if (editing) {
       update.mutate(
@@ -162,6 +180,10 @@ function AdminTeachers() {
   const handleCreateAccount = async () => {
     if (!acct.name.trim() || !acct.subject.trim() || !acct.stage || !acct.grade || !acct.email.trim() || acct.password.length < 8) {
       toast.error("الاسم والمادة والمرحلة والسنة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
+      return;
+    }
+    if (!acct.image_url.trim()) {
+      toast.error("صورة المدرّس مطلوبة.");
       return;
     }
     setAcctBusy(true);
@@ -270,16 +292,34 @@ function AdminTeachers() {
               onGrade={(v) => set("grade", v)}
             />
             <Field label="النبذة التعريفية"><Textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={3} /></Field>
-            <Field label="رابط الصورة (اختياري)"><Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." dir="ltr" /></Field>
+            <Field label="صورة المدرّس (مطلوبة)">
+              <div className="flex items-center gap-3">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
+                ) : (
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+                    <ImageIcon className="h-6 w-6" />
+                  </span>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; uploadTo(f, (u) => set("image_url", u)); }} className="hidden" />
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploadImage.isPending} className="gap-2">
+                  {uploadImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {form.image_url ? "تغيير الصورة" : "تحميل صورة"}
+                </Button>
+              </div>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field label="سنوات الخبرة"><Input type="number" value={form.experience_years} onChange={(e) => set("experience_years", e.target.value)} /></Field>
               <Field label="التقييم (من 5)"><Input type="number" step="0.1" value={form.rating} onChange={(e) => set("rating", e.target.value)} /></Field>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="عدد الطلاب (نص)"><Input value={form.students_label} onChange={(e) => set("students_label", e.target.value)} placeholder="10k+" /></Field>
               <Field label="نسبة ربح المدرّس (%)"><Input type="number" min="0" max="100" value={form.profit_percentage} onChange={(e) => set("profit_percentage", e.target.value)} placeholder="50" /></Field>
+              <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
             </div>
-            <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
+            <p className="rounded-xl border border-border bg-card/50 p-3 text-xs text-muted-foreground">
+              💡 عدد الطلاب بيتحسب تلقائيًا من الطلاب المشتركين فعليًا في دورات المدرّس.
+            </p>
+
 
             <Field label="معرّف حساب المدرّس (User ID) — لربط لوحة المدرّس"><Input value={form.user_id} onChange={(e) => set("user_id", e.target.value)} placeholder="UUID من صفحة المستخدمين" dir="ltr" /></Field>
           </div>
@@ -334,7 +374,23 @@ function AdminTeachers() {
                   </div>
                 </Field>
                 <Field label="النبذة (اختياري)"><Textarea value={acct.bio} onChange={(e) => setA("bio", e.target.value)} rows={2} /></Field>
-                <Field label="رابط الصورة (اختياري)"><Input value={acct.image_url} onChange={(e) => setA("image_url", e.target.value)} dir="ltr" placeholder="https://..." /></Field>
+                <Field label="صورة المدرّس (مطلوبة)">
+                  <div className="flex items-center gap-3">
+                    {acct.image_url ? (
+                      <img src={acct.image_url} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
+                    ) : (
+                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                      </span>
+                    )}
+                    <input ref={acctFileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; uploadTo(f, (u) => setA("image_url", u)); }} className="hidden" />
+                    <Button type="button" variant="outline" onClick={() => acctFileRef.current?.click()} disabled={uploadImage.isPending} className="gap-2">
+                      {uploadImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {acct.image_url ? "تغيير الصورة" : "تحميل صورة"}
+                    </Button>
+                  </div>
+                </Field>
+
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAcctOpen(false)}>إلغاء</Button>

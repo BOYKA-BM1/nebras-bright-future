@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, Settings2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Eye, EyeOff, Settings2, Upload, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useCourses, useTeachers, useStages, useCourseAdmin } from "@/hooks/use-catalog";
+import { useCourses, useTeachers, useStages, useCourseAdmin, useUploadImage } from "@/hooks/use-catalog";
 import { tracks, courseTypes, trackLabel, resolveImage, type CourseWithRelations } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/courses")({
@@ -50,10 +50,6 @@ type FormState = {
   track: string;
   subject: string;
   type: string;
-  lessons_count: string;
-  videos_count: string;
-  hours: string;
-  live_sessions: string;
   badge: string;
   is_published: boolean;
   sort_order: string;
@@ -62,9 +58,9 @@ type FormState = {
 const empty: FormState = {
   title: "", description: "", price: "0", old_price: "", image_url: "",
   stage_id: "", teacher_id: "", grade: "", track: "all", subject: "",
-  type: "recorded", lessons_count: "0", videos_count: "0", hours: "0",
-  live_sessions: "0", badge: "", is_published: true, sort_order: "0",
+  type: "recorded", badge: "", is_published: true, sort_order: "0",
 };
+
 
 const NONE = "__none__";
 
@@ -77,6 +73,8 @@ function AdminCourses() {
   const [editing, setEditing] = useState<CourseWithRelations | null>(null);
   const [form, setForm] = useState<FormState>(empty);
   const [toDelete, setToDelete] = useState<CourseWithRelations | null>(null);
+  const uploadImage = useUploadImage();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof FormState, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -95,15 +93,25 @@ function AdminCourses() {
       track: c.track,
       subject: c.subject ?? "",
       type: c.type,
-      lessons_count: String(c.lessons_count),
-      videos_count: String(c.videos_count),
-      hours: String(c.hours),
-      live_sessions: String(c.live_sessions),
       badge: c.badge ?? "",
       is_published: c.is_published,
       sort_order: String(c.sort_order),
     });
     setOpen(true);
+  };
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة."); return; }
+    try {
+      const url = await uploadImage.mutateAsync(file);
+      set("image_url", url);
+      toast.success("تم رفع الصورة.");
+    } catch {
+      toast.error("تعذّر رفع الصورة، حاول تاني.");
+    }
   };
 
   const handleSubmit = () => {
@@ -120,14 +128,11 @@ function AdminCourses() {
       track: form.track,
       subject: form.subject.trim() || null,
       type: form.type,
-      lessons_count: Number(form.lessons_count) || 0,
-      videos_count: Number(form.videos_count) || 0,
-      hours: Number(form.hours) || 0,
-      live_sessions: Number(form.live_sessions) || 0,
       badge: form.badge.trim() || null,
       is_published: form.is_published,
       sort_order: Number(form.sort_order) || 0,
     };
+
     const onErr = () => toast.error("حصل خطأ، حاول تاني.");
     if (editing) {
       update.mutate({ id: editing.id, ...payload }, { onSuccess: () => { toast.success("تم تحديث الدورة."); setOpen(false); }, onError: onErr });
@@ -246,22 +251,38 @@ function AdminCourses() {
               <Field label="السعر قبل الخصم (اختياري)"><Input type="number" value={form.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Field label="عدد الدروس"><Input type="number" value={form.lessons_count} onChange={(e) => set("lessons_count", e.target.value)} /></Field>
-              <Field label="عدد الفيديوهات"><Input type="number" value={form.videos_count} onChange={(e) => set("videos_count", e.target.value)} /></Field>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="عدد الساعات"><Input type="number" value={form.hours} onChange={(e) => set("hours", e.target.value)} /></Field>
-              <Field label="الحصص المباشرة"><Input type="number" value={form.live_sessions} onChange={(e) => set("live_sessions", e.target.value)} /></Field>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <Field label="شارة (Badge)"><Input value={form.badge} onChange={(e) => set("badge", e.target.value)} placeholder="الأكثر طلبًا" /></Field>
               <Field label="الترتيب"><Input type="number" value={form.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></Field>
             </div>
-            <Field label="رابط صورة الدورة (اختياري)"><Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." dir="ltr" /></Field>
+            <Field label="صورة الدورة (اختياري)">
+              <div className="flex items-center gap-3">
+                {form.image_url ? (
+                  <img src={form.image_url} alt="" className="h-16 w-16 shrink-0 rounded-xl border border-border object-cover" />
+                ) : (
+                  <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground">
+                    <ImageIcon className="h-6 w-6" />
+                  </span>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" onChange={onPickImage} className="hidden" />
+                <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploadImage.isPending} className="gap-2">
+                  {uploadImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {form.image_url ? "تغيير الصورة" : "تحميل صورة"}
+                </Button>
+                {form.image_url && (
+                  <Button type="button" variant="ghost" onClick={() => set("image_url", "")} className="text-destructive">
+                    إزالة
+                  </Button>
+                )}
+              </div>
+            </Field>
+            <p className="rounded-xl border border-border bg-card/50 p-3 text-xs text-muted-foreground">
+              💡 عدد الدروس والفيديوهات والساعات والحصص المباشرة بتتحسب تلقائيًا من محتوى الدورة الفعلي.
+            </p>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
               <Label className="text-sm">منشورة (تظهر للطلاب)</Label>
               <Switch checked={form.is_published} onCheckedChange={(v) => set("is_published", v)} />
             </div>
+
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>إلغاء</Button>
