@@ -25,10 +25,10 @@ function LearnPage() {
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const updateProgress = useUpdateProgress(courseId);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [downloading, setDownloading] = useState(false);
+  const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
 
   const downloadPdf = async (url: string, title: string) => {
-    setDownloading(true);
+    setDownloadingUrl(url);
     try {
       const res = await fetch(url);
       if (!res.ok) throw new Error("fetch failed");
