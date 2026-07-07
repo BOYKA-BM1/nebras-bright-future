@@ -187,9 +187,35 @@ function ManageCourse() {
   const setLiveStatus = (l: LiveSession, status: string) => {
     liveAdmin.update.mutate(
       { id: l.id, status, ...(status === "live" && !l.starts_at ? { starts_at: new Date().toISOString() } : {}) },
-      { onSuccess: () => toast.success(status === "live" ? "بدأ البث المباشر 🔴" : "تم إنهاء البث."), onError: () => toast.error("تعذّر التحديث.") },
+      {
+        onSuccess: () => {
+          if (status !== "live") {
+            // عند إنهاء البث: نحوّله تلقائيًا لمحاضرة مسجّلة داخل المنصة بنفس الجودة
+            if (l.embed_url && course) {
+              const alreadySaved = sections.some((s) => s.lessons.some((ls) => ls.video_url === l.embed_url));
+              if (!alreadySaved) {
+                lessonAdmin.create.mutate({
+                  course_id: course.id,
+                  section_id: null,
+                  title: l.title,
+                  description: l.description ?? null,
+                  video_url: l.embed_url,
+                  is_free: false,
+                });
+                toast.success("تم إنهاء البث وتحويله لمحاضرة مسجّلة داخل الدورة ✅");
+                return;
+              }
+            }
+            toast.success("تم إنهاء البث.");
+          } else {
+            toast.success("بدأ البث المباشر 🔴");
+          }
+        },
+        onError: () => toast.error("تعذّر التحديث."),
+      },
     );
   };
+
 
   const togglePublish = () => {
     if (!course) return;
