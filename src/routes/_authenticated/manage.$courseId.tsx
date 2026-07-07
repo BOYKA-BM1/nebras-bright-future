@@ -457,8 +457,8 @@ function getVideoDuration(file: File): Promise<number> {
   });
 }
 
-type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean; transcript: string };
-const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false, transcript: "" };
+type LessonForm = { title: string; description: string; video_url: string; pdf_url: string; duration_minutes: string; is_free: boolean };
+const emptyLesson: LessonForm = { title: "", description: "", video_url: "", pdf_url: "", duration_minutes: "0", is_free: false };
 
 type LiveForm = { title: string; description: string; embed_url: string };
 const emptyLive: LiveForm = { title: "", description: "", embed_url: "" };
