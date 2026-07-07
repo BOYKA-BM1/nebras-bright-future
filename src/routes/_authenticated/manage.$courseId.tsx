@@ -469,32 +469,46 @@ function ManageCourse() {
               </div>
             </F>
 
-            <F label="ملف PDF للمحاضرة (اختياري)">
+            <F label="ملفات PDF للمحاضرة (اختياري — تقدر ترفع أكتر من ملف)">
               <input ref={pdfFileRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={handlePdfUpload} />
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="grid gap-2">
+                {lesForm.pdf_files.map((pdf, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                    <FileText className="h-4 w-4 shrink-0 text-primary" />
+                    <Input
+                      value={pdf.title}
+                      onChange={(e) =>
+                        setLesForm((f) => ({
+                          ...f,
+                          pdf_files: f.pdf_files.map((p, idx) => (idx === i ? { ...p, title: e.target.value } : p)),
+                        }))
+                      }
+                      placeholder="عنوان الملف (مثال: جزء أول، ملخص، واجب...)"
+                      className="flex-1"
+                    />
+                    <IconBtn
+                      danger
+                      title="حذف الملف"
+                      onClick={() => setLesForm((f) => ({ ...f, pdf_files: f.pdf_files.filter((_, idx) => idx !== i) }))}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </IconBtn>
+                  </div>
+                ))}
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => pdfFileRef.current?.click()}
                   disabled={uploadPdf.isPending}
-                  className="gap-2"
+                  className="gap-2 justify-self-start"
                 >
-                  {uploadPdf.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {uploadPdf.isPending ? "جارٍ الرفع..." : lesForm.pdf_url ? "استبدال ملف الـ PDF" : "ارفع ملف PDF"}
+                  {uploadPdf.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  {uploadPdf.isPending ? "جارٍ الرفع..." : "أضف ملف PDF"}
                 </Button>
-                {lesForm.pdf_url && !uploadPdf.isPending && (
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
-                    <CheckCircle2 className="h-4 w-4" /> تم رفع الملف
-                  </span>
-                )}
-                {lesForm.pdf_url && !uploadPdf.isPending && (
-                  <Button type="button" size="sm" variant="ghost" className="gap-1 text-destructive" onClick={() => setLesForm((f) => ({ ...f, pdf_url: "" }))}>
-                    <Trash2 className="h-3.5 w-3.5" /> إزالة
-                  </Button>
-                )}
               </div>
-              <p className="text-xs text-muted-foreground">ارفع ملف الـ PDF من اللاب أو الهاتف مباشرة — هيظهر للطلاب المشتركين لتحميله على أجهزتهم.</p>
+              <p className="text-xs text-muted-foreground">ارفع ملفات الـ PDF من اللاب أو الهاتف مباشرة، واكتب لكل ملف عنوان — هتظهر للطلاب المشتركين لتحميلها على أجهزتهم.</p>
             </F>
+
 
             <div className="grid grid-cols-2 gap-4">
               <F label="المدة (تُحسب تلقائيًا)">
