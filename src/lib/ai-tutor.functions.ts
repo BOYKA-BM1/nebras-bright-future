@@ -86,25 +86,45 @@ export const askTutor = createServerFn({ method: "POST" })
 
     // (1) قاعدة معرفة الأدمن: كتب ومذكرات مخصّصة لمرحلة الطالب وصفّه (أو العامة)
     const { data: kdocs } = await (context.supabase.from as any)("knowledge_docs")
-      .select("title, subject, content, stage, grade")
+      .select("title, subject, content, stage, grade, teacher_name")
       .or(`stage.is.null,stage.eq.${stage}`)
       .limit(80);
 
     const blocks: string[] = [];
+    // سجل المدرّسين: مادة -> اسم المدرّس (نبنيه من الكتب/المذكرات ومن جدول المدرّسين)
+    const teacherBySubject = new Map<string, string>();
     let budget = 42000;
 
     for (const d of (kdocs ?? []) as Array<{
-      title: string; subject: string | null; content: string | null; grade: string | null;
+      title: string; subject: string | null; content: string | null; grade: string | null; teacher_name: string | null;
     }>) {
       // فلترة الصف: لو الكتاب مخصّص لصف معيّن لازم يطابق صف الطالب
       if (d.grade && d.grade !== grade) continue;
+      if (d.teacher_name && d.subject) teacherBySubject.set(d.subject.trim(), d.teacher_name.trim());
       const body = (d.content?.trim() || "").slice(0, 12000);
       if (!body) continue;
-      const block = `### كتاب/مذكرة: ${d.title}${d.subject ? ` — ${d.subject}` : ""}\n${body}`;
+      const who = d.teacher_name ? ` — المدرّس: أ/ ${d.teacher_name}` : "";
+      const block = `### كتاب/مذكرة: ${d.title}${d.subject ? ` — ${d.subject}` : ""}${who}\n${body}`;
       if (block.length > budget) break;
       budget -= block.length;
       blocks.push(block);
     }
+
+    // (1.5) سجل مدرّسي المنصة لمرحلة الطالب/صفّه (عشان يرد باسم مدرّس المادة)
+    const { data: teacherRoster } = await context.supabase
+      .from("teachers")
+      .select("name, subject, stage, grade")
+      .limit(200);
+
+    for (const t of teacherRoster ?? []) {
+      const tt = t as { name: string; subject: string | null; stage: string | null; grade: string | null };
+      if (tt.stage && tt.stage !== stage) continue;
+      if (tt.grade && tt.grade !== grade) continue;
+      if (tt.subject && !teacherBySubject.has(tt.subject.trim())) {
+        teacherBySubject.set(tt.subject.trim(), tt.name.trim());
+      }
+    }
+
 
     // (2) محاضرات ومذكرات الطالب المتاحة له (RLS)
     const { data: lessons } = await context.supabase
