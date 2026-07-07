@@ -190,7 +190,7 @@ function AiTutorPage() {
                   </div>
                 ))
               )}
-              {busy && (
+              {busy && !typing && (
                 <div className="flex gap-3">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-gold text-primary-foreground"><Bot className="h-4 w-4" /></span>
                   <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
