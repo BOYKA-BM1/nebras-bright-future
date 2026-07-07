@@ -106,7 +106,7 @@ export function useCourses() {
     queryFn: async (): Promise<CourseWithRelations[]> => {
       const { data, error } = await supabase
         .from("courses")
-        .select("*, teacher:teachers(*), stage:stages(*)")
+        .select(`*, teacher:teachers(${TEACHER_PUBLIC_COLUMNS}), stage:stages(*)`)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       const courses = (data ?? []) as unknown as CourseWithRelations[];
