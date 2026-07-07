@@ -153,6 +153,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       // لو المستخدم أوقف الرد وهو لسه بيفكّر، نتجاهل الرد بالكامل
       if (!stoppedRef.current) {
         setTyping(true);
+        if (autoSpeak && reply) tts.speak(reply);
         await typeReply(reply);
         setTyping(false);
       }
