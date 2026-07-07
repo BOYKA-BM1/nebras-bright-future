@@ -1226,6 +1226,17 @@ export type Database = {
         Args: { _answer: string; _question_id: string }
         Returns: boolean
       }
+      course_stats: {
+        Args: never
+        Returns: {
+          course_id: string
+          hours: number
+          lessons: number
+          live_sessions: number
+          students: number
+          videos: number
+        }[]
+      }
       gen_enrollment_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1266,6 +1277,13 @@ export type Database = {
           stage_id: string
           students: number
           teachers: number
+        }[]
+      }
+      teacher_stats: {
+        Args: never
+        Returns: {
+          students: number
+          teacher_id: string
         }[]
       }
     }
