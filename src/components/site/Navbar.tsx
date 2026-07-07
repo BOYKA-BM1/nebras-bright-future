@@ -10,7 +10,7 @@ import { resolveImage } from "@/lib/catalog";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, confirmSignOut } = useAuth();
   const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
