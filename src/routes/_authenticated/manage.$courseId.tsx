@@ -377,33 +377,10 @@ function ManageCourse() {
                     <CheckCircle2 className="h-4 w-4" /> تم رفع الفيديو
                   </span>
                 )}
-                {transcribing && (
-                  <span className="flex items-center gap-1.5 text-sm font-semibold text-primary">
-                    <Loader2 className="h-4 w-4 animate-spin" /> جارٍ تفريغ المحاضرة إلى نص...
-                  </span>
-                )}
               </div>
-              <p className="text-xs text-muted-foreground">ارفع الفيديو من اللاب أو الهاتف — يُحفظ بنفس الدقة والجودة، وتُحسب المدة تلقائيًا، ويتحوّل الكلام إلى نص أوتوماتيك عشان المساعد الذكي يجاوب منه الطلاب.</p>
+              <p className="text-xs text-muted-foreground">ارفع الفيديو من اللاب أو الهاتف — يُحفظ بنفس الدقة والجودة، وتُحسب المدة تلقائيًا.</p>
             </F>
-            <F label="نص المحاضرة (يُنشأ تلقائيًا — المساعد الذكي بيجاوب الطلاب منه)">
-              <div className="grid gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  {lesForm.transcript ? (
-                    <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
-                      <Sparkles className="h-4 w-4" /> تم تفريغ المحاضرة ({lesForm.transcript.length} حرف)
-                    </span>
-                  ) : (
-                    <span className="text-sm text-muted-foreground">لا يوجد نص بعد — ارفع فيديو ليتم تفريغه، أو اكتبه/الصقه يدويًا.</span>
-                  )}
-                  {lesForm.video_url && (
-                    <Button type="button" size="sm" variant="outline" className="gap-1.5" disabled={transcribing} onClick={() => runTranscription(lesForm.video_url)}>
-                      <Wand2 className="h-3.5 w-3.5" /> {lesForm.transcript ? "إعادة التفريغ" : "تفريغ الآن"}
-                    </Button>
-                  )}
-                </div>
-                <Textarea rows={5} value={lesForm.transcript} onChange={(e) => setLesForm({ ...lesForm, transcript: e.target.value })} placeholder="نص المحاضرة المكتوب..." />
-              </div>
-            </F>
+
 
             <F label="رابط ملف PDF (اختياري)">
               <Input value={lesForm.pdf_url} onChange={(e) => setLesForm({ ...lesForm, pdf_url: e.target.value })} dir="ltr" />
