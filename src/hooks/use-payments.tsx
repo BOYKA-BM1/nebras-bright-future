@@ -125,7 +125,7 @@ export function useReviewPaymentRequest() {
       const { error } = await supabase.rpc("review_payment_request", {
         _id: input.id,
         _approve: input.approve,
-        _note: input.note ?? null,
+        _note: input.note ?? undefined,
       });
       if (error) throw error;
     },
