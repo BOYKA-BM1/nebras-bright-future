@@ -320,6 +320,12 @@ function AdminTeachers() {
               <div className="grid gap-4 py-2">
                 <Field label="الاسم"><Input value={acct.name} onChange={(e) => setA("name", e.target.value)} placeholder="أ. محمد علي" /></Field>
                 <Field label="المادة"><Input value={acct.subject} onChange={(e) => setA("subject", e.target.value)} placeholder="الرياضيات" /></Field>
+                <StageGradeFields
+                  stage={acct.stage}
+                  grade={acct.grade}
+                  onStage={(v) => setAcct((a) => ({ ...a, stage: v, grade: "" }))}
+                  onGrade={(v) => setA("grade", v)}
+                />
                 <Field label="البريد الإلكتروني"><Input type="email" value={acct.email} onChange={(e) => setA("email", e.target.value)} placeholder="teacher@example.com" dir="ltr" /></Field>
                 <Field label="كلمة المرور">
                   <div className="flex gap-2">
