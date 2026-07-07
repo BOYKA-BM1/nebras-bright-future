@@ -27,12 +27,14 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff.index'
+import { Route as AuthenticatedAiIndexRouteImport } from './routes/_authenticated/ai.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedStaffSupportRouteImport } from './routes/_authenticated/staff.support'
 import { Route as AuthenticatedStaffStudentsRouteImport } from './routes/_authenticated/staff.students'
 import { Route as AuthenticatedStaffMontageRouteImport } from './routes/_authenticated/staff.montage'
 import { Route as AuthenticatedManageCourseIdRouteImport } from './routes/_authenticated/manage.$courseId'
 import { Route as AuthenticatedLearnCourseIdRouteImport } from './routes/_authenticated/learn.$courseId'
+import { Route as AuthenticatedAiThreadIdRouteImport } from './routes/_authenticated/ai.$threadId'
 import { Route as AuthenticatedAdminTeachersRouteImport } from './routes/_authenticated/admin.teachers'
 import { Route as AuthenticatedAdminSubscriptionsRouteImport } from './routes/_authenticated/admin.subscriptions'
 import { Route as AuthenticatedAdminStagesRouteImport } from './routes/_authenticated/admin.stages'
@@ -133,6 +135,11 @@ const AuthenticatedStaffIndexRoute = AuthenticatedStaffIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedStaffRoute,
 } as any)
+const AuthenticatedAiIndexRoute = AuthenticatedAiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAiRoute,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -168,6 +175,11 @@ const AuthenticatedLearnCourseIdRoute =
     path: '/learn/$courseId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAiThreadIdRoute = AuthenticatedAiThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => AuthenticatedAiRoute,
+} as any)
 const AuthenticatedAdminTeachersRoute =
   AuthenticatedAdminTeachersRouteImport.update({
     id: '/teachers',
@@ -235,7 +247,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/ai': typeof AuthenticatedAiRoute
+  '/ai': typeof AuthenticatedAiRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -256,12 +268,14 @@ export interface FileRoutesByFullPath {
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
   '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersRoute
+  '/ai/$threadId': typeof AuthenticatedAiThreadIdRoute
   '/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/ai/': typeof AuthenticatedAiIndexRoute
   '/staff/': typeof AuthenticatedStaffIndexRoute
 }
 export interface FileRoutesByTo {
@@ -269,7 +283,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
-  '/ai': typeof AuthenticatedAiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -289,12 +302,14 @@ export interface FileRoutesByTo {
   '/admin/stages': typeof AuthenticatedAdminStagesRoute
   '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersRoute
+  '/ai/$threadId': typeof AuthenticatedAiThreadIdRoute
   '/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/ai': typeof AuthenticatedAiIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
 }
 export interface FileRoutesById {
@@ -305,7 +320,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/ai': typeof AuthenticatedAiRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -326,12 +341,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/stages': typeof AuthenticatedAdminStagesRoute
   '/_authenticated/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsRoute
   '/_authenticated/admin/teachers': typeof AuthenticatedAdminTeachersRoute
+  '/_authenticated/ai/$threadId': typeof AuthenticatedAiThreadIdRoute
   '/_authenticated/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/_authenticated/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/_authenticated/staff/montage': typeof AuthenticatedStaffMontageRoute
   '/_authenticated/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/_authenticated/staff/support': typeof AuthenticatedStaffSupportRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/ai/': typeof AuthenticatedAiIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
 }
 export interface FileRouteTypes {
@@ -363,12 +380,14 @@ export interface FileRouteTypes {
     | '/admin/stages'
     | '/admin/subscriptions'
     | '/admin/teachers'
+    | '/ai/$threadId'
     | '/learn/$courseId'
     | '/manage/$courseId'
     | '/staff/montage'
     | '/staff/students'
     | '/staff/support'
     | '/admin/'
+    | '/ai/'
     | '/staff/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -376,7 +395,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
-    | '/ai'
     | '/dashboard'
     | '/lectures'
     | '/onboarding'
@@ -396,12 +414,14 @@ export interface FileRouteTypes {
     | '/admin/stages'
     | '/admin/subscriptions'
     | '/admin/teachers'
+    | '/ai/$threadId'
     | '/learn/$courseId'
     | '/manage/$courseId'
     | '/staff/montage'
     | '/staff/students'
     | '/staff/support'
     | '/admin'
+    | '/ai'
     | '/staff'
   id:
     | '__root__'
@@ -432,12 +452,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/stages'
     | '/_authenticated/admin/subscriptions'
     | '/_authenticated/admin/teachers'
+    | '/_authenticated/ai/$threadId'
     | '/_authenticated/learn/$courseId'
     | '/_authenticated/manage/$courseId'
     | '/_authenticated/staff/montage'
     | '/_authenticated/staff/students'
     | '/_authenticated/staff/support'
     | '/_authenticated/admin/'
+    | '/_authenticated/ai/'
     | '/_authenticated/staff/'
   fileRoutesById: FileRoutesById
 }
@@ -581,6 +603,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStaffIndexRouteImport
       parentRoute: typeof AuthenticatedStaffRoute
     }
+    '/_authenticated/ai/': {
+      id: '/_authenticated/ai/'
+      path: '/'
+      fullPath: '/ai/'
+      preLoaderRoute: typeof AuthenticatedAiIndexRouteImport
+      parentRoute: typeof AuthenticatedAiRoute
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -622,6 +651,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/learn/$courseId'
       preLoaderRoute: typeof AuthenticatedLearnCourseIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ai/$threadId': {
+      id: '/_authenticated/ai/$threadId'
+      path: '/$threadId'
+      fullPath: '/ai/$threadId'
+      preLoaderRoute: typeof AuthenticatedAiThreadIdRouteImport
+      parentRoute: typeof AuthenticatedAiRoute
     }
     '/_authenticated/admin/teachers': {
       id: '/_authenticated/admin/teachers'
@@ -727,6 +763,20 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedAiRouteChildren {
+  AuthenticatedAiThreadIdRoute: typeof AuthenticatedAiThreadIdRoute
+  AuthenticatedAiIndexRoute: typeof AuthenticatedAiIndexRoute
+}
+
+const AuthenticatedAiRouteChildren: AuthenticatedAiRouteChildren = {
+  AuthenticatedAiThreadIdRoute: AuthenticatedAiThreadIdRoute,
+  AuthenticatedAiIndexRoute: AuthenticatedAiIndexRoute,
+}
+
+const AuthenticatedAiRouteWithChildren = AuthenticatedAiRoute._addFileChildren(
+  AuthenticatedAiRouteChildren,
+)
+
 interface AuthenticatedStaffRouteChildren {
   AuthenticatedStaffMontageRoute: typeof AuthenticatedStaffMontageRoute
   AuthenticatedStaffStudentsRoute: typeof AuthenticatedStaffStudentsRoute
@@ -746,7 +796,7 @@ const AuthenticatedStaffRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedAiRoute: typeof AuthenticatedAiRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
@@ -759,7 +809,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedAiRoute: AuthenticatedAiRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
