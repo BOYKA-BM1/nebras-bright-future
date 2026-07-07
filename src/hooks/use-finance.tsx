@@ -38,7 +38,7 @@ export function useFinance() {
         supabase.from("payments").select("amount,status,course_id,user_id"),
         supabase.from("enrollments").select("course_id,user_id,status"),
         supabase.from("courses").select("id,title,price,teacher_id"),
-        supabase.from("teachers").select("id,name,subject,image_url,profit_percentage"),
+        (supabase.rpc as any)("admin_teachers"),
       ]);
 
       const payments = (payRes.data ?? []).filter((p) => p.status === "paid");
