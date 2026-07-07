@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Trophy, Loader2, Sparkles } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Trophy, Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMyXp, useLeaderboard } from "@/hooks/use-gamification";
 import { levelInfo, levelTitle, computeBadges } from "@/lib/gamification";
@@ -111,6 +112,12 @@ export function GamificationPanel({ courses = 0 }: { courses?: number }) {
             })}
           </ol>
         )}
+        <Link
+          to="/leaderboard"
+          className="mt-4 flex items-center justify-center gap-1.5 rounded-xl border border-primary/40 px-4 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary/10"
+        >
+          شوف لوحة المتصدّرين كاملة <ArrowLeft className="h-4 w-4" />
+        </Link>
       </div>
     </div>
   );
