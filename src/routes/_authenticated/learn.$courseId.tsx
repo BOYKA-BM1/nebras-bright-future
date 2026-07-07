@@ -10,6 +10,10 @@ import { Logo } from "@/components/site/Logo";
 import { useCourse, useCourseContent, useEnrollment, useProgress, useUpdateProgress } from "@/hooks/use-content";
 import { useLiveSessions } from "@/hooks/use-live";
 import { toEmbedUrl, getLessonPdfs, type Lesson } from "@/lib/catalog";
+import { ProtectedVideo } from "@/components/site/ProtectedVideo";
+import { useContentProtection } from "@/hooks/use-content-protection";
+import { useProfile } from "@/hooks/use-profile";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/learn/$courseId")({
   component: LearnPage,
