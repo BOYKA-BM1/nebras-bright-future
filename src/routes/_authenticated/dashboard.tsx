@@ -144,6 +144,13 @@ function Dashboard() {
                     <Link to="/learn/$courseId" params={{ courseId: c.id }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
                       <ArrowLeft className="h-4 w-4" /> كمّل التعلّم
                     </Link>
+                    <button
+                      onClick={() => handleUnenroll(c.id, c.title)}
+                      disabled={unenroll.isPending}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
+                    >
+                      <XCircle className="h-4 w-4" /> إلغاء الاشتراك
+                    </button>
                   </div>
                 </article>
               );
