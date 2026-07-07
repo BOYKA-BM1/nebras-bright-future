@@ -278,9 +278,38 @@ function AdminKnowledge() {
               </Field>
             </div>
 
+            <Field label="مدرّس المادة">
+              <Select
+                value={form.teacher_id}
+                onValueChange={(v) => {
+                  const t = teachers.find((x) => x.id === v);
+                  setForm((f) => ({
+                    ...f,
+                    teacher_id: v,
+                    // نملأ المادة تلقائيًا من المدرّس لو المادة فاضية
+                    subject: f.subject.trim() ? f.subject : t?.subject ?? "",
+                  }));
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="اختر المدرّس المسؤول" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL}>بدون مدرّس محدد</SelectItem>
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}{t.subject ? ` — ${t.subject}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground">
+                لما تختار المدرّس، المساعد الذكي هيعرف إنه هو مدرّس المادة دي ويقدر يقول اسمه لو الطالب سأل.
+              </p>
+            </Field>
+
             <Field label="المادة (اختياري)">
               <Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder="رياضيات / علوم / لغة عربية..." />
             </Field>
+
 
             <div className="rounded-xl border border-dashed border-border p-3">
               <div className="flex flex-wrap items-center gap-2">
