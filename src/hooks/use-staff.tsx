@@ -100,6 +100,24 @@ export function useUploadMontageVideo() {
   });
 }
 
+/** رفع ملف PDF من الجهاز إلى التخزين وإرجاع رابط موقّع طويل المدى */
+export function useUploadLessonPdf() {
+  return useMutation({
+    mutationFn: async (file: File): Promise<string> => {
+      const path = `pdfs/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+      const { error: upErr } = await supabase.storage
+        .from("lesson-pdfs")
+        .upload(path, file, { upsert: true, contentType: file.type || "application/pdf" });
+      if (upErr) throw upErr;
+      const { data, error: signErr } = await supabase.storage
+        .from("lesson-pdfs")
+        .createSignedUrl(path, 60 * 60 * 24 * 365 * 10);
+      if (signErr) throw signErr;
+      return data.signedUrl;
+    },
+  });
+}
+
 /* ============ بيانات الطلاب (خدمة العملاء + السكرتيرة) ============ */
 
 export type StudentRow = {
