@@ -1,8 +1,9 @@
-import { useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, PlayCircle, BookOpen, Video, ArrowLeft, Home } from "lucide-react";
 import { useCourses } from "@/hooks/use-catalog";
 import { useMyEnrollments } from "@/hooks/use-content";
+import { useRoles } from "@/hooks/use-roles";
 import { resolveImage } from "@/lib/catalog";
 import { Logo } from "@/components/site/Logo";
 
@@ -11,6 +12,16 @@ export const Route = createFileRoute("/_authenticated/lectures")({
 });
 
 function LecturesPage() {
+  const navigate = useNavigate();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading: rolesLoading } = useRoles();
+
+  // المحاضرات خاصة بالطلاب فقط — المدرّس والطاقم يرجعون للرئيسية
+  const isStaffAccount = !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary);
+  useEffect(() => {
+    if (!rolesLoading && isStaffAccount) navigate({ to: "/" });
+  }, [rolesLoading, isStaffAccount, navigate]);
+
+
   const { data: courses = [], isLoading: lc } = useCourses();
   const { data: enrollments = [], isLoading: le } = useMyEnrollments();
 
