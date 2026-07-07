@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useTeachers, useTeacherAdmin } from "@/hooks/use-catalog";
+import { useTeachers, useTeacherAdmin, useUploadImage } from "@/hooks/use-catalog";
 import { resolveImage, type Teacher } from "@/lib/catalog";
 import { createTeacherAccount } from "@/lib/teacher-admin.functions";
 import { stages } from "@/data/site";
