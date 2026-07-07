@@ -139,32 +139,29 @@ function LearnPage() {
         {/* المشغّل */}
         <div className="lg:col-span-2">
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="aspect-video w-full bg-black">
-              {locked ? (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-                  <Lock className="h-10 w-10" />
-                  <p>الدرس ده متاح للمشتركين فقط.</p>
-                </div>
-              ) : embed.kind === "iframe" ? (
-                <iframe src={embed.src} title={active?.title} className="h-full w-full" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowFullScreen />
-              ) : embed.kind === "video" ? (
-                <video
-                  src={embed.src}
-                  controls
-                  className="h-full w-full"
-                  onTimeUpdate={(e) => {
-                    const t = (e.target as HTMLVideoElement).currentTime;
-                    if (active && Math.round(t) % 15 === 0 && t > 0) updateProgress.mutate({ lessonId: active.id, position: t });
-                  }}
-                  onEnded={() => active && updateProgress.mutate({ lessonId: active.id, completed: true })}
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                  <PlayCircle className="h-12 w-12" />
-                  <span className="mr-2">لا يوجد فيديو لهذا الدرس بعد.</span>
-                </div>
-              )}
-            </div>
+            {locked ? (
+              <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-black text-center text-muted-foreground">
+                <Lock className="h-10 w-10" />
+                <p>الدرس ده متاح للمشتركين فقط.</p>
+              </div>
+            ) : (
+              <ProtectedVideo
+                embed={embed}
+                title={active?.title}
+                watermark={watermark}
+                obscured={obscured}
+                onTimeUpdate={(t) => {
+                  if (active && Math.round(t) % 15 === 0 && t > 0) updateProgress.mutate({ lessonId: active.id, position: t });
+                }}
+                onEnded={() => active && updateProgress.mutate({ lessonId: active.id, completed: true })}
+                emptyLabel={
+                  <>
+                    <PlayCircle className="h-12 w-12" />
+                    <span className="mr-2">لا يوجد فيديو لهذا الدرس بعد.</span>
+                  </>
+                }
+              />
+            )}
 
             {active && (
               <div className="p-5">
