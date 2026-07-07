@@ -37,6 +37,8 @@ export const Route = createFileRoute("/_authenticated/admin/teachers")({
 type FormState = {
   name: string;
   subject: string;
+  stage: string;
+  grade: string;
   bio: string;
   experience_years: string;
   image_url: string;
@@ -50,6 +52,8 @@ type FormState = {
 const empty: FormState = {
   name: "",
   subject: "",
+  stage: "",
+  grade: "",
   bio: "",
   experience_years: "0",
   image_url: "",
@@ -60,8 +64,13 @@ const empty: FormState = {
   user_id: "",
 };
 
-type AcctState = { name: string; subject: string; email: string; password: string; bio: string; image_url: string };
-const emptyAcct: AcctState = { name: "", subject: "", email: "", password: "", bio: "", image_url: "" };
+type AcctState = { name: string; subject: string; stage: string; grade: string; email: string; password: string; bio: string; image_url: string };
+const emptyAcct: AcctState = { name: "", subject: "", stage: "", grade: "", email: "", password: "", bio: "", image_url: "" };
+
+/** صفوف المرحلة المختارة */
+function gradesForStage(stageId: string): readonly string[] {
+  return stages.find((s) => s.id === stageId)?.grades ?? [];
+}
 
 function genPassword() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$%";
