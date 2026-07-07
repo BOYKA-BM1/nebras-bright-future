@@ -35,8 +35,8 @@ export function Stages() {
   const { data: profile } = useProfile();
   const navigate = useNavigate();
 
-  // المدرّس وحساب المونتاج لا يظهر لهم قسم المراحل الدراسية إطلاقًا
-  if (isTeacher || isMontage) return null;
+  // المدرّس والطاقم (مونتاج/دعم/سكرتارية) لا يظهر لهم قسم المراحل الدراسية إطلاقًا
+  if (isTeacher || isMontage || isCustomerService || isSecretary) return null;
 
   // الطالب لا يرى قسم المراحل الدراسية إطلاقًا مهما كانت مرحلته
   const isStudent =
