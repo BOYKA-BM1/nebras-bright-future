@@ -88,6 +88,7 @@ function AdminKnowledge() {
   const { create, update, remove } = useKnowledgeAdmin();
   const uploadFile = useUploadKnowledgeFile();
   const extract = useServerFn(extractDocText);
+  const { data: teachers = [] } = useTeachers();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<KnowledgeDoc | null>(null);
