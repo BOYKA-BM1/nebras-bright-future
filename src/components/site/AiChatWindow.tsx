@@ -116,7 +116,8 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
 
       // نحدّث الكاش عشان صفحة المحادثة تفتح جاهزة من غير وميض
       const now = new Date().toISOString();
-      const stored: StoredMessage[] = [...history, { role: "assistant", content: reply }].map(
+      const combined: ChatMsg[] = [...history, { role: "assistant", content: reply }];
+      const stored: StoredMessage[] = combined.map(
         (m, idx) => ({
           id: `local-${idx}`,
           conversation_id: id!,
