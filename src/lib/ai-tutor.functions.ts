@@ -49,27 +49,28 @@ export const askTutor = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("لم يتم تهيئة المساعد الذكي بعد.");
 
-    // ملف الطالب: المرحلة والصف
-    const { data: profile } = await context.supabase
-      .from("profiles")
-      .select("grade, level")
-      .eq("id", context.userId)
+    // سجل المدرّس له الأولوية لو المستخدم مدرّس (لأنه ممكن يكون عنده ملف طالب قديم)
+    const { data: teacher } = await context.supabase
+      .from("teachers")
+      .select("grade, stage")
+      .eq("user_id", context.userId)
       .maybeSingle();
 
-    let grade = profile?.grade?.trim() || "";
-    let levelValue = profile?.level ?? "";
+    let grade = "";
+    let levelValue = "";
 
-    // لو المستخدم مدرّس بدون صف في ملفه، نستخدم مرحلته وسنته من سجل المدرّس
-    if (!grade) {
-      const { data: teacher } = await context.supabase
-        .from("teachers")
-        .select("grade, stage")
-        .eq("user_id", context.userId)
+    if (teacher?.grade) {
+      grade = teacher.grade.trim();
+      levelValue = teacher.stage ?? "";
+    } else {
+      // طالب عادي: نأخذ المرحلة والصف من ملفه
+      const { data: profile } = await context.supabase
+        .from("profiles")
+        .select("grade, level")
+        .eq("id", context.userId)
         .maybeSingle();
-      if (teacher?.grade) {
-        grade = teacher.grade.trim();
-        levelValue = teacher.stage ?? levelValue;
-      }
+      grade = profile?.grade?.trim() || "";
+      levelValue = profile?.level ?? "";
     }
 
     if (!grade) {
