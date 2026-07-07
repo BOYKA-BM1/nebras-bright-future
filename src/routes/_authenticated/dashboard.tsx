@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, confirmSignOut } = useAuth();
   const navigate = useNavigate();
   const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
