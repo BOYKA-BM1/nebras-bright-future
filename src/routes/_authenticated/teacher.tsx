@@ -23,6 +23,14 @@ function TeacherDashboard() {
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
   const { data: teachers = [] } = useTeachers();
   const { data: coupons = [] } = useCoupons();
+  const callDashboard = useServerFn(getMyTeacherDashboard);
+  const { data: stats } = useQuery({
+    queryKey: ["my-teacher-dashboard", user?.id],
+    enabled: !!user && (isTeacher || isAdmin),
+    queryFn: () => callDashboard(),
+    staleTime: 30_000,
+  });
+  const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
 
   const myTeacher = useMemo(
     () => teachers.find((t) => t.user_id === user?.id) ?? null,
