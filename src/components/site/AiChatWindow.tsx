@@ -2,10 +2,11 @@ import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { Send, Loader2, Bot, User as UserIcon, Square } from "lucide-react";
+import { Send, Loader2, Bot, User as UserIcon, Square, Mic, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { askTutor } from "@/lib/ai-tutor.functions";
+import { useSpeechRecognition, useSpeech } from "@/hooks/use-voice";
 import {
   useMessages,
   useConversationActions,
