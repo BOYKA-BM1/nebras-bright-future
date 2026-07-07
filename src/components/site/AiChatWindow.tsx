@@ -37,6 +37,8 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const typingTimer = useRef<number | null>(null);
   const loadedFor = useRef<string | null | undefined>(undefined);
+  // لو المستخدم عمل سكرول لفوق بنفسه، نوقّف المتابعة التلقائية لحد ما يرجع لتحت
+  const stickToBottom = useRef(true);
 
   // مزامنة الرسائل عند تبديل المحادثة أو تحميلها من قاعدة البيانات
   useEffect(() => {
