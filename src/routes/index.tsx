@@ -16,10 +16,10 @@ export const Route = createFileRoute("/")({
         content:
           "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
       },
-      { property: "og:title", content: "نبراس | أقوى منصة تعليمية في مصر" },
+      { property: "og:title", content: "نبراس | أقوى منصة تعليمية في مصر لكل المراحل" },
       {
         property: "og:description",
-        content: "أفضل المدرسين وأحدث التقنيات لتعليم الطلاب في كل مصر مع منصة نبراس.",
+        content: "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://nebras-bright-future.lovable.app/" },

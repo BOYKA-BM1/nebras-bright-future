@@ -81,21 +81,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "نبراس | أقوى منصة تعليمية في مصر" },
+      { title: "نبراس | أقوى منصة تعليمية في مصر لكل المراحل" },
       {
         name: "description",
         content:
-          "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية لكل المراحل الدراسية لتحقيق التفوق.",
+          "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
       },
       { name: "author", content: "نبراس التعليمية" },
-      { property: "og:title", content: "نبراس | أقوى منصة تعليمية في مصر" },
+      { property: "og:title", content: "نبراس | أقوى منصة تعليمية في مصر لكل المراحل" },
       {
         property: "og:description",
         content:
-          "منصة نبراس التعليمية — أفضل المدرسين وأحدث التقنيات لتعليم الطلاب في كل مصر.",
+          "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "نبراس | أقوى منصة تعليمية في مصر لكل المراحل" },
+      { name: "twitter:description", content: "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/75a057b3-8f7d-4dc8-a122-90bfdf8b4412/id-preview-a8c5c5c8--c3919d93-8675-4ca3-9dd6-35829b724365.lovable.app-1783448534861.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/75a057b3-8f7d-4dc8-a122-90bfdf8b4412/id-preview-a8c5c5c8--c3919d93-8675-4ca3-9dd6-35829b724365.lovable.app-1783448534861.png" },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
