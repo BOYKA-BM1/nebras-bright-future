@@ -374,7 +374,23 @@ function AdminTeachers() {
                   </div>
                 </Field>
                 <Field label="النبذة (اختياري)"><Textarea value={acct.bio} onChange={(e) => setA("bio", e.target.value)} rows={2} /></Field>
-                <Field label="رابط الصورة (اختياري)"><Input value={acct.image_url} onChange={(e) => setA("image_url", e.target.value)} dir="ltr" placeholder="https://..." /></Field>
+                <Field label="صورة المدرّس (مطلوبة)">
+                  <div className="flex items-center gap-3">
+                    {acct.image_url ? (
+                      <img src={acct.image_url} alt="" className="h-16 w-16 shrink-0 rounded-full border-2 border-primary/40 object-cover" />
+                    ) : (
+                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border border-dashed border-border text-muted-foreground">
+                        <ImageIcon className="h-6 w-6" />
+                      </span>
+                    )}
+                    <input ref={acctFileRef} type="file" accept="image/*" onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; uploadTo(f, (u) => setA("image_url", u)); }} className="hidden" />
+                    <Button type="button" variant="outline" onClick={() => acctFileRef.current?.click()} disabled={uploadImage.isPending} className="gap-2">
+                      {uploadImage.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                      {acct.image_url ? "تغيير الصورة" : "تحميل صورة"}
+                    </Button>
+                  </div>
+                </Field>
+
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setAcctOpen(false)}>إلغاء</Button>
