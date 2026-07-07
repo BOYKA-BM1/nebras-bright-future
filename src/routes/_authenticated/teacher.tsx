@@ -18,11 +18,29 @@ function TeacherDashboard() {
   const navigate = useNavigate();
   const { isTeacher, isAdmin, isLoading } = useRoles();
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
+  const { data: teachers = [] } = useTeachers();
+  const { data: coupons = [] } = useCoupons();
+
+  const myTeacher = useMemo(
+    () => teachers.find((t) => t.user_id === user?.id) ?? null,
+    [teachers, user?.id],
+  );
+
+  const myCoupons = useMemo(() => {
+    if (isAdmin) return coupons;
+    if (!myTeacher) return [];
+    return coupons.filter((c) => c.teacher_id === myTeacher.id);
+  }, [coupons, isAdmin, myTeacher]);
 
   const myCourses = useMemo(() => {
     if (isAdmin) return courses;
     return courses.filter((c) => c.teacher?.user_id === user?.id);
   }, [courses, isAdmin, user?.id]);
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success("تم نسخ الكود");
+  };
 
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
