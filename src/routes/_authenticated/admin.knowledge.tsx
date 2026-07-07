@@ -68,6 +68,7 @@ type FormState = {
   stage: string; // "" or ALL means كل المراحل
   grade: string;
   subject: string;
+  teacher_id: string; // ALL means بدون مدرّس محدد
   content: string;
   file_url: string;
 };
@@ -77,6 +78,7 @@ const empty: FormState = {
   stage: ALL,
   grade: ALL,
   subject: "",
+  teacher_id: ALL,
   content: "",
   file_url: "",
 };
