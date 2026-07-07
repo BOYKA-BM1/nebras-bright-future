@@ -182,6 +182,10 @@ function AdminTeachers() {
       toast.error("الاسم والمادة والمرحلة والسنة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
       return;
     }
+    if (!acct.image_url.trim()) {
+      toast.error("صورة المدرّس مطلوبة.");
+      return;
+    }
     setAcctBusy(true);
     try {
       await callCreateAccount({
