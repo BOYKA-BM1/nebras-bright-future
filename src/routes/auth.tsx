@@ -230,10 +230,8 @@ function AuthPage() {
               : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
           </p>
 
-          <div className="mt-7">
+          <form onSubmit={handleEmail} className="mt-7 grid gap-4">
 
-
-          <form onSubmit={handleEmail} className="grid gap-4">
             {mode === "signup" && (
               <div className="relative">
                 <UserIcon className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
