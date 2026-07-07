@@ -130,7 +130,7 @@ export function Navbar() {
                   <LayoutDashboard className="h-4 w-4" /> حسابي
                 </Link>
                 <button
-                  onClick={() => { setOpen(false); signOut(); }}
+                  onClick={() => { setOpen(false); confirmSignOut(); }}
                   className="flex-1 rounded-xl bg-secondary px-4 py-2 text-center text-sm font-bold"
                 >
                   خروج
