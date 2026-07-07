@@ -173,10 +173,16 @@ function LearnPage() {
                     </button>
                   )}
                   {active.pdf_url && (
-                    <a href={active.pdf_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
-                      <FileText className="h-4 w-4 text-primary" /> تحميل الملف
-                    </a>
+                    <button
+                      onClick={() => downloadPdf(active.pdf_url!, active.title)}
+                      disabled={downloading}
+                      className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent disabled:opacity-60"
+                    >
+                      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-primary" />}
+                      {downloading ? "جارٍ التحميل..." : "تحميل ملف PDF"}
+                    </button>
                   )}
+
                 </div>
               </div>
             )}
