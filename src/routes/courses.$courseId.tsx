@@ -329,6 +329,17 @@ function CourseDetail() {
           </aside>
         </div>
       </main>
+
+      {showPayment && (
+        <PaymentDialog
+          courseId={course.id}
+          courseTitle={course.title}
+          amount={finalPrice}
+          couponId={coupon?.id ?? null}
+          onClose={() => setShowPayment(false)}
+          onSubmitted={() => setShowPayment(false)}
+        />
+      )}
     </div>
   );
 }
