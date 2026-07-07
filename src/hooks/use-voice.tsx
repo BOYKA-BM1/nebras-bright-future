@@ -84,59 +84,30 @@ export function useSpeechRecognition() {
 }
 
 export function useSpeech() {
-  const callTts = useServerFn(synthesizeSpeech);
   const [speaking, setSpeaking] = useState(false);
-  const supported = typeof window !== "undefined" && typeof Audio !== "undefined";
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const supported =
+    typeof window !== "undefined" &&
+    (typeof AudioContext !== "undefined" || typeof (window as any).webkitAudioContext !== "undefined");
   // معرّف الطلب الحالي: أي طلب أقدم يتم تجاهله لو المستخدم بدأ قراءة جديدة أو أوقف.
   const runRef = useRef(0);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const stopAudio = useCallback(() => {
-    const a = audioRef.current;
-    if (a) {
-      a.onended = null;
-      a.onerror = null;
-      a.pause();
-      a.src = "";
-      audioRef.current = null;
+  const teardown = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    const ctx = ctxRef.current;
+    if (ctx) {
+      ctx.close().catch(() => {});
+      ctxRef.current = null;
     }
   }, []);
 
   const cancel = useCallback(() => {
-    runRef.current += 1; // يُبطل أي طلب صوتي جارٍ
-    stopAudio();
+    runRef.current += 1; // يُبطل أي بث صوتي جارٍ
+    teardown();
     setSpeaking(false);
-  }, [stopAudio]);
-
-  // تشغيل قائمة مقاطع MP3 (base64) بالتتابع.
-  const playQueue = useCallback(
-    (chunks: string[], runId: number) =>
-      new Promise<void>((resolve) => {
-        let i = 0;
-        const next = () => {
-          if (runRef.current !== runId || i >= chunks.length) {
-            resolve();
-            return;
-          }
-          const a = new Audio(`data:audio/mpeg;base64,${chunks[i]}`);
-          audioRef.current = a;
-          a.onended = () => {
-            i += 1;
-            next();
-          };
-          a.onerror = () => {
-            i += 1;
-            next();
-          };
-          a.play().catch(() => {
-            i += 1;
-            next();
-          });
-        };
-        next();
-      }),
-    [],
-  );
+  }, [teardown]);
 
   const speak = useCallback(
     async (text: string) => {
@@ -145,21 +116,111 @@ export function useSpeech() {
       cancel();
       const runId = runRef.current;
       setSpeaking(true);
+
+      const Ctor: typeof AudioContext =
+        (window as any).AudioContext || (window as any).webkitAudioContext;
+      const ctx = new Ctor({ sampleRate: 24000 });
+      ctxRef.current = ctx;
+      if (ctx.state === "suspended") await ctx.resume().catch(() => {});
+
+      let playhead = 0;
+      let pending = new Uint8Array(0);
+      let scheduled = 0; // عدد المقاطع المجدولة للتشغيل
+      let ended = false;
+
+      const schedule = (incoming: Uint8Array) => {
+        const bytes = new Uint8Array(pending.length + incoming.length);
+        bytes.set(pending);
+        bytes.set(incoming, pending.length);
+        const usable = bytes.length - (bytes.length % 2);
+        pending = bytes.slice(usable);
+        if (usable === 0) return;
+        const samples = new Int16Array(bytes.buffer, 0, usable / 2);
+        const floats = Float32Array.from(samples, (s) => s / 32768);
+        const buffer = ctx.createBuffer(1, floats.length, 24000);
+        buffer.copyToChannel(floats, 0);
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(ctx.destination);
+        if (playhead === 0) playhead = ctx.currentTime + 0.05;
+        else playhead = Math.max(playhead, ctx.currentTime);
+        scheduled += 1;
+        src.onended = () => {
+          scheduled -= 1;
+          if (ended && scheduled <= 0 && runRef.current === runId) {
+            setSpeaking(false);
+            teardown();
+          }
+        };
+        src.start(playhead);
+        playhead += buffer.duration;
+      };
+
       try {
-        const { audio } = await callTts({ data: { text: content } });
-        if (runRef.current !== runId) return; // اتلغى أثناء التوليد
-        await playQueue(audio, runId);
+        const { data } = await supabase.auth.getSession();
+        const token = data.session?.access_token;
+        if (!token) return;
+
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ text: content }),
+          signal: controller.signal,
+        });
+        if (!res.ok || !res.body || runRef.current !== runId) return;
+
+        const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+        let buf = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done || runRef.current !== runId) break;
+          buf += value;
+          const parts = buf.split("\n\n");
+          buf = parts.pop() ?? "";
+          for (const part of parts) {
+            const line = part.split("\n").find((l) => l.startsWith("data:"));
+            if (!line) continue;
+            const payload = line.slice(5).trim();
+            if (!payload || payload === "[DONE]") continue;
+            let evt: { type?: string; audio?: string };
+            try {
+              evt = JSON.parse(payload);
+            } catch {
+              continue;
+            }
+            if (evt.type === "speech.audio.delta" && evt.audio) {
+              const bin = atob(evt.audio);
+              const arr = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+              schedule(arr);
+            }
+          }
+        }
+        ended = true;
+        // لو خلص البث ومفيش صوت مجدول (أو كله اتشغّل بسرعة) نوقف الحالة.
+        if (scheduled <= 0 && runRef.current === runId) {
+          setSpeaking(false);
+          teardown();
+        }
       } catch {
-        /* لو فشل التوليد نتجاهل بهدوء */
-      } finally {
-        if (runRef.current === runId) setSpeaking(false);
+        if (runRef.current === runId) {
+          setSpeaking(false);
+          teardown();
+        }
       }
     },
-    [supported, cancel, callTts, playQueue],
+    [supported, cancel, teardown],
   );
 
   useEffect(() => () => cancel(), [cancel]);
 
   return { supported, speaking, speak, cancel };
 }
+
 
