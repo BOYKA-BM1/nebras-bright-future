@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { Trophy, Loader2, Sparkles } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Trophy, Loader2, Sparkles, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMyXp, useLeaderboard } from "@/hooks/use-gamification";
 import { levelInfo, levelTitle, computeBadges } from "@/lib/gamification";
