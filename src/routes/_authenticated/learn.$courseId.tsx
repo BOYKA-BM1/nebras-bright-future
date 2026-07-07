@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/site/Logo";
 import { useCourse, useCourseContent, useEnrollment, useProgress, useUpdateProgress } from "@/hooks/use-content";
 import { useLiveSessions } from "@/hooks/use-live";
-import { toEmbedUrl, type Lesson } from "@/lib/catalog";
+import { toEmbedUrl, getLessonPdfs, type Lesson } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/learn/$courseId")({
   component: LearnPage,
