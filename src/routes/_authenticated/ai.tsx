@@ -142,7 +142,7 @@ function AiLayout() {
               <Sparkles className="h-4 w-4" />
             </span>
             <div className="min-w-0">
-              <h1 className="text-base font-extrabold sm:text-lg">المساعد الذكي</h1>
+              <h1 className="text-base font-extrabold sm:text-lg">نبراس المساعد الذكي</h1>
               <p className="truncate text-xs text-muted-foreground">
                 {hasGrade ? `${grade} — ${stageLabel(grade)}` : "بيجاوبك من محاضرات ومذكرات مدرّسينك بس"}
               </p>
