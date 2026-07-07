@@ -160,8 +160,8 @@ function AdminTeachers() {
   };
 
   const handleCreateAccount = async () => {
-    if (!acct.name.trim() || !acct.subject.trim() || !acct.email.trim() || acct.password.length < 8) {
-      toast.error("الاسم والمادة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
+    if (!acct.name.trim() || !acct.subject.trim() || !acct.stage || !acct.grade || !acct.email.trim() || acct.password.length < 8) {
+      toast.error("الاسم والمادة والمرحلة والسنة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
       return;
     }
     setAcctBusy(true);
@@ -172,6 +172,8 @@ function AdminTeachers() {
           password: acct.password,
           name: acct.name.trim(),
           subject: acct.subject.trim(),
+          stage: acct.stage,
+          grade: acct.grade,
           bio: acct.bio.trim() || null,
           image_url: acct.image_url.trim() || null,
         },
