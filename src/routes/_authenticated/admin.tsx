@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, ShieldCheck, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone, Database } from "lucide-react";
+import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, ShieldCheck, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone, Database, Film, MessageCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
@@ -20,6 +20,10 @@ const navItems = [
   { to: "/admin/stages", label: "المراحل", icon: GraduationCap, exact: false },
   { to: "/admin/knowledge", label: "معرفة الذكاء", icon: Database, exact: false },
   { to: "/admin/coupons", label: "الكوبونات", icon: Ticket, exact: false },
+  // لوحات الطاقم — الأدمن يقدر يفتحها ويتابعها مباشرة
+  { to: "/staff/montage", label: "المونتاج", icon: Film, exact: false },
+  { to: "/staff/students", label: "الطلاب (سكرتارية)", icon: Users, exact: false },
+  { to: "/staff/support", label: "خدمة العملاء", icon: MessageCircle, exact: false },
 ];
 
 
