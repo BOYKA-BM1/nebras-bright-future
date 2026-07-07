@@ -149,7 +149,6 @@ function AccountsPage() {
                 <th className="p-3 font-bold">البريد الإلكتروني</th>
                 <th className="p-3 font-bold">النوع</th>
                 <th className="p-3 font-bold">الحالة</th>
-                <th className="p-3 font-bold">الجهاز المسجّل</th>
                 <th className="p-3 font-bold">إجراءات</th>
               </tr>
             </thead>
