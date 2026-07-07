@@ -1218,6 +1218,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_teachers: {
+        Args: never
+        Returns: {
+          bio: string | null
+          created_at: string
+          experience_years: number
+          grade: string | null
+          id: string
+          image_url: string | null
+          name: string
+          profit_percentage: number
+          rating: number
+          sort_order: number
+          stage: string | null
+          students_label: string | null
+          subject: string
+          updated_at: string
+          user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "teachers"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       bind_device: {
         Args: { _device_id: string; _label: string }
         Returns: string

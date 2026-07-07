@@ -45,27 +45,48 @@ export function useStageCounts() {
 }
 
 
+// أعمدة المدرّس الآمنة للعرض العام (بدون نسبة الربح والبيانات الحساسة)
+const TEACHER_PUBLIC_COLUMNS =
+  "id,name,subject,bio,experience_years,image_url,rating,students_label,sort_order,created_at,updated_at,stage,grade";
+
+async function mergeTeacherStudents(teachers: Teacher[]): Promise<Teacher[]> {
+  const { data: stats } = await (supabase.rpc as any)("teacher_stats");
+  const map = new Map<string, number>();
+  for (const row of (stats ?? []) as { teacher_id: string; students: number }[]) {
+    map.set(row.teacher_id, Number(row.students) || 0);
+  }
+  return teachers.map((t) => ({
+    ...t,
+    students_label: map.has(t.id) ? String(map.get(t.id)) : t.students_label,
+  }));
+}
+
 export function useTeachers() {
   return useQuery({
     queryKey: ["teachers"],
     queryFn: async (): Promise<Teacher[]> => {
       const { data, error } = await supabase
         .from("teachers")
-        .select("*")
+        .select(TEACHER_PUBLIC_COLUMNS)
         .order("sort_order", { ascending: true });
       if (error) throw error;
-      const teachers = (data ?? []) as Teacher[];
+      const teachers = (data ?? []) as unknown as Teacher[];
 
       // عدد الطلاب الحقيقي لكل مدرّس
-      const { data: stats } = await (supabase.rpc as any)("teacher_stats");
-      const map = new Map<string, number>();
-      for (const row of (stats ?? []) as { teacher_id: string; students: number }[]) {
-        map.set(row.teacher_id, Number(row.students) || 0);
-      }
-      return teachers.map((t) => ({
-        ...t,
-        students_label: map.has(t.id) ? String(map.get(t.id)) : t.students_label,
-      }));
+      return mergeTeacherStudents(teachers);
+    },
+  });
+}
+
+/** قراءة كاملة لبيانات المدرّسين (تشمل نسبة الربح) — للأدمن فقط عبر دالة محمية */
+export function useAdminTeachers() {
+  return useQuery({
+    queryKey: ["admin-teachers"],
+    queryFn: async (): Promise<Teacher[]> => {
+      const { data, error } = await (supabase.rpc as any)("admin_teachers");
+      if (error) throw error;
+      const teachers = (data ?? []) as unknown as Teacher[];
+      return mergeTeacherStudents(teachers);
     },
   });
 }
@@ -85,7 +106,7 @@ export function useCourses() {
     queryFn: async (): Promise<CourseWithRelations[]> => {
       const { data, error } = await supabase
         .from("courses")
-        .select("*, teacher:teachers(*), stage:stages(*)")
+        .select(`*, teacher:teachers(${TEACHER_PUBLIC_COLUMNS}), stage:stages(*)`)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       const courses = (data ?? []) as unknown as CourseWithRelations[];
