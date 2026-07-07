@@ -10,6 +10,8 @@ import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
+import { useMyPaymentRequests } from "@/hooks/use-payments";
+import { PaymentDialog } from "@/components/site/PaymentDialog";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
 
