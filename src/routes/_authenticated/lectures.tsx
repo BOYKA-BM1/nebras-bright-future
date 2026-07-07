@@ -34,6 +34,8 @@ function LecturesPage() {
 
   const isLoading = lc || le;
 
+  if (isStaffAccount) return null;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
