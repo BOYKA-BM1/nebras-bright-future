@@ -28,6 +28,14 @@ function LearnPage() {
   const { data: progress = [] } = useProgress(courseId);
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const updateProgress = useUpdateProgress(courseId);
+  const { data: profile } = useProfile();
+  const { user } = useAuth();
+  const { obscured } = useContentProtection();
+  const watermark = useMemo(() => {
+    const name = profile?.full_name?.trim() || user?.email?.split("@")[0] || "طالب";
+    const contact = profile?.phone?.trim() || user?.email || "";
+    return [name, contact].filter(Boolean).join(" · ");
+  }, [profile?.full_name, profile?.phone, user?.email]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
 
