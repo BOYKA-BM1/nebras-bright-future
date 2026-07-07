@@ -4,6 +4,7 @@ import { Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react"
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { lovable } from "@/integrations/lovable/index";
 import { Logo } from "@/components/site/Logo";
 
 export const Route = createFileRoute("/auth")({
