@@ -175,6 +175,83 @@ function AuthPage() {
         </div>
 
         <div className="rounded-3xl border border-border bg-card/80 p-7 shadow-card backdrop-blur-xl sm:p-9">
+          {reset ? (
+            <>
+              <h1 className="text-center text-2xl font-extrabold">نسيت كلمة السر؟</h1>
+              <p className="mt-2 text-center text-sm text-muted-foreground">
+                {resetStep === "email"
+                  ? "اكتب بريدك وهنبعتلك كود تأكيد من 6 أرقام."
+                  : "اكتب الكود اللي وصلك على البريد وكلمة السر الجديدة."}
+              </p>
+
+              {resetStep === "email" ? (
+                <div className="mt-7 grid gap-4">
+                  <div className="relative">
+                    <Mail className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      placeholder="البريد الإلكتروني"
+                      className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
+                    />
+                  </div>
+                  <button
+                    onClick={sendResetCode}
+                    disabled={resetBusy}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-70"
+                  >
+                    {resetBusy && <Loader2 className="h-4 w-4 animate-spin" />} إرسال الكود
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-7 grid gap-4">
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    placeholder="كود التأكيد (6 أرقام)"
+                    dir="ltr"
+                    className="w-full rounded-xl border border-input bg-background/60 px-4 py-3 text-center text-lg font-bold tracking-[0.4em] outline-none focus:border-primary"
+                  />
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      type="password"
+                      placeholder="كلمة السر الجديدة (8 أحرف على الأقل)"
+                      className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none focus:border-primary"
+                    />
+                  </div>
+                  <button
+                    onClick={verifyResetCode}
+                    disabled={resetBusy}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-70"
+                  >
+                    {resetBusy && <Loader2 className="h-4 w-4 animate-spin" />} تأكيد وتغيير كلمة السر
+                  </button>
+                  <button
+                    onClick={sendResetCode}
+                    disabled={resetBusy}
+                    className="text-center text-xs font-bold text-primary hover:underline"
+                  >
+                    إعادة إرسال الكود
+                  </button>
+                </div>
+              )}
+
+              <p className="mt-6 text-center text-sm">
+                <button
+                  onClick={() => { setReset(false); setResetStep("email"); setCode(""); setNewPassword(""); }}
+                  className="font-bold text-primary hover:underline"
+                >
+                  ← الرجوع لتسجيل الدخول
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
           <h1 className="text-center text-2xl font-extrabold">
             {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
           </h1>
@@ -243,6 +320,16 @@ function AuthPage() {
               />
             </div>
 
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={() => setReset(true)}
+                className="justify-self-start text-xs font-bold text-primary hover:underline"
+              >
+                نسيت كلمة السر؟
+              </button>
+            )}
+
             <button
               type="submit"
               disabled={submitting}
@@ -263,6 +350,8 @@ function AuthPage() {
               {mode === "login" ? "أنشئ حساب جديد" : "سجّل دخولك"}
             </button>
           </p>
+            </>
+          )}
         </div>
 
         <div className="mt-6 text-center">
