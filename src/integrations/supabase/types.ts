@@ -1151,6 +1151,14 @@ export type Database = {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
       }
+      stage_counts: {
+        Args: never
+        Returns: {
+          stage_id: string
+          students: number
+          teachers: number
+        }[]
+      }
     }
     Enums: {
       app_role:
