@@ -86,6 +86,50 @@ function TeacherDashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {/* ملخص أداء المدرّس */}
+        {stats?.isTeacher && (
+          <section className="mb-10">
+            <h1 className="text-2xl font-extrabold sm:text-3xl">أهلًا{stats.name ? ` أ/ ${stats.name}` : ""} 👋</h1>
+            <p className="mt-1 text-muted-foreground">ملخّص أدائك على المنصة.</p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: Wallet, label: "أرباحي", value: `${fmt(stats.profit)} ج.م`, hint: `نسبتك ${stats.profitPercentage}% من ${fmt(stats.revenue)} ج.م` },
+                { icon: Users, label: "عدد الطلاب", value: fmt(stats.students), hint: `${fmt(stats.activeEnrollments)} اشتراك نشط` },
+                { icon: Star, label: "تقييمي", value: stats.rating.toFixed(1), hint: "من 5 نجوم" },
+                { icon: PlayCircle, label: "إجمالي الدروس", value: fmt(stats.lessons), hint: `${stats.courses.length} دورة` },
+              ].map((c) => (
+                <div key={c.label} className="rounded-2xl border border-border bg-card p-5 shadow-card">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-muted-foreground">{c.label}</span>
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary"><c.icon className="h-4 w-4" /></span>
+                  </div>
+                  <p className="mt-3 text-2xl font-extrabold text-gradient-gold">{c.value}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{c.hint}</p>
+                </div>
+              ))}
+            </div>
+
+            {stats.courses.some((c) => c.income > 0 || c.subscribers > 0) && (
+              <div className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-card">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary"><TrendingUp className="h-4 w-4" /></span>
+                  <h2 className="font-extrabold">الكورسات الأكثر مبيعًا</h2>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {stats.courses.slice(0, 5).map((c, i) => (
+                    <div key={c.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-extrabold text-primary">{i + 1}</span>
+                      <span className="flex-1 truncate font-bold">{c.title}</span>
+                      <span className="shrink-0 text-xs text-muted-foreground">{fmt(c.subscribers)} طالب</span>
+                      <span className="shrink-0 text-sm font-extrabold text-primary">{fmt(c.income)} ج.م</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* كوبونات المدرّس */}
         <section className="mb-10 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6">
           <div className="flex items-center gap-2">
