@@ -61,7 +61,6 @@ function ManageCourse() {
           duration_minutes: minutes ? String(minutes) : f.duration_minutes,
         }));
         toast.success("تم رفع الفيديو بنفس الجودة ✅ واحتُسبت المدة تلقائيًا.");
-        void runTranscription(url);
       },
       onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
     });
