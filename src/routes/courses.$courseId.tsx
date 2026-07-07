@@ -118,16 +118,21 @@ function CourseDetail() {
       router.navigate({ to: "/profile" });
       return;
     }
-    enroll.mutate(
-      { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
-      {
-        onSuccess: () => {
-          toast.success("تم تفعيل اشتراكك! 🎉");
-          router.navigate({ to: "/learn/$courseId", params: { courseId: course.id } });
+    // الدورات المجانية تُفعّل مباشرة، والمدفوعة تفتح نافذة الدفع اليدوي
+    if (finalPrice === 0) {
+      enroll.mutate(
+        { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
+        {
+          onSuccess: () => {
+            toast.success("تم تفعيل اشتراكك! 🎉");
+            router.navigate({ to: "/learn/$courseId", params: { courseId: course.id } });
+          },
+          onError: () => toast.error("تعذّر الاشتراك، حاول تاني."),
         },
-        onError: () => toast.error("تعذّر الاشتراك، حاول تاني."),
-      },
-    );
+      );
+      return;
+    }
+    setShowPayment(true);
   };
 
   const handleUnenroll = () => {
