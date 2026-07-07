@@ -153,6 +153,26 @@ export function useEnroll() {
   });
 }
 
+export function useUnenroll() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      if (!user) throw new Error("not_authenticated");
+      const { error } = await supabase
+        .from("enrollments")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("course_id", courseId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["enrollments"] });
+    },
+  });
+}
+
+
 /* ===================== التقدّم ===================== */
 
 export function useProgress(courseId: string | undefined) {
