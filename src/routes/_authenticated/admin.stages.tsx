@@ -126,6 +126,16 @@ function AdminStages() {
               </div>
               <h3 className="mt-4 font-bold">{s.name}</h3>
               <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{s.description}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+                  <Users className="h-3.5 w-3.5" />
+                  {(counts[s.id]?.teachers ?? 0).toLocaleString("ar-EG")} مدرّس
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-bold text-emerald-500">
+                  <UserRound className="h-3.5 w-3.5" />
+                  {(counts[s.id]?.students ?? 0).toLocaleString("ar-EG")} طالب
+                </span>
+              </div>
               <div className="mt-4 flex gap-2">
                 <button onClick={() => openEdit(s)} className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-accent">
                   <Pencil className="h-3.5 w-3.5" /> تعديل
