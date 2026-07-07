@@ -293,6 +293,45 @@ export type Database = {
           },
         ]
       }
+      knowledge_docs: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          file_url: string | null
+          grade: string | null
+          id: string
+          stage: string | null
+          subject: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          grade?: string | null
+          id?: string
+          stage?: string | null
+          subject?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          grade?: string | null
+          id?: string
+          stage?: string | null
+          subject?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed: boolean
