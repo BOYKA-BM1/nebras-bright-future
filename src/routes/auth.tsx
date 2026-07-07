@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { lovable } from "@/integrations/lovable/index";
 import { Logo } from "@/components/site/Logo";
+import { preAuthGuard, logAudit } from "@/lib/security.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -51,6 +53,9 @@ function AuthPage() {
   const [newPassword, setNewPassword] = useState("");
   const [resetBusy, setResetBusy] = useState(false);
 
+  const preAuth = useServerFn(preAuthGuard);
+  const audit = useServerFn(logAudit);
+
   useEffect(() => {
     if (!loading && user) {
       navigate({ to: "/dashboard" });
@@ -81,6 +86,7 @@ function AuthPage() {
       if (error) throw error;
       const { error: updErr } = await supabase.auth.updateUser({ password: newPassword });
       if (updErr) throw updErr;
+      audit({ data: { action: "password_change" } }).catch(() => {});
       toast.success("تم تغيير كلمة السر بنجاح! 🎉");
       navigate({ to: "/dashboard" });
     } catch {
@@ -138,6 +144,21 @@ function AuthPage() {
         setSubmitting(false);
         return;
       }
+
+      // حد المعدل لمنع السبام على الدخول/الاشتراك
+      try {
+        const guard = await preAuth({
+          data: { action: mode === "signup" ? "signup" : "login", email },
+        });
+        if (!guard.allowed) {
+          toast.error(guard.message);
+          setSubmitting(false);
+          return;
+        }
+      } catch {
+        /* fail-open: لو تعذّر الفحص نكمّل عادي */
+      }
+
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
           email,

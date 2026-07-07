@@ -70,6 +70,39 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string | null
+          id: string
+          ip: string | null
+          metadata: Json
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity?: string | null
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string | null
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       banned_emails: {
         Row: {
           created_at: string
@@ -572,6 +605,54 @@ export type Database = {
           },
         ]
       }
+      login_events: {
+        Row: {
+          browser: string | null
+          city: string | null
+          country: string | null
+          created_at: string
+          device_type: string | null
+          fingerprint: string | null
+          hardware: string | null
+          id: string
+          ip: string | null
+          screen: string | null
+          timezone: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          fingerprint?: string | null
+          hardware?: string | null
+          id?: string
+          ip?: string | null
+          screen?: string | null
+          timezone?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          browser?: string | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          device_type?: string | null
+          fingerprint?: string | null
+          hardware?: string | null
+          id?: string
+          ip?: string | null
+          screen?: string | null
+          timezone?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -992,6 +1073,24 @@ export type Database = {
           },
         ]
       }
+      rate_limit_hits: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       role_shares: {
         Row: {
           percentage: number
@@ -1044,6 +1143,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      security_alerts: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json
+          resolved: boolean
+          severity: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json
+          resolved?: boolean
+          severity?: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json
+          resolved?: boolean
+          severity?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       site_metrics: {
         Row: {
@@ -1250,6 +1382,10 @@ export type Database = {
       }
       check_quiz_answer: {
         Args: { _answer: string; _question_id: string }
+        Returns: boolean
+      }
+      check_rate_limit: {
+        Args: { _bucket: string; _max: number; _window_seconds: number }
         Returns: boolean
       }
       course_stats: {

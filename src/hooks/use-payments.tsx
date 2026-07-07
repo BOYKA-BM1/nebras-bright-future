@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { auditEvent } from "@/lib/audit";
 import type { Database } from "@/integrations/supabase/types";
 
 export type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
@@ -79,6 +80,11 @@ export function useSubmitPaymentRequest() {
         status: "pending",
       });
       if (error) throw error;
+      auditEvent("course_purchase_request", "course", {
+        courseId: input.courseId,
+        amount: input.amount,
+        method: input.method,
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-payment-requests"] }),
   });

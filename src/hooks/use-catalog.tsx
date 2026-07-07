@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { auditEvent } from "@/lib/audit";
 import type {
   Stage,
   Teacher,
@@ -194,6 +195,7 @@ export function useTeacherAdmin() {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("teachers").delete().eq("id", id);
       if (error) throw error;
+      auditEvent("delete", "teacher", { id });
     },
     onSuccess: invalidate,
   });
@@ -222,6 +224,7 @@ export function useCourseAdmin() {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("courses").delete().eq("id", id);
       if (error) throw error;
+      auditEvent("delete", "course", { id });
     },
     onSuccess: invalidate,
   });

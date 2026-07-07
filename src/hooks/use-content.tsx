@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { auditEvent } from "@/lib/audit";
 import type { Database } from "@/integrations/supabase/types";
 import type {
   Section,
@@ -309,6 +310,7 @@ export function useLessonAdmin(courseId: string | undefined) {
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("lessons").delete().eq("id", id);
       if (error) throw error;
+      auditEvent("delete", "lesson", { id });
     },
     onSuccess: invalidate,
   });
