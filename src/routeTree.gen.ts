@@ -18,6 +18,7 @@ import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as TeachersTeacherIdRouteImport } from './routes/teachers.$teacherId'
 import { Route as StagesLevelRouteImport } from './routes/stages.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -89,6 +90,11 @@ const StagesLevelRoute = StagesLevelRouteImport.update({
 const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
   id: '/courses/$courseId',
   path: '/courses/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTtsRoute = ApiTtsRouteImport.update({
+  id: '/api/tts',
+  path: '/api/tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
@@ -261,6 +267,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/staff': typeof AuthenticatedStaffRouteWithChildren
   '/teacher': typeof AuthenticatedTeacherRoute
+  '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
   '/teachers/$teacherId': typeof TeachersTeacherIdRoute
@@ -296,6 +303,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/teacher': typeof AuthenticatedTeacherRoute
+  '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
   '/teachers/$teacherId': typeof TeachersTeacherIdRoute
@@ -336,6 +344,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRouteWithChildren
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
+  '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
   '/teachers/$teacherId': typeof TeachersTeacherIdRoute
@@ -376,6 +385,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/staff'
     | '/teacher'
+    | '/api/tts'
     | '/courses/$courseId'
     | '/stages/$level'
     | '/teachers/$teacherId'
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/profile'
     | '/teacher'
+    | '/api/tts'
     | '/courses/$courseId'
     | '/stages/$level'
     | '/teachers/$teacherId'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/staff'
     | '/_authenticated/teacher'
+    | '/api/tts'
     | '/courses/$courseId'
     | '/stages/$level'
     | '/teachers/$teacherId'
@@ -482,6 +494,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SupportRoute: typeof SupportRoute
+  ApiTtsRoute: typeof ApiTtsRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   StagesLevelRoute: typeof StagesLevelRoute
   TeachersTeacherIdRoute: typeof TeachersTeacherIdRoute
@@ -551,6 +564,13 @@ declare module '@tanstack/react-router' {
       path: '/courses/$courseId'
       fullPath: '/courses/$courseId'
       preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tts': {
+      id: '/api/tts'
+      path: '/api/tts'
+      fullPath: '/api/tts'
+      preLoaderRoute: typeof ApiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/teacher': {
@@ -851,6 +871,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SupportRoute: SupportRoute,
+  ApiTtsRoute: ApiTtsRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   StagesLevelRoute: StagesLevelRoute,
   TeachersTeacherIdRoute: TeachersTeacherIdRoute,
