@@ -73,15 +73,20 @@ export function useTeachers() {
       const teachers = (data ?? []) as unknown as Teacher[];
 
       // عدد الطلاب الحقيقي لكل مدرّس
-      const { data: stats } = await (supabase.rpc as any)("teacher_stats");
-      const map = new Map<string, number>();
-      for (const row of (stats ?? []) as { teacher_id: string; students: number }[]) {
-        map.set(row.teacher_id, Number(row.students) || 0);
-      }
-      return teachers.map((t) => ({
-        ...t,
-        students_label: map.has(t.id) ? String(map.get(t.id)) : t.students_label,
-      }));
+      return mergeTeacherStudents(teachers);
+    },
+  });
+}
+
+/** قراءة كاملة لبيانات المدرّسين (تشمل نسبة الربح) — للأدمن فقط عبر دالة محمية */
+export function useAdminTeachers() {
+  return useQuery({
+    queryKey: ["admin-teachers"],
+    queryFn: async (): Promise<Teacher[]> => {
+      const { data, error } = await (supabase.rpc as any)("admin_teachers");
+      if (error) throw error;
+      const teachers = (data ?? []) as unknown as Teacher[];
+      return mergeTeacherStudents(teachers);
     },
   });
 }
