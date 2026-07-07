@@ -172,18 +172,25 @@ function LearnPage() {
                       {completedIds.has(active.id) ? "تم الإكمال" : "تحديد كمكتمل"}
                     </button>
                   )}
-                  {active.pdf_url && (
-                    <button
-                      onClick={() => downloadPdf(active.pdf_url!, active.title)}
-                      disabled={downloading}
-                      className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent disabled:opacity-60"
-                    >
-                      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-primary" />}
-                      {downloading ? "جارٍ التحميل..." : "تحميل ملف PDF"}
-                    </button>
-                  )}
-
                 </div>
+                {getLessonPdfs(active).length > 0 && (
+                  <div className="mt-4 grid gap-2">
+                    <p className="text-sm font-bold text-muted-foreground">ملفات المحاضرة</p>
+                    {getLessonPdfs(active).map((pdf, i) => (
+                      <button
+                        key={i}
+                        onClick={() => downloadPdf(pdf.url, pdf.title)}
+                        disabled={downloadingUrl === pdf.url}
+                        className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent disabled:opacity-60"
+                      >
+                        {downloadingUrl === pdf.url ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-primary" />}
+                        <span className="flex-1 text-right">{pdf.title}</span>
+                        <span className="text-xs text-muted-foreground">{downloadingUrl === pdf.url ? "جارٍ التحميل..." : "تحميل PDF"}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
               </div>
             )}
           </div>
