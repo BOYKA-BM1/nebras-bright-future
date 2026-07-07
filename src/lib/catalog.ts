@@ -38,7 +38,7 @@ export function toEmbedUrl(url?: string | null): { kind: "iframe" | "video" | "n
     /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/|v\/))([\w-]{11})/,
   );
   if (yt) {
-    return { kind: "iframe", src: `https://www.youtube.com/embed/${yt[1]}?rel=0&playsinline=1&autoplay=1` };
+    return { kind: "iframe", src: `https://www.youtube.com/embed/${yt[1]}?rel=0&playsinline=1` };
   }
   // Vimeo
   const vm = u.match(/vimeo\.com\/(\d+)/);
