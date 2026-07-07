@@ -296,6 +296,13 @@ function CourseDetail() {
                       </button>
                     )}
                   </>
+                ) : pendingRequest ? (
+                  <div className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-sm font-bold text-amber-500">
+                    طلب دفعك قيد المراجعة ⏳
+                    <p className="mt-1 text-xs font-normal text-muted-foreground">
+                      هيتم تفعيل اشتراكك بعد تأكيد الدفع من الإدارة.
+                    </p>
+                  </div>
                 ) : (
                   <button
                     onClick={handleEnroll}
@@ -303,7 +310,7 @@ function CourseDetail() {
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
                   >
                     {enroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                    {finalPrice === 0 ? "اشترك مجانًا" : "اشترك الآن"}
+                    {finalPrice === 0 ? "اشترك مجانًا" : "ادفع واشترك"}
                   </button>
                 )}
 
