@@ -83,6 +83,25 @@ function ManageCourse() {
     });
   };
 
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("اختر ملف PDF صالح.");
+      return;
+    }
+    uploadPdf.mutate(file, {
+      onSuccess: (url) => {
+        setLesForm((f) => ({ ...f, pdf_url: url }));
+        toast.success("تم رفع ملف الـ PDF ✅");
+      },
+      onError: () => toast.error("تعذّر رفع الملف، حاول تاني."),
+    });
+  };
+
+
+
   const [secOpen, setSecOpen] = useState(false);
   const [editSec, setEditSec] = useState<Section | null>(null);
   const [secTitle, setSecTitle] = useState("");
