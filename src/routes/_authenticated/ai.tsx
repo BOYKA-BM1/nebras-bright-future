@@ -186,6 +186,9 @@ function AiTutorPage() {
                     </span>
                     <div className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${m.role === "user" ? "bg-gradient-gold text-primary-foreground" : "border border-border bg-card"}`}>
                       {m.content}
+                      {typing && m.role === "assistant" && i === messages.length - 1 && (
+                        <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-primary align-middle" />
+                      )}
                     </div>
                   </div>
                 ))
