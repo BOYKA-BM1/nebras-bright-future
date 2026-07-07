@@ -92,22 +92,59 @@ export function useSpeech() {
   const runRef = useRef(0);
   const ctxRef = useRef<AudioContext | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  // المصادر الصوتية الجارية عشان نوقفها فورًا عند الإلغاء
+  const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
 
-  const teardown = useCallback(() => {
-    abortRef.current?.abort();
-    abortRef.current = null;
-    const ctx = ctxRef.current;
-    if (ctx) {
-      ctx.close().catch(() => {});
-      ctxRef.current = null;
+  // إنشاء/فتح سياق الصوت. لازم يتنفّذ داخل تفاعل مستخدم (ضغطة زر) عشان
+  // المتصفح يسمح بتشغيل الصوت (سياسة التشغيل التلقائي)، وإلا يفضل الصوت معطّل.
+  const ensureCtx = useCallback((): AudioContext | null => {
+    if (typeof window === "undefined") return null;
+    const Ctor: typeof AudioContext | undefined =
+      (window as any).AudioContext || (window as any).webkitAudioContext;
+    if (!Ctor) return null;
+    let ctx = ctxRef.current;
+    if (!ctx || ctx.state === "closed") {
+      ctx = new Ctor({ sampleRate: 24000 });
+      ctxRef.current = ctx;
     }
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    return ctx;
+  }, []);
+
+  // فتح الصوت مبكرًا على ضغطة المستخدم (زر القراءة/المايك) — بتشغيل نبضة صامتة.
+  const prime = useCallback(() => {
+    const ctx = ensureCtx();
+    if (!ctx) return;
+    try {
+      const b = ctx.createBuffer(1, 1, 24000);
+      const s = ctx.createBufferSource();
+      s.buffer = b;
+      s.connect(ctx.destination);
+      s.start(0);
+    } catch {
+      /* noop */
+    }
+  }, [ensureCtx]);
+
+  const stopSources = useCallback(() => {
+    for (const s of sourcesRef.current) {
+      try {
+        s.onended = null;
+        s.stop();
+      } catch {
+        /* noop */
+      }
+    }
+    sourcesRef.current.clear();
   }, []);
 
   const cancel = useCallback(() => {
     runRef.current += 1; // يُبطل أي بث صوتي جارٍ
-    teardown();
+    abortRef.current?.abort();
+    abortRef.current = null;
+    stopSources();
     setSpeaking(false);
-  }, [teardown]);
+  }, [stopSources]);
 
   const speak = useCallback(
     async (text: string) => {
@@ -117,16 +154,21 @@ export function useSpeech() {
       const runId = runRef.current;
       setSpeaking(true);
 
-      const Ctor: typeof AudioContext =
-        (window as any).AudioContext || (window as any).webkitAudioContext;
-      const ctx = new Ctor({ sampleRate: 24000 });
-      ctxRef.current = ctx;
+      const ctx = ensureCtx();
+      if (!ctx) {
+        setSpeaking(false);
+        return;
+      }
       if (ctx.state === "suspended") await ctx.resume().catch(() => {});
 
       let playhead = 0;
       let pending = new Uint8Array(0);
       let scheduled = 0; // عدد المقاطع المجدولة للتشغيل
       let ended = false;
+
+      const finish = () => {
+        if (runRef.current === runId) setSpeaking(false);
+      };
 
       const schedule = (incoming: Uint8Array) => {
         const bytes = new Uint8Array(pending.length + incoming.length);
@@ -142,15 +184,14 @@ export function useSpeech() {
         const src = ctx.createBufferSource();
         src.buffer = buffer;
         src.connect(ctx.destination);
-        if (playhead === 0) playhead = ctx.currentTime + 0.05;
+        if (playhead === 0) playhead = ctx.currentTime + 0.08;
         else playhead = Math.max(playhead, ctx.currentTime);
         scheduled += 1;
+        sourcesRef.current.add(src);
         src.onended = () => {
           scheduled -= 1;
-          if (ended && scheduled <= 0 && runRef.current === runId) {
-            setSpeaking(false);
-            teardown();
-          }
+          sourcesRef.current.delete(src);
+          if (ended && scheduled <= 0) finish();
         };
         src.start(playhead);
         playhead += buffer.duration;
@@ -159,7 +200,10 @@ export function useSpeech() {
       try {
         const { data } = await supabase.auth.getSession();
         const token = data.session?.access_token;
-        if (!token) return;
+        if (!token || runRef.current !== runId) {
+          finish();
+          return;
+        }
 
         const controller = new AbortController();
         abortRef.current = controller;
@@ -173,7 +217,10 @@ export function useSpeech() {
           body: JSON.stringify({ text: content }),
           signal: controller.signal,
         });
-        if (!res.ok || !res.body || runRef.current !== runId) return;
+        if (!res.ok || !res.body || runRef.current !== runId) {
+          finish();
+          return;
+        }
 
         const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
         let buf = "";
@@ -204,23 +251,17 @@ export function useSpeech() {
         }
         ended = true;
         // لو خلص البث ومفيش صوت مجدول (أو كله اتشغّل بسرعة) نوقف الحالة.
-        if (scheduled <= 0 && runRef.current === runId) {
-          setSpeaking(false);
-          teardown();
-        }
+        if (scheduled <= 0) finish();
       } catch {
-        if (runRef.current === runId) {
-          setSpeaking(false);
-          teardown();
-        }
+        if (runRef.current === runId) setSpeaking(false);
       }
     },
-    [supported, cancel, teardown],
+    [supported, cancel, ensureCtx],
   );
 
   useEffect(() => () => cancel(), [cancel]);
 
-  return { supported, speaking, speak, cancel };
+  return { supported, speaking, speak, cancel, prime };
 }
 
 
