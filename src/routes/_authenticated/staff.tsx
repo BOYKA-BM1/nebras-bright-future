@@ -15,7 +15,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 function StaffLayout() {
-  const { signOut } = useAuth();
+  const { confirmSignOut } = useAuth();
   const { isAdmin, isMontage, isCustomerService, isSecretary, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
@@ -55,7 +55,7 @@ function StaffLayout() {
     (isSecretary && ROLE_LABEL.secretary) ||
     "لوحة الطاقم";
 
-  const handleSignOut = async () => { await signOut(); navigate({ to: "/" }); };
+  const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
 
   return (
     <div className="min-h-screen bg-background">

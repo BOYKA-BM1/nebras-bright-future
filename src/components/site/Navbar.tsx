@@ -10,7 +10,7 @@ import { resolveImage } from "@/lib/catalog";
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, confirmSignOut } = useAuth();
   const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
@@ -79,7 +79,7 @@ export function Navbar() {
                 <span className="hidden max-w-[8rem] truncate md:inline">{profile?.full_name || "حسابي"}</span>
               </Link>
               <button
-                onClick={() => signOut()}
+                onClick={() => confirmSignOut()}
                 className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-bold transition-colors hover:bg-accent"
                 aria-label="خروج"
               >
@@ -130,7 +130,7 @@ export function Navbar() {
                   <LayoutDashboard className="h-4 w-4" /> حسابي
                 </Link>
                 <button
-                  onClick={() => { setOpen(false); signOut(); }}
+                  onClick={() => { setOpen(false); confirmSignOut(); }}
                   className="flex-1 rounded-xl bg-secondary px-4 py-2 text-center text-sm font-bold"
                 >
                   خروج

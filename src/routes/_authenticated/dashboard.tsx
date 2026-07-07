@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { user, signOut } = useAuth();
+  const { user, confirmSignOut } = useAuth();
   const navigate = useNavigate();
   const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
@@ -69,7 +69,7 @@ function Dashboard() {
   );
   const totalSpent = useMemo(() => myCourses.reduce((s, c) => s + (c.price || 0), 0), [myCourses]);
 
-  const handleSignOut = async () => { await signOut(); navigate({ to: "/" }); };
+  const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
 
 
   return (
