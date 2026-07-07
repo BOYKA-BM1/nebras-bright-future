@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown } from "lucide-react";
+import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown, MonitorSmartphone, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
   unbanAccount,
   deleteAccount,
   setUserRole,
+  resetAccountDevice,
   ASSIGNABLE_ROLES,
 } from "@/lib/admin-accounts.functions";
 import {
