@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/tts")({
             stream_format: "sse",
             response_format: "pcm",
             instructions:
-              "Speak in warm, natural, friendly Egyptian Arabic like a real human tutor sitting next to the student. Clear, expressive and encouraging.",
+              "Speak in warm, natural, friendly Egyptian Arabic like a real human tutor sitting next to the student. Clear, expressive and encouraging. Talk at a lively, brisk conversational pace — a bit faster than average, the way a real person speaks naturally, without rushing or dragging.",
           }),
         });
 
