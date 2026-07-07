@@ -59,6 +59,7 @@ const icons = ["GraduationCap", "Library", "BookA"];
 
 function AdminStages() {
   const { data: stages = [], isLoading } = useStages();
+  const { data: counts = {} } = useStageCounts();
   const { create, update, remove } = useStageAdmin();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Stage | null>(null);
