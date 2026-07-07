@@ -23,7 +23,7 @@ import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useSectionAdmin, useLessonAdmin } from "@/hooks/use-content";
 import { useCourseAdmin } from "@/hooks/use-catalog";
 import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
-import { useUploadMontageVideo } from "@/hooks/use-staff";
+import { useUploadMontageVideo, useUploadLessonPdf } from "@/hooks/use-staff";
 import { transcribeVideo } from "@/lib/ai-tutor.functions";
 import { Logo } from "@/components/site/Logo";
 import type { Section, Lesson } from "@/lib/catalog";
@@ -43,7 +43,9 @@ function ManageCourse() {
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const liveAdmin = useLiveAdmin(courseId);
   const uploadVideo = useUploadMontageVideo();
+  const uploadPdf = useUploadLessonPdf();
   const videoFileRef = useRef<HTMLInputElement>(null);
+  const pdfFileRef = useRef<HTMLInputElement>(null);
   const callTranscribe = useServerFn(transcribeVideo);
   const [transcribing, setTranscribing] = useState(false);
 
@@ -80,6 +82,25 @@ function ManageCourse() {
       onError: () => toast.error("تعذّر رفع الفيديو، حاول تاني."),
     });
   };
+
+  const handlePdfUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      toast.error("اختر ملف PDF صالح.");
+      return;
+    }
+    uploadPdf.mutate(file, {
+      onSuccess: (url) => {
+        setLesForm((f) => ({ ...f, pdf_url: url }));
+        toast.success("تم رفع ملف الـ PDF ✅");
+      },
+      onError: () => toast.error("تعذّر رفع الملف، حاول تاني."),
+    });
+  };
+
+
 
   const [secOpen, setSecOpen] = useState(false);
   const [editSec, setEditSec] = useState<Section | null>(null);
@@ -446,9 +467,33 @@ function ManageCourse() {
               </div>
             </F>
 
-            <F label="رابط ملف PDF (اختياري)">
-              <Input value={lesForm.pdf_url} onChange={(e) => setLesForm({ ...lesForm, pdf_url: e.target.value })} dir="ltr" />
+            <F label="ملف PDF للمحاضرة (اختياري)">
+              <input ref={pdfFileRef} type="file" accept="application/pdf,.pdf" className="hidden" onChange={handlePdfUpload} />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => pdfFileRef.current?.click()}
+                  disabled={uploadPdf.isPending}
+                  className="gap-2"
+                >
+                  {uploadPdf.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {uploadPdf.isPending ? "جارٍ الرفع..." : lesForm.pdf_url ? "استبدال ملف الـ PDF" : "ارفع ملف PDF"}
+                </Button>
+                {lesForm.pdf_url && !uploadPdf.isPending && (
+                  <span className="flex items-center gap-1.5 text-sm font-semibold text-green-500">
+                    <CheckCircle2 className="h-4 w-4" /> تم رفع الملف
+                  </span>
+                )}
+                {lesForm.pdf_url && !uploadPdf.isPending && (
+                  <Button type="button" size="sm" variant="ghost" className="gap-1 text-destructive" onClick={() => setLesForm((f) => ({ ...f, pdf_url: "" }))}>
+                    <Trash2 className="h-3.5 w-3.5" /> إزالة
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">ارفع ملف الـ PDF من اللاب أو الهاتف مباشرة — هيظهر للطلاب المشتركين لتحميله على أجهزتهم.</p>
             </F>
+
             <div className="grid grid-cols-2 gap-4">
               <F label="المدة (تُحسب تلقائيًا)">
                 <Input value={Number(lesForm.duration_minutes) > 0 ? `${lesForm.duration_minutes} دقيقة` : "—"} readOnly disabled />

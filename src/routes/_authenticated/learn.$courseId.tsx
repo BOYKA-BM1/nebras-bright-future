@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Loader2, CheckCircle2, Circle, Lock, FileText, ChevronRight,
-  PlayCircle,
+  Loader2, CheckCircle2, Circle, Lock, ChevronRight,
+  PlayCircle, Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/site/Logo";
 import { useCourse, useCourseContent, useEnrollment, useProgress, useUpdateProgress } from "@/hooks/use-content";
@@ -24,6 +25,29 @@ function LearnPage() {
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const updateProgress = useUpdateProgress(courseId);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const downloadPdf = async (url: string, title: string) => {
+    setDownloading(true);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${title || "ملف-المحاضرة"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
+      toast.error("تعذّر التحميل المباشر — تم فتح الملف في تبويب جديد.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const completedIds = useMemo(() => new Set(progress.filter((p) => p.completed).map((p) => p.lesson_id)), [progress]);
   const pct = lessons.length ? Math.round((completedIds.size / lessons.length) * 100) : 0;
@@ -149,10 +173,16 @@ function LearnPage() {
                     </button>
                   )}
                   {active.pdf_url && (
-                    <a href={active.pdf_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
-                      <FileText className="h-4 w-4 text-primary" /> تحميل الملف
-                    </a>
+                    <button
+                      onClick={() => downloadPdf(active.pdf_url!, active.title)}
+                      disabled={downloading}
+                      className="flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent disabled:opacity-60"
+                    >
+                      {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-primary" />}
+                      {downloading ? "جارٍ التحميل..." : "تحميل ملف PDF"}
+                    </button>
                   )}
+
                 </div>
               </div>
             )}
