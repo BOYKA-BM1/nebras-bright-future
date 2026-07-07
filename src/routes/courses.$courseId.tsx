@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
+import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
@@ -43,6 +44,8 @@ function CourseDetail() {
   const unenroll = useUnenroll();
   const { favoriteIds, toggle } = useFavorites();
   const { data: profile } = useProfile();
+  const { isAdmin, isTeacher, isStaff } = useRoles();
+  const isStudentAccount = !isAdmin && !isTeacher && !isStaff;
 
   const [couponCode, setCouponCode] = useState("");
   const [applying, setApplying] = useState(false);
@@ -272,14 +275,16 @@ function CourseDetail() {
                     >
                       <Check className="h-4 w-4" /> ادخل الدورة
                     </Link>
-                    <button
-                      onClick={handleUnenroll}
-                      disabled={unenroll.isPending}
-                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2.5 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
-                    >
-                      {unenroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
-                      إلغاء الاشتراك
-                    </button>
+                    {isStudentAccount && (
+                      <button
+                        onClick={handleUnenroll}
+                        disabled={unenroll.isPending}
+                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2.5 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
+                      >
+                        {unenroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                        إلغاء الاشتراك
+                      </button>
+                    )}
                   </>
                 ) : (
                   <button
