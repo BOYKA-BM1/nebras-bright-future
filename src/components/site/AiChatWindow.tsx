@@ -84,8 +84,13 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       setMessages((m) => [...m, { role: "assistant", content: "" }]);
       let i = 0;
       const step = () => {
+        if (stoppedRef.current) {
+          resolve();
+          return;
+        }
         i = Math.min(chars.length, i + 2);
         const shown = chars.slice(0, i).join("");
+        shownRef.current = shown;
         setMessages((m) => {
           const copy = [...m];
           copy[copy.length - 1] = { role: "assistant", content: shown };
@@ -100,12 +105,25 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       step();
     });
 
+  // إيقاف رد الذكاء الاصطناعي في أي وقت
+  const stop = () => {
+    stoppedRef.current = true;
+    if (typingTimer.current) {
+      clearTimeout(typingTimer.current);
+      typingTimer.current = null;
+    }
+    setTyping(false);
+    setBusy(false);
+  };
+
   const send = async (text: string) => {
     const content = text.trim();
     if (!content || busy) return;
 
     const history: ChatMsg[] = [...messages, { role: "user", content }];
     stickToBottom.current = true; // عند إرسال رسالة جديدة نرجع لآخر الشات
+    stoppedRef.current = false;
+    shownRef.current = "";
     setMessages(history);
     setInput("");
     setBusy(true);
@@ -124,36 +142,50 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       await saveMessage(id, "user", content);
 
       const { reply } = await callTutor({ data: { messages: history.slice(-12) } });
-      setTyping(true);
-      await typeReply(reply);
-      await saveMessage(id, "assistant", reply);
+
+      // لو المستخدم أوقف الرد وهو لسه بيفكّر، نتجاهل الرد بالكامل
+      if (!stoppedRef.current) {
+        setTyping(true);
+        await typeReply(reply);
+        setTyping(false);
+      }
+
+      // النص النهائي المحفوظ: الكامل لو خلص، أو اللي ظهر لو اتوقف أثناء الكتابة
+      const finalText = stoppedRef.current ? shownRef.current : reply;
+
+      if (finalText) {
+        await saveMessage(id, "assistant", finalText);
+      }
 
       // نحدّث الكاش عشان صفحة المحادثة تفتح جاهزة من غير وميض
       const now = new Date().toISOString();
-      const combined: ChatMsg[] = [...history, { role: "assistant", content: reply }];
-      const stored: StoredMessage[] = combined.map(
-        (m, idx) => ({
-          id: `local-${idx}`,
-          conversation_id: id!,
-          role: m.role,
-          content: m.content,
-          created_at: now,
-        }),
-      );
+      const combined: ChatMsg[] = finalText
+        ? [...history, { role: "assistant", content: finalText }]
+        : history;
+      const stored: StoredMessage[] = combined.map((m, idx) => ({
+        id: `local-${idx}`,
+        conversation_id: id!,
+        role: m.role,
+        content: m.content,
+        created_at: now,
+      }));
       qc.setQueryData(["ai-messages", id], stored);
 
       if (isNew) {
         navigate({ to: "/ai/$threadId", params: { threadId: id }, replace: true });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "حصل خطأ، حاول تاني.");
-      setMessages((m) => m.slice(0, -1));
-      setInput(content);
+      if (!stoppedRef.current) {
+        toast.error(err instanceof Error ? err.message : "حصل خطأ، حاول تاني.");
+        setMessages((m) => m.slice(0, -1));
+        setInput(content);
+      }
     } finally {
       setBusy(false);
       setTyping(false);
     }
   };
+
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
