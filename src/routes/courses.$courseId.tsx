@@ -44,6 +44,8 @@ function CourseDetail() {
   const unenroll = useUnenroll();
   const { favoriteIds, toggle } = useFavorites();
   const { data: profile } = useProfile();
+  const { isAdmin, isTeacher, isStaff } = useRoles();
+  const isStudentAccount = !isAdmin && !isTeacher && !isStaff;
 
   const [couponCode, setCouponCode] = useState("");
   const [applying, setApplying] = useState(false);
