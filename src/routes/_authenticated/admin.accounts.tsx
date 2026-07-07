@@ -50,8 +50,6 @@ function AccountsPage() {
   const del = useServerFn(deleteAccount);
   const assignRole = useServerFn(setUserRole);
 
-  const resetDevice = useServerFn(resetAccountDevice);
-
   const qc = useQueryClient();
   const [q, setQ] = useState("");
 
