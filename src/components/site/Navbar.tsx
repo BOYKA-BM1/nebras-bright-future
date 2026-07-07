@@ -11,12 +11,15 @@ import { resolveImage } from "@/lib/catalog";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage } = useRoles();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
 
-  // المدرّس وحساب المونتاج لا يظهر لهم قسم الدورات (خاص بمراحل الطلاب)
-  const links = isTeacher || isMontage ? navLinks.filter((l) => l.href !== "/courses") : navLinks;
+  // المدرّس والطاقم لا يظهر لهم قسم الدورات ولا المحاضرات (خاص بالطلاب فقط)
+  const isStaffAccount = !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary);
+  const links = isStaffAccount
+    ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
+    : navLinks;
 
   // وجهة صورة المستخدم حسب الدور
   const accountTo = isAdmin ? "/admin" : isTeacher ? "/teacher" : "/profile";
