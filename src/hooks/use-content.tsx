@@ -29,7 +29,7 @@ export function useCourse(courseId: string | undefined) {
     queryFn: async (): Promise<CourseWithRelations | null> => {
       const { data, error } = await supabase
         .from("courses")
-        .select("*, teacher:teachers(*), stage:stages(*)")
+        .select(`*, teacher:teachers(${TEACHER_PUBLIC_COLUMNS}), stage:stages(*)`)
         .eq("id", courseId!)
         .maybeSingle();
       if (error) throw error;
