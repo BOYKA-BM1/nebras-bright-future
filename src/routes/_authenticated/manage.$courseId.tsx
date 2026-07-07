@@ -44,21 +44,7 @@ function ManageCourse() {
   const liveAdmin = useLiveAdmin(courseId);
   const uploadVideo = useUploadMontageVideo();
   const videoFileRef = useRef<HTMLInputElement>(null);
-  const callTranscribe = useServerFn(transcribeVideo);
-  const [transcribing, setTranscribing] = useState(false);
 
-  const runTranscription = async (url: string) => {
-    setTranscribing(true);
-    try {
-      const { transcript } = await callTranscribe({ data: { url } });
-      setLesForm((f) => ({ ...f, transcript }));
-      toast.success("تم تفريغ المحاضرة إلى نص تلقائيًا ✅ — المساعد الذكي هيجاوب الطلاب منها.");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "تعذّر تفريغ الفيديو تلقائيًا.");
-    } finally {
-      setTranscribing(false);
-    }
-  };
 
   const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
