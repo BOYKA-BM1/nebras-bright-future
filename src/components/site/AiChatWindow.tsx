@@ -119,8 +119,23 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
+    tts.cancel();
     setTyping(false);
     setBusy(false);
+  };
+
+  // التسجيل الصوتي: يحوّل الكلام لنص ويبعته تلقائيًا
+  const toggleMic = () => {
+    if (voice.listening) {
+      voice.stop();
+      return;
+    }
+    if (!voice.supported) {
+      toast.error("متصفحك مش بيدعم الإدخال الصوتي. جرّب Chrome على الكمبيوتر أو الموبايل.");
+      return;
+    }
+    tts.cancel();
+    voice.start((text) => send(text));
   };
 
   const send = async (text: string) => {
