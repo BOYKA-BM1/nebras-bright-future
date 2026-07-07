@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Loader2, BookOpen, Clock, Video, PlayCircle, Lock, Check, Heart,
-  ArrowRight, GraduationCap, ChevronLeft, FileText,
+  ArrowRight, GraduationCap, ChevronLeft, FileText, Ticket, X, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
-import { useCourse, useCourseContent, useEnrollment, useEnroll, useFavorites } from "@/hooks/use-content";
+import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
 
@@ -39,8 +40,13 @@ function CourseDetail() {
   const { sections, lessons, isLoading: contentLoading } = useCourseContent(courseId);
   const { isEnrolled } = useEnrollment(courseId);
   const enroll = useEnroll();
+  const unenroll = useUnenroll();
   const { favoriteIds, toggle } = useFavorites();
   const { data: profile } = useProfile();
+
+  const [couponCode, setCouponCode] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [coupon, setCoupon] = useState<{ id: string; label: string; finalPrice: number } | null>(null);
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
@@ -49,6 +55,48 @@ function CourseDetail() {
 
   const img = resolveImage(course.image_url) ?? resolveImage(course.teacher?.image_url);
   const isFav = favoriteIds.has(course.id);
+  const finalPrice = coupon ? coupon.finalPrice : course.price;
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+    if (!user) { toast.info("سجّل دخولك الأول علشان تستخدم الكوبون."); router.navigate({ to: "/auth" }); return; }
+    setApplying(true);
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("id, code, course_id, teacher_id, discount_amount, discount_percent, is_active, expires_at, max_uses, used_count")
+        .ilike("code", code)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) { toast.error("الكوبون غير صحيح."); return; }
+      // لازم يكون كوبون الدورة دي أو كوبون المدرّس صاحب الدورة
+      const matchesCourse = !data.course_id || data.course_id === course.id;
+      const matchesTeacher = !data.teacher_id || data.teacher_id === course.teacher_id;
+      if (!matchesCourse || !matchesTeacher) { toast.error("الكوبون ده مش صالح لهذه الدورة."); return; }
+      if (data.expires_at && new Date(data.expires_at) < new Date()) { toast.error("انتهت صلاحية الكوبون."); return; }
+      if (data.max_uses != null && data.used_count >= data.max_uses) { toast.error("تم استهلاك عدد مرات استخدام الكوبون."); return; }
+
+      let discounted = course.price;
+      let label = "";
+      if (data.discount_percent) {
+        discounted = Math.max(0, Math.round(course.price * (1 - data.discount_percent / 100)));
+        label = `خصم ${data.discount_percent}%`;
+      } else if (data.discount_amount) {
+        discounted = Math.max(0, course.price - data.discount_amount);
+        label = `خصم ${data.discount_amount} ج.م`;
+      }
+      setCoupon({ id: data.id, label, finalPrice: discounted });
+      toast.success(`تم تطبيق الكوبون ✅ ${label}`);
+    } catch {
+      toast.error("تعذّر التحقق من الكوبون، حاول تاني.");
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const clearCoupon = () => { setCoupon(null); setCouponCode(""); };
 
   const handleEnroll = () => {
     if (!user) {
@@ -63,7 +111,7 @@ function CourseDetail() {
       return;
     }
     enroll.mutate(
-      { courseId: course.id, price: course.price },
+      { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
       {
         onSuccess: () => {
           toast.success("تم تفعيل اشتراكك! 🎉");
@@ -73,6 +121,15 @@ function CourseDetail() {
       },
     );
   };
+
+  const handleUnenroll = () => {
+    unenroll.mutate(course.id, {
+      onSuccess: () => toast.success("تم إلغاء اشتراكك في الدورة."),
+      onError: () => toast.error("تعذّر إلغاء الاشتراك، حاول تاني."),
+    });
+  };
+
+
 
 
   return (
@@ -166,18 +223,64 @@ function CourseDetail() {
               )}
               <div className="p-5">
                 <div className="flex items-end gap-2">
-                  {course.old_price && <span className="text-sm text-muted-foreground line-through">{course.old_price} ج.م</span>}
-                  <span className="text-3xl font-extrabold text-gradient-gold">{course.price === 0 ? "مجانًا" : `${course.price} ج.م`}</span>
+                  {(course.old_price || coupon) && (
+                    <span className="text-sm text-muted-foreground line-through">{(coupon ? course.price : course.old_price)} ج.م</span>
+                  )}
+                  <span className="text-3xl font-extrabold text-gradient-gold">{finalPrice === 0 ? "مجانًا" : `${finalPrice} ج.م`}</span>
                 </div>
 
+                {/* إدخال كوبون الخصم */}
+                {!isEnrolled && course.price > 0 && (
+                  <div className="mt-4">
+                    {coupon ? (
+                      <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-bold text-primary">
+                        <span className="flex items-center gap-1.5"><Ticket className="h-4 w-4" /> {coupon.label} مطبّق</span>
+                        <button onClick={clearCoupon} className="text-muted-foreground hover:text-foreground" aria-label="إزالة الكوبون">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Ticket className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <input
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
+                            placeholder="كوبون الخصم"
+                            className="w-full rounded-xl border border-border bg-background py-2.5 pr-9 pl-3 text-sm outline-none focus:border-primary/50"
+                          />
+                        </div>
+                        <button
+                          onClick={applyCoupon}
+                          disabled={applying || !couponCode.trim()}
+                          className="shrink-0 rounded-xl border border-primary/40 px-4 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+                        >
+                          {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : "تطبيق"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {isEnrolled ? (
-                  <Link
-                    to="/learn/$courseId"
-                    params={{ courseId: course.id }}
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
-                  >
-                    <Check className="h-4 w-4" /> ادخل الدورة
-                  </Link>
+                  <>
+                    <Link
+                      to="/learn/$courseId"
+                      params={{ courseId: course.id }}
+                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
+                    >
+                      <Check className="h-4 w-4" /> ادخل الدورة
+                    </Link>
+                    <button
+                      onClick={handleUnenroll}
+                      disabled={unenroll.isPending}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2.5 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
+                    >
+                      {unenroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                      إلغاء الاشتراك
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={handleEnroll}
@@ -185,7 +288,7 @@ function CourseDetail() {
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
                   >
                     {enroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                    {course.price === 0 ? "اشترك مجانًا" : "اشترك الآن"}
+                    {finalPrice === 0 ? "اشترك مجانًا" : "اشترك الآن"}
                   </button>
                 )}
 
@@ -199,6 +302,7 @@ function CourseDetail() {
                   </button>
                 )}
               </div>
+
             </div>
           </aside>
         </div>
