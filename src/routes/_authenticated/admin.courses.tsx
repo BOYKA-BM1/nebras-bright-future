@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useCourses, useTeachers, useStages, useCourseAdmin } from "@/hooks/use-catalog";
+import { useCourses, useTeachers, useStages, useCourseAdmin, useUploadImage } from "@/hooks/use-catalog";
 import { tracks, courseTypes, trackLabel, resolveImage, type CourseWithRelations } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/courses")({
