@@ -73,6 +73,8 @@ function AdminCourses() {
   const [editing, setEditing] = useState<CourseWithRelations | null>(null);
   const [form, setForm] = useState<FormState>(empty);
   const [toDelete, setToDelete] = useState<CourseWithRelations | null>(null);
+  const uploadImage = useUploadImage();
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof FormState, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -91,15 +93,25 @@ function AdminCourses() {
       track: c.track,
       subject: c.subject ?? "",
       type: c.type,
-      lessons_count: String(c.lessons_count),
-      videos_count: String(c.videos_count),
-      hours: String(c.hours),
-      live_sessions: String(c.live_sessions),
       badge: c.badge ?? "",
       is_published: c.is_published,
       sort_order: String(c.sort_order),
     });
     setOpen(true);
+  };
+
+  const onPickImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("اختر ملف صورة."); return; }
+    try {
+      const url = await uploadImage.mutateAsync(file);
+      set("image_url", url);
+      toast.success("تم رفع الصورة.");
+    } catch {
+      toast.error("تعذّر رفع الصورة، حاول تاني.");
+    }
   };
 
   const handleSubmit = () => {
@@ -116,14 +128,11 @@ function AdminCourses() {
       track: form.track,
       subject: form.subject.trim() || null,
       type: form.type,
-      lessons_count: Number(form.lessons_count) || 0,
-      videos_count: Number(form.videos_count) || 0,
-      hours: Number(form.hours) || 0,
-      live_sessions: Number(form.live_sessions) || 0,
       badge: form.badge.trim() || null,
       is_published: form.is_published,
       sort_order: Number(form.sort_order) || 0,
     };
+
     const onErr = () => toast.error("حصل خطأ، حاول تاني.");
     if (editing) {
       update.mutate({ id: editing.id, ...payload }, { onSuccess: () => { toast.success("تم تحديث الدورة."); setOpen(false); }, onError: onErr });
