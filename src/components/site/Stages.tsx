@@ -1,6 +1,6 @@
-import { GraduationCap, Library, BookA, ChevronLeft, Loader2 } from "lucide-react";
+import { GraduationCap, Library, BookA, ChevronLeft, Loader2, Users, UserRound } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { useStages } from "@/hooks/use-catalog";
+import { useStages, useStageCounts } from "@/hooks/use-catalog";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useProfile } from "@/hooks/use-profile";
