@@ -228,10 +228,13 @@ export function useSpeech() {
           const { value, done } = await reader.read();
           if (done || runRef.current !== runId) break;
           buf += value;
-          const parts = buf.split("\n\n");
+          // بوابة الذكاء الاصطناعي بتفصل رسائل SSE بـ CRLF (\r\n\r\n) أو LF (\n\n)
+          const parts = buf.split(/\r?\n\r?\n/);
           buf = parts.pop() ?? "";
           for (const part of parts) {
-            const line = part.split("\n").find((l) => l.startsWith("data:"));
+            const line = part
+              .split(/\r?\n/)
+              .find((l) => l.startsWith("data:"));
             if (!line) continue;
             const payload = line.slice(5).trim();
             if (!payload || payload === "[DONE]") continue;
