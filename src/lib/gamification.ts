@@ -26,11 +26,11 @@ export function levelTitle(level: number): string {
   return "مبتدئ";
 }
 
-export function computeBadges(opts: { xp: number; rank: number | null; lessons: number; courses: number }): Badge[] {
-  const { xp, rank, lessons, courses } = opts;
+export function computeBadges(opts: { xp: number; rank: number | null; courses: number }): Badge[] {
+  const { xp, rank, courses } = opts;
   return [
     { key: "beginner", label: "Beginner Hacker", emoji: "🐣", desc: "بدأت رحلتك — أول نقاطك", earned: xp >= 10 },
-    { key: "learner", label: "متعلّم نشيط", emoji: "🔥", desc: "أكملت 5 دروس", earned: lessons >= 5 },
+    { key: "learner", label: "متعلّم نشيط", emoji: "🔥", desc: "وصلت إلى 100 نقطة", earned: xp >= 100 },
     { key: "collector", label: "جامع الدورات", emoji: "📚", desc: "اشتركت في 3 دورات", earned: courses >= 3 },
     { key: "security", label: "Security Expert", emoji: "🛡️", desc: "وصلت إلى 500 نقطة", earned: xp >= 500 },
     { key: "legend", label: "أسطورة", emoji: "⚡", desc: "وصلت إلى 1000 نقطة", earned: xp >= 1000 },
