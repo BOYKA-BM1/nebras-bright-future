@@ -359,6 +359,8 @@ export type Database = {
           id: string
           stage: string | null
           subject: string | null
+          teacher_id: string | null
+          teacher_name: string | null
           title: string
           updated_at: string
         }
@@ -371,6 +373,8 @@ export type Database = {
           id?: string
           stage?: string | null
           subject?: string | null
+          teacher_id?: string | null
+          teacher_name?: string | null
           title: string
           updated_at?: string
         }
@@ -383,10 +387,20 @@ export type Database = {
           id?: string
           stage?: string | null
           subject?: string | null
+          teacher_id?: string | null
+          teacher_name?: string | null
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_docs_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_progress: {
         Row: {
