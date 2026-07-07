@@ -64,8 +64,8 @@ function AiLayout() {
       <div className="flex min-h-0 flex-1">
         {/* الشريط الجانبي: المحادثات */}
         <aside
-          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 border-l border-border bg-card transition-transform md:static md:mt-0 md:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
+          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-300 md:static md:mt-0 ${
+            sidebarOpen ? "translate-x-0 md:w-72" : "translate-x-full md:w-0 md:translate-x-0 md:border-l-0"
           }`}
         >
           <div className="flex h-full flex-col p-3">
@@ -99,7 +99,7 @@ function AiLayout() {
                     </Link>
                     <button
                       onClick={() => handleDelete(c.id)}
-                      className="shrink-0 rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                      className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:opacity-70 md:group-hover:opacity-100"
                       aria-label="حذف المحادثة"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -121,10 +121,11 @@ function AiLayout() {
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <button
               onClick={() => setSidebarOpen((v) => !v)}
-              className="rounded-lg border border-border p-2 text-muted-foreground md:hidden"
+              className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent"
               aria-label="قائمة المحادثات"
             >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              <span className="hidden sm:inline">المحادثات</span>
             </button>
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-primary-foreground shadow-gold">
               <Sparkles className="h-4 w-4" />
