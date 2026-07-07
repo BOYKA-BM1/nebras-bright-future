@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/teacher")({
 });
 
 function TeacherDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, confirmSignOut } = useAuth();
   const navigate = useNavigate();
   const { isTeacher, isAdmin, isLoading } = useRoles();
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
