@@ -80,11 +80,6 @@ function AccountsPage() {
     onSuccess: (_d, v) => { toast.success(`تم تعيين الحساب كـ${ROLE_META[v.role].text}.`); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر تعيين الصلاحية."),
   });
-  const resetDeviceM = useMutation({
-    mutationFn: (a: { userId: string }) => resetDevice({ data: a }),
-    onSuccess: () => { toast.success("تم إعادة تعيين الجهاز، يقدر يسجّل من جهاز جديد."); invalidate(); },
-    onError: (e: any) => toast.error(e?.message ?? "تعذّر إعادة التعيين."),
-  });
 
 
 
