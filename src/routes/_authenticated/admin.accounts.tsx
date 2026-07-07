@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown } from "lucide-react";
+import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown, MonitorSmartphone, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -10,6 +10,7 @@ import {
   unbanAccount,
   deleteAccount,
   setUserRole,
+  resetAccountDevice,
   ASSIGNABLE_ROLES,
 } from "@/lib/admin-accounts.functions";
 import {
@@ -43,6 +44,25 @@ function roleLabel(roles: string[]) {
   return ROLE_META.student;
 }
 
+/** يحوّل الـ user agent لاسم جهاز مبسّط */
+function deviceName(ua: string | null): string {
+  if (!ua) return "جهاز";
+  const os =
+    /iPhone/i.test(ua) ? "آيفون" :
+    /iPad/i.test(ua) ? "آيباد" :
+    /Android/i.test(ua) ? "أندرويد" :
+    /Windows/i.test(ua) ? "ويندوز" :
+    /Mac OS/i.test(ua) ? "ماك" :
+    /Linux/i.test(ua) ? "لينكس" : "جهاز";
+  const browser =
+    /Edg/i.test(ua) ? "Edge" :
+    /Chrome/i.test(ua) ? "Chrome" :
+    /Firefox/i.test(ua) ? "Firefox" :
+    /Safari/i.test(ua) ? "Safari" : "متصفح";
+  return `${os} · ${browser}`;
+}
+
+
 
 function AccountsPage() {
   const fetchAccounts = useServerFn(listAccounts);
@@ -50,6 +70,7 @@ function AccountsPage() {
   const unban = useServerFn(unbanAccount);
   const del = useServerFn(deleteAccount);
   const assignRole = useServerFn(setUserRole);
+  const resetDevice = useServerFn(resetAccountDevice);
 
   const qc = useQueryClient();
   const [q, setQ] = useState("");
@@ -81,6 +102,13 @@ function AccountsPage() {
     onSuccess: (_d, v) => { toast.success(`تم تعيين الحساب كـ${ROLE_META[v.role].text}.`); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر تعيين الصلاحية."),
   });
+  const resetDeviceM = useMutation({
+    mutationFn: (a: { userId: string }) => resetDevice({ data: a }),
+    onSuccess: () => { toast.success("تم إعادة تعيين الجهاز، يقدر يسجّل من جهاز جديد."); invalidate(); },
+    onError: (e: any) => toast.error(e?.message ?? "تعذّر إعادة التعيين."),
+  });
+
+
 
 
   const filtered = accounts.filter(
@@ -121,6 +149,7 @@ function AccountsPage() {
                 <th className="p-3 font-bold">البريد الإلكتروني</th>
                 <th className="p-3 font-bold">النوع</th>
                 <th className="p-3 font-bold">الحالة</th>
+                <th className="p-3 font-bold">الجهاز المسجّل</th>
                 <th className="p-3 font-bold">إجراءات</th>
               </tr>
             </thead>
@@ -143,6 +172,23 @@ function AccountsPage() {
                         <span className="rounded-full bg-green-500/15 px-2.5 py-1 text-xs font-bold text-green-500">
                           نشط
                         </span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      {a.device_registered_at ? (
+                        <div className="flex items-start gap-1.5">
+                          <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                          <div className="min-w-0">
+                            <p className="truncate text-xs font-semibold" title={a.device_label ?? ""}>
+                              {deviceName(a.device_label)}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {new Date(a.device_registered_at).toLocaleString("ar-EG")}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">لم يُسجّل بعد</span>
                       )}
                     </td>
                     <td className="p-3">
@@ -186,6 +232,20 @@ function AccountsPage() {
                             ))}
                           </DropdownMenuContent>
                         </DropdownMenu>
+
+                        {a.device_registered_at && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`إعادة تعيين جهاز ${a.email}؟ هيقدر يسجّل الدخول من جهاز جديد.`))
+                                resetDeviceM.mutate({ userId: a.id });
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" /> إعادة تعيين الجهاز
+                          </button>
+                        )}
+
+
 
                         <button
                           onClick={() => {

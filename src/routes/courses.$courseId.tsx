@@ -10,6 +10,8 @@ import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
+import { useMyPaymentRequests } from "@/hooks/use-payments";
+import { PaymentDialog } from "@/components/site/PaymentDialog";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
 
@@ -50,6 +52,9 @@ function CourseDetail() {
   const [couponCode, setCouponCode] = useState("");
   const [applying, setApplying] = useState(false);
   const [coupon, setCoupon] = useState<{ id: string; label: string; finalPrice: number } | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const { data: myRequests = [] } = useMyPaymentRequests();
+  const pendingRequest = myRequests.find((r) => r.course_id === courseId && r.status === "pending");
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
@@ -113,16 +118,21 @@ function CourseDetail() {
       router.navigate({ to: "/profile" });
       return;
     }
-    enroll.mutate(
-      { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
-      {
-        onSuccess: () => {
-          toast.success("تم تفعيل اشتراكك! 🎉");
-          router.navigate({ to: "/learn/$courseId", params: { courseId: course.id } });
+    // الدورات المجانية تُفعّل مباشرة، والمدفوعة تفتح نافذة الدفع اليدوي
+    if (finalPrice === 0) {
+      enroll.mutate(
+        { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
+        {
+          onSuccess: () => {
+            toast.success("تم تفعيل اشتراكك! 🎉");
+            router.navigate({ to: "/learn/$courseId", params: { courseId: course.id } });
+          },
+          onError: () => toast.error("تعذّر الاشتراك، حاول تاني."),
         },
-        onError: () => toast.error("تعذّر الاشتراك، حاول تاني."),
-      },
-    );
+      );
+      return;
+    }
+    setShowPayment(true);
   };
 
   const handleUnenroll = () => {
@@ -286,6 +296,13 @@ function CourseDetail() {
                       </button>
                     )}
                   </>
+                ) : pendingRequest ? (
+                  <div className="mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center text-sm font-bold text-amber-500">
+                    طلب دفعك قيد المراجعة ⏳
+                    <p className="mt-1 text-xs font-normal text-muted-foreground">
+                      هيتم تفعيل اشتراكك بعد تأكيد الدفع من الإدارة.
+                    </p>
+                  </div>
                 ) : (
                   <button
                     onClick={handleEnroll}
@@ -293,7 +310,7 @@ function CourseDetail() {
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
                   >
                     {enroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                    {finalPrice === 0 ? "اشترك مجانًا" : "اشترك الآن"}
+                    {finalPrice === 0 ? "اشترك مجانًا" : "ادفع واشترك"}
                   </button>
                 )}
 
@@ -312,6 +329,17 @@ function CourseDetail() {
           </aside>
         </div>
       </main>
+
+      {showPayment && (
+        <PaymentDialog
+          courseId={course.id}
+          courseTitle={course.title}
+          amount={finalPrice}
+          couponId={coupon?.id ?? null}
+          onClose={() => setShowPayment(false)}
+          onSubmitted={() => setShowPayment(false)}
+        />
+      )}
     </div>
   );
 }

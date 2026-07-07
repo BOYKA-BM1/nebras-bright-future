@@ -19,6 +19,8 @@ export type AccountRow = {
   phone: string | null;
   roles: string[];
   banned: boolean;
+  device_label: string | null;
+  device_registered_at: string | null;
 };
 
 export const listAccounts = createServerFn({ method: "GET" })
@@ -35,7 +37,7 @@ export const listAccounts = createServerFn({ method: "GET" })
 
     const [{ data: roles }, { data: profiles }, { data: banned }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role"),
-      supabaseAdmin.from("profiles").select("id, full_name, phone"),
+      supabaseAdmin.from("profiles").select("id, full_name, phone, device_label, device_registered_at"),
       supabaseAdmin.from("banned_emails").select("email"),
     ]);
 
@@ -58,6 +60,8 @@ export const listAccounts = createServerFn({ method: "GET" })
         phone: p?.phone ?? null,
         roles: roleMap.get(u.id) ?? ["student"],
         banned: bannedSet.has((u.email ?? "").toLowerCase()),
+        device_label: p?.device_label ?? null,
+        device_registered_at: p?.device_registered_at ?? null,
       };
     });
   });
@@ -144,4 +148,19 @@ export const setUserRole = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+export const resetAccountDevice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("profiles")
+      .update({ device_id: null, device_label: null, device_registered_at: null })
+      .eq("id", data.userId);
+    if (error) throw new Error("تعذّر إعادة تعيين الجهاز.");
+    return { ok: true };
+  });
+
 
