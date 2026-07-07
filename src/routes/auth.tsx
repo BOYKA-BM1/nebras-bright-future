@@ -92,15 +92,25 @@ function AuthPage() {
   const handleGoogle = async () => {
     setGoogleBusy(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: window.location.origin + "/dashboard",
-          queryParams: { prompt: "select_account" },
-        },
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
       });
-      if (error) throw error;
-      // المتصفح هيتحوّل مباشرة لصفحة جوجل ثم يرجع للمنصة
+
+      if (result.error) {
+        setGoogleBusy(false);
+        toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
+        return;
+      }
+
+      if (result.redirected) {
+        // المتصفح هيتحوّل لصفحة جوجل ثم يرجع للمنصة
+        return;
+      }
+
+      // تم تسجيل الدخول والجلسة جاهزة
+      toast.success("أهلًا بعودتك! 👋");
+      navigate({ to: "/dashboard" });
     } catch {
       setGoogleBusy(false);
       toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
