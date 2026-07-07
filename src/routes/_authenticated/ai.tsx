@@ -121,10 +121,11 @@ function AiLayout() {
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <button
               onClick={() => setSidebarOpen((v) => !v)}
-              className="rounded-lg border border-border p-2 text-muted-foreground md:hidden"
+              className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent"
               aria-label="قائمة المحادثات"
             >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              <span className="hidden sm:inline">المحادثات</span>
             </button>
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-primary-foreground shadow-gold">
               <Sparkles className="h-4 w-4" />
