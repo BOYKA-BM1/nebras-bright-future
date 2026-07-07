@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Loader2, CheckCircle2, Circle, Lock, FileText, ChevronRight,
+  Loader2, CheckCircle2, Circle, Lock, ChevronRight,
   PlayCircle, Download,
 } from "lucide-react";
 import { toast } from "sonner";
