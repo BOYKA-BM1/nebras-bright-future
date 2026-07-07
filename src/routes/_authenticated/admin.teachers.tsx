@@ -77,7 +77,7 @@ function genPassword() {
 }
 
 function AdminTeachers() {
-  const { data: teachers = [], isLoading } = useTeachers();
+  const { data: teachers = [], isLoading } = useAdminTeachers();
   const { create, update, remove } = useTeacherAdmin();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Teacher | null>(null);
