@@ -44,6 +44,25 @@ function roleLabel(roles: string[]) {
   return ROLE_META.student;
 }
 
+/** يحوّل الـ user agent لاسم جهاز مبسّط */
+function deviceName(ua: string | null): string {
+  if (!ua) return "جهاز";
+  const os =
+    /iPhone/i.test(ua) ? "آيفون" :
+    /iPad/i.test(ua) ? "آيباد" :
+    /Android/i.test(ua) ? "أندرويد" :
+    /Windows/i.test(ua) ? "ويندوز" :
+    /Mac OS/i.test(ua) ? "ماك" :
+    /Linux/i.test(ua) ? "لينكس" : "جهاز";
+  const browser =
+    /Edg/i.test(ua) ? "Edge" :
+    /Chrome/i.test(ua) ? "Chrome" :
+    /Firefox/i.test(ua) ? "Firefox" :
+    /Safari/i.test(ua) ? "Safari" : "متصفح";
+  return `${os} · ${browser}`;
+}
+
+
 
 function AccountsPage() {
   const fetchAccounts = useServerFn(listAccounts);
