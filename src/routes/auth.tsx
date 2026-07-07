@@ -30,7 +30,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [social, setSocial] = useState<"google" | "apple" | null>(null);
+  
 
   // استعادة كلمة السر بكود OTP
   const [reset, setReset] = useState(false);
