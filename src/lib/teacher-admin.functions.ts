@@ -8,6 +8,8 @@ const inputSchema = z.object({
   password: z.string().min(8),
   name: z.string().min(2),
   subject: z.string().min(1),
+  stage: z.string().min(1),
+  grade: z.string().min(1),
   bio: z.string().optional().nullable(),
   image_url: z.string().optional().nullable(),
   experience_years: z.number().optional(),
