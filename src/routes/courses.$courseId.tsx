@@ -223,18 +223,64 @@ function CourseDetail() {
               )}
               <div className="p-5">
                 <div className="flex items-end gap-2">
-                  {course.old_price && <span className="text-sm text-muted-foreground line-through">{course.old_price} ج.م</span>}
-                  <span className="text-3xl font-extrabold text-gradient-gold">{course.price === 0 ? "مجانًا" : `${course.price} ج.م`}</span>
+                  {(course.old_price || coupon) && (
+                    <span className="text-sm text-muted-foreground line-through">{(coupon ? course.price : course.old_price)} ج.م</span>
+                  )}
+                  <span className="text-3xl font-extrabold text-gradient-gold">{finalPrice === 0 ? "مجانًا" : `${finalPrice} ج.م`}</span>
                 </div>
 
+                {/* إدخال كوبون الخصم */}
+                {!isEnrolled && course.price > 0 && (
+                  <div className="mt-4">
+                    {coupon ? (
+                      <div className="flex items-center justify-between gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2.5 text-sm font-bold text-primary">
+                        <span className="flex items-center gap-1.5"><Ticket className="h-4 w-4" /> {coupon.label} مطبّق</span>
+                        <button onClick={clearCoupon} className="text-muted-foreground hover:text-foreground" aria-label="إزالة الكوبون">
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Ticket className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <input
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCoupon(); } }}
+                            placeholder="كوبون الخصم"
+                            className="w-full rounded-xl border border-border bg-background py-2.5 pr-9 pl-3 text-sm outline-none focus:border-primary/50"
+                          />
+                        </div>
+                        <button
+                          onClick={applyCoupon}
+                          disabled={applying || !couponCode.trim()}
+                          className="shrink-0 rounded-xl border border-primary/40 px-4 py-2.5 text-sm font-bold text-primary transition-colors hover:bg-primary/10 disabled:opacity-60"
+                        >
+                          {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : "تطبيق"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {isEnrolled ? (
-                  <Link
-                    to="/learn/$courseId"
-                    params={{ courseId: course.id }}
-                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
-                  >
-                    <Check className="h-4 w-4" /> ادخل الدورة
-                  </Link>
+                  <>
+                    <Link
+                      to="/learn/$courseId"
+                      params={{ courseId: course.id }}
+                      className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
+                    >
+                      <Check className="h-4 w-4" /> ادخل الدورة
+                    </Link>
+                    <button
+                      onClick={handleUnenroll}
+                      disabled={unenroll.isPending}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2.5 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
+                    >
+                      {unenroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <XCircle className="h-4 w-4" />}
+                      إلغاء الاشتراك
+                    </button>
+                  </>
                 ) : (
                   <button
                     onClick={handleEnroll}
@@ -242,7 +288,7 @@ function CourseDetail() {
                     className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
                   >
                     {enroll.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                    {course.price === 0 ? "اشترك مجانًا" : "اشترك الآن"}
+                    {finalPrice === 0 ? "اشترك مجانًا" : "اشترك الآن"}
                   </button>
                 )}
 
@@ -256,6 +302,7 @@ function CourseDetail() {
                   </button>
                 )}
               </div>
+
             </div>
           </aside>
         </div>
