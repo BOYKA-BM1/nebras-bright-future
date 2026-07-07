@@ -29,7 +29,7 @@ const navItems = [
 
 
 function AdminLayout() {
-  const { signOut } = useAuth();
+  const { confirmSignOut } = useAuth();
   const { isAdmin, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
