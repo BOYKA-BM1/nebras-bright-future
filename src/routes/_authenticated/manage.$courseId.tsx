@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, Plus, Pencil, Trash2, ChevronRight, Video, FileText, Layers, GripVertical,
-  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2,
+  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2, Wand2, Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
