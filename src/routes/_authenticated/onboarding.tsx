@@ -17,7 +17,7 @@ const iconMap = { GraduationCap, Library, BookA } as const;
 
 function Onboarding() {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { confirmSignOut } = useAuth();
   const { isAdmin, isTeacher, isLoading: rolesLoading } = useRoles();
   const { data: stages = [], isLoading: stagesLoading } = useStages();
   const { data: profile, isLoading: profileLoading } = useProfile();
