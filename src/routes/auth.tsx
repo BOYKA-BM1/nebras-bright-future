@@ -258,7 +258,26 @@ function AuthPage() {
               : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
           </p>
 
-          <form onSubmit={handleEmail} className="mt-7 grid gap-4">
+          <div className="mt-7">
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleBusy}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
+            >
+              {googleBusy ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
+              المتابعة باستخدام Google
+            </button>
+          </div>
+
+          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            أو بالبريد الإلكتروني
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <form onSubmit={handleEmail} className="grid gap-4">
+
 
             {mode === "signup" && (
               <div className="relative">
