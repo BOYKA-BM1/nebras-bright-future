@@ -392,3 +392,41 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+const selectCls =
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary/60 disabled:opacity-50";
+
+function StageGradeFields({
+  stage,
+  grade,
+  onStage,
+  onGrade,
+}: {
+  stage: string;
+  grade: string;
+  onStage: (v: string) => void;
+  onGrade: (v: string) => void;
+}) {
+  const grades = gradesForStage(stage);
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <Field label="المرحلة">
+        <select className={selectCls} value={stage} onChange={(e) => onStage(e.target.value)}>
+          <option value="">اختر المرحلة</option>
+          {stages.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="السنة الدراسية">
+        <select className={selectCls} value={grade} onChange={(e) => onGrade(e.target.value)} disabled={!stage}>
+          <option value="">{stage ? "اختر السنة" : "اختر المرحلة أولًا"}</option>
+          {grades.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+      </Field>
+    </div>
+  );
+}
+
