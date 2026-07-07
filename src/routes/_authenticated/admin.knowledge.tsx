@@ -181,6 +181,7 @@ function AdminKnowledge() {
     parts.push(d.stage ? stageLabel[d.stage] ?? d.stage : "كل المراحل");
     if (d.grade) parts.push(d.grade);
     if (d.subject) parts.push(d.subject);
+    if (d.teacher_name) parts.push(`أ/ ${d.teacher_name}`);
     return parts.join(" · ");
   };
 
