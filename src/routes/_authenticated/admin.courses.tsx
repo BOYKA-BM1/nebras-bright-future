@@ -50,10 +50,6 @@ type FormState = {
   track: string;
   subject: string;
   type: string;
-  lessons_count: string;
-  videos_count: string;
-  hours: string;
-  live_sessions: string;
   badge: string;
   is_published: boolean;
   sort_order: string;
@@ -62,9 +58,9 @@ type FormState = {
 const empty: FormState = {
   title: "", description: "", price: "0", old_price: "", image_url: "",
   stage_id: "", teacher_id: "", grade: "", track: "all", subject: "",
-  type: "recorded", lessons_count: "0", videos_count: "0", hours: "0",
-  live_sessions: "0", badge: "", is_published: true, sort_order: "0",
+  type: "recorded", badge: "", is_published: true, sort_order: "0",
 };
+
 
 const NONE = "__none__";
 
