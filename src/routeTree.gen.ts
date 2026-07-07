@@ -27,6 +27,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff.index'
+import { Route as AuthenticatedAiIndexRouteImport } from './routes/_authenticated/ai.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedStaffSupportRouteImport } from './routes/_authenticated/staff.support'
 import { Route as AuthenticatedStaffStudentsRouteImport } from './routes/_authenticated/staff.students'
@@ -133,6 +134,11 @@ const AuthenticatedStaffIndexRoute = AuthenticatedStaffIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedStaffRoute,
 } as any)
+const AuthenticatedAiIndexRoute = AuthenticatedAiIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAiRoute,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -235,7 +241,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/ai': typeof AuthenticatedAiRoute
+  '/ai': typeof AuthenticatedAiRouteWithChildren
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/ai/': typeof AuthenticatedAiIndexRoute
   '/staff/': typeof AuthenticatedStaffIndexRoute
 }
 export interface FileRoutesByTo {
@@ -269,7 +276,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
-  '/ai': typeof AuthenticatedAiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -295,6 +301,7 @@ export interface FileRoutesByTo {
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/ai': typeof AuthenticatedAiIndexRoute
   '/staff': typeof AuthenticatedStaffIndexRoute
 }
 export interface FileRoutesById {
@@ -305,7 +312,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/ai': typeof AuthenticatedAiRoute
+  '/_authenticated/ai': typeof AuthenticatedAiRouteWithChildren
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -332,6 +339,7 @@ export interface FileRoutesById {
   '/_authenticated/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/_authenticated/staff/support': typeof AuthenticatedStaffSupportRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/ai/': typeof AuthenticatedAiIndexRoute
   '/_authenticated/staff/': typeof AuthenticatedStaffIndexRoute
 }
 export interface FileRouteTypes {
@@ -369,6 +377,7 @@ export interface FileRouteTypes {
     | '/staff/students'
     | '/staff/support'
     | '/admin/'
+    | '/ai/'
     | '/staff/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -376,7 +385,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
-    | '/ai'
     | '/dashboard'
     | '/lectures'
     | '/onboarding'
@@ -402,6 +410,7 @@ export interface FileRouteTypes {
     | '/staff/students'
     | '/staff/support'
     | '/admin'
+    | '/ai'
     | '/staff'
   id:
     | '__root__'
@@ -438,6 +447,7 @@ export interface FileRouteTypes {
     | '/_authenticated/staff/students'
     | '/_authenticated/staff/support'
     | '/_authenticated/admin/'
+    | '/_authenticated/ai/'
     | '/_authenticated/staff/'
   fileRoutesById: FileRoutesById
 }
@@ -580,6 +590,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/staff/'
       preLoaderRoute: typeof AuthenticatedStaffIndexRouteImport
       parentRoute: typeof AuthenticatedStaffRoute
+    }
+    '/_authenticated/ai/': {
+      id: '/_authenticated/ai/'
+      path: '/'
+      fullPath: '/ai/'
+      preLoaderRoute: typeof AuthenticatedAiIndexRouteImport
+      parentRoute: typeof AuthenticatedAiRoute
     }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
@@ -727,6 +744,18 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedAiRouteChildren {
+  AuthenticatedAiIndexRoute: typeof AuthenticatedAiIndexRoute
+}
+
+const AuthenticatedAiRouteChildren: AuthenticatedAiRouteChildren = {
+  AuthenticatedAiIndexRoute: AuthenticatedAiIndexRoute,
+}
+
+const AuthenticatedAiRouteWithChildren = AuthenticatedAiRoute._addFileChildren(
+  AuthenticatedAiRouteChildren,
+)
+
 interface AuthenticatedStaffRouteChildren {
   AuthenticatedStaffMontageRoute: typeof AuthenticatedStaffMontageRoute
   AuthenticatedStaffStudentsRoute: typeof AuthenticatedStaffStudentsRoute
@@ -746,7 +775,7 @@ const AuthenticatedStaffRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedAiRoute: typeof AuthenticatedAiRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
@@ -759,7 +788,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedAiRoute: AuthenticatedAiRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
