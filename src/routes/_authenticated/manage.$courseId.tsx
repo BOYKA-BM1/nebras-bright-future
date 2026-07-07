@@ -43,7 +43,9 @@ function ManageCourse() {
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const liveAdmin = useLiveAdmin(courseId);
   const uploadVideo = useUploadMontageVideo();
+  const uploadPdf = useUploadLessonPdf();
   const videoFileRef = useRef<HTMLInputElement>(null);
+  const pdfFileRef = useRef<HTMLInputElement>(null);
   const callTranscribe = useServerFn(transcribeVideo);
   const [transcribing, setTranscribing] = useState(false);
 
