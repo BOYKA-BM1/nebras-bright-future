@@ -30,7 +30,7 @@ function levelFromGrade(grade?: string | null): "primary" | "prep" | "secondary"
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
-  content: z.string().min(1).max(4000),
+  content: z.string().min(1).max(100000),
 });
 
 /* =========================================================
