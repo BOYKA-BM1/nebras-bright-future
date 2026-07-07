@@ -11,6 +11,7 @@ import { useMyEnrollments, useFavorites, useUnenroll } from "@/hooks/use-content
 import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
+import { GamificationPanel } from "@/components/site/GamificationPanel";
 import { resolveImage } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -117,6 +118,11 @@ function Dashboard() {
           <StatCard icon={BookOpen} label="دوراتي" value={String(myCourses.length)} />
           <StatCard icon={Wallet} label="إجمالي القيمة" value={`${totalSpent} ج.م`} />
           <StatCard icon={Heart} label="المفضّلة" value={String(favoriteIds.size)} />
+        </div>
+
+        <h2 className="mt-12 text-xl font-extrabold">إنجازاتي ونقاطي</h2>
+        <div className="mt-4">
+          <GamificationPanel courses={myCourses.length} />
         </div>
 
         <h2 className="mt-12 text-xl font-extrabold">دوراتي</h2>

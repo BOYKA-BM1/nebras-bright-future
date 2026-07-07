@@ -1345,6 +1345,30 @@ export type Database = {
         }
         Relationships: []
       }
+      xp_ledger: {
+        Row: {
+          created_at: string
+          id: string
+          points: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          points?: number
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          points?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1375,6 +1399,10 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      award_xp: {
+        Args: { _points: number; _source: string; _user_id: string }
+        Returns: undefined
       }
       bind_device: {
         Args: { _device_id: string; _label: string }
@@ -1414,6 +1442,16 @@ export type Database = {
         Returns: boolean
       }
       is_support_staff: { Args: { _user_id: string }; Returns: boolean }
+      leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          name: string
+          rank: number
+          user_id: string
+          xp: number
+        }[]
+      }
+      my_xp: { Args: never; Returns: number }
       owns_course: {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean

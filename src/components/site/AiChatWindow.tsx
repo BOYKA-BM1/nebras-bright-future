@@ -2,10 +2,11 @@ import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
-import { Send, Loader2, Bot, User as UserIcon, Square } from "lucide-react";
+import { Send, Loader2, Bot, User as UserIcon, Square, Mic, Volume2, VolumeX } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { askTutor } from "@/lib/ai-tutor.functions";
+import { useSpeechRecognition, useSpeech } from "@/hooks/use-voice";
 import {
   useMessages,
   useConversationActions,
@@ -26,6 +27,9 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { createConversation, saveMessage } = useConversationActions();
+  const voice = useSpeechRecognition();
+  const tts = useSpeech();
+  const [autoSpeak, setAutoSpeak] = useState(false);
 
   const { data: loaded } = useMessages(conversationId);
 
@@ -115,8 +119,23 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
+    tts.cancel();
     setTyping(false);
     setBusy(false);
+  };
+
+  // التسجيل الصوتي: يحوّل الكلام لنص ويبعته تلقائيًا
+  const toggleMic = () => {
+    if (voice.listening) {
+      voice.stop();
+      return;
+    }
+    if (!voice.supported) {
+      toast.error("متصفحك مش بيدعم الإدخال الصوتي. جرّب Chrome على الكمبيوتر أو الموبايل.");
+      return;
+    }
+    tts.cancel();
+    voice.start((text) => send(text));
   };
 
   const send = async (text: string) => {
@@ -149,6 +168,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       // لو المستخدم أوقف الرد وهو لسه بيفكّر، نتجاهل الرد بالكامل
       if (!stoppedRef.current) {
         setTyping(true);
+        if (autoSpeak && reply) tts.speak(reply);
         await typeReply(reply);
         setTyping(false);
       }
@@ -269,9 +289,27 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
               }
             }}
             rows={1}
-            placeholder="اكتب سؤالك هنا..."
+            placeholder={voice.listening ? (voice.interim || "بتكلّم... قول سؤالك") : "اكتب سؤالك هنا..."}
             className="max-h-40 flex-1 resize-none rounded-2xl border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary/50"
           />
+          <Button
+            type="button"
+            onClick={() => setAutoSpeak((v) => { const n = !v; if (!n) tts.cancel(); return n; })}
+            aria-label={autoSpeak ? "إيقاف القراءة الصوتية" : "تشغيل القراءة الصوتية"}
+            title={autoSpeak ? "قراءة الردود بالصوت: مفعّلة" : "قراءة الردود بالصوت"}
+            className={`h-12 w-12 shrink-0 rounded-2xl border ${autoSpeak ? "border-primary bg-primary/15 text-primary" : "border-border bg-background text-muted-foreground hover:bg-accent"}`}
+          >
+            {autoSpeak ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+          </Button>
+          <Button
+            type="button"
+            onClick={toggleMic}
+            aria-label={voice.listening ? "إيقاف التسجيل" : "التحدّث بالصوت"}
+            title="اسأل بصوتك"
+            className={`h-12 w-12 shrink-0 rounded-2xl border ${voice.listening ? "animate-pulse border-destructive bg-destructive/15 text-destructive" : "border-border bg-background text-muted-foreground hover:bg-accent"}`}
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
           {busy ? (
             <Button
               type="button"
