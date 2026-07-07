@@ -19,6 +19,8 @@ export type AccountRow = {
   phone: string | null;
   roles: string[];
   banned: boolean;
+  device_label: string | null;
+  device_registered_at: string | null;
 };
 
 export const listAccounts = createServerFn({ method: "GET" })
