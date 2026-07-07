@@ -11,6 +11,7 @@ import { useMyEnrollments, useFavorites, useUnenroll } from "@/hooks/use-content
 import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
+import { GamificationPanel } from "@/components/site/GamificationPanel";
 import { resolveImage } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
