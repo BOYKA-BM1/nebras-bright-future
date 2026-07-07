@@ -4,7 +4,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MAX_BYTES = 18 * 1024 * 1024; // حد استخراج النص من الكتاب
 
 /* =========================================================
    استخراج نص كتاب/مذكرة PDF لاستخدامه في قاعدة معرفة الذكاء
@@ -35,16 +34,7 @@ export const extractDocText = createServerFn({ method: "POST" })
     const fileRes = await fetch(data.url);
     if (!fileRes.ok) throw new Error("تعذّر تحميل الملف.");
 
-    const len = Number(fileRes.headers.get("content-length") || 0);
-    if (len && len > MAX_BYTES) {
-      throw new Error("الملف كبير على الاستخراج التلقائي (الحد 18 ميجا). اكتب أو الصق النص يدويًا.");
-    }
-
     const buf = new Uint8Array(await fileRes.arrayBuffer());
-    if (buf.byteLength > MAX_BYTES) {
-      throw new Error("الملف كبير على الاستخراج التلقائي (الحد 18 ميجا). اكتب أو الصق النص يدويًا.");
-    }
-
     const contentType = fileRes.headers.get("content-type") || "application/pdf";
     const base64 = Buffer.from(buf).toString("base64");
 
@@ -53,13 +43,14 @@ export const extractDocText = createServerFn({ method: "POST" })
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        max_tokens: 65536,
         messages: [
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "استخرج كل النص المكتوب في هذا الملف التعليمي (كتاب/مذكرة) إلى نص عربي منظّم في فقرات وعناوين، بدون أي إضافات أو تعليقات من عندك، فقط المحتوى كما هو.",
+                text: "استخرج كل النص المكتوب في هذا الملف التعليمي (كتاب/مذكرة) كاملًا من أول صفحة لآخر صفحة إلى نص عربي منظّم في فقرات وعناوين، بدون أي إضافات أو تعليقات أو تلخيص من عندك، فقط المحتوى كما هو بالكامل.",
               },
               { type: "image_url", image_url: { url: `data:${contentType};base64,${base64}` } },
             ],

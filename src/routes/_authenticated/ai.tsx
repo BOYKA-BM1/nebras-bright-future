@@ -64,8 +64,8 @@ function AiLayout() {
       <div className="flex min-h-0 flex-1">
         {/* الشريط الجانبي: المحادثات */}
         <aside
-          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-300 md:static md:mt-0 ${
-            sidebarOpen ? "translate-x-0 md:w-72" : "translate-x-full md:w-0 md:translate-x-0 md:border-l-0"
+          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-300 sm:static sm:mt-0 ${
+            sidebarOpen ? "translate-x-0 sm:w-72" : "translate-x-full sm:w-0 sm:translate-x-0 sm:border-l-0"
           }`}
         >
           <div className="flex h-full flex-col p-3">
@@ -112,7 +112,18 @@ function AiLayout() {
         </aside>
 
         {sidebarOpen && (
-          <div className="fixed inset-0 z-30 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-0 z-30 bg-black/40 sm:hidden" onClick={() => setSidebarOpen(false)} />
+        )}
+
+        {/* لسان جانبي عائم للهاتف يفتح المحادثات (زي شات جي بي تي) */}
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="fixed right-0 top-1/2 z-30 flex -translate-y-1/2 items-center gap-1 rounded-l-xl bg-gradient-gold py-3 pl-2 pr-1.5 text-primary-foreground shadow-gold sm:hidden"
+            aria-label="فتح المحادثات"
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
         )}
 
         {/* العمود الرئيسي */}
@@ -121,11 +132,11 @@ function AiLayout() {
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <button
               onClick={() => setSidebarOpen((v) => !v)}
-              className="flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent"
+              className="hidden shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent sm:flex"
               aria-label="قائمة المحادثات"
             >
               {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-              <span className="hidden sm:inline">المحادثات</span>
+              <span>المحادثات</span>
             </button>
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-primary-foreground shadow-gold">
               <Sparkles className="h-4 w-4" />
