@@ -43,7 +43,6 @@ type FormState = {
   experience_years: string;
   image_url: string;
   rating: string;
-  students_label: string;
   profit_percentage: string;
   sort_order: string;
   user_id: string;
@@ -58,11 +57,11 @@ const empty: FormState = {
   experience_years: "0",
   image_url: "",
   rating: "5.0",
-  students_label: "",
   profit_percentage: "50",
   sort_order: "0",
   user_id: "",
 };
+
 
 type AcctState = { name: string; subject: string; stage: string; grade: string; email: string; password: string; bio: string; image_url: string };
 const emptyAcct: AcctState = { name: "", subject: "", stage: "", grade: "", email: "", password: "", bio: "", image_url: "" };
