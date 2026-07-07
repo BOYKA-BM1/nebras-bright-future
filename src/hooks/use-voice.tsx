@@ -85,35 +85,82 @@ export function useSpeechRecognition() {
 }
 
 export function useSpeech() {
+  const callTts = useServerFn(synthesizeSpeech);
   const [speaking, setSpeaking] = useState(false);
-  const supported = typeof window !== "undefined" && "speechSynthesis" in window;
+  const supported = typeof window !== "undefined" && typeof Audio !== "undefined";
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  // معرّف الطلب الحالي: أي طلب أقدم يتم تجاهله لو المستخدم بدأ قراءة جديدة أو أوقف.
+  const runRef = useRef(0);
+
+  const stopAudio = useCallback(() => {
+    const a = audioRef.current;
+    if (a) {
+      a.onended = null;
+      a.onerror = null;
+      a.pause();
+      a.src = "";
+      audioRef.current = null;
+    }
+  }, []);
 
   const cancel = useCallback(() => {
-    if (!supported) return;
-    window.speechSynthesis.cancel();
+    runRef.current += 1; // يُبطل أي طلب صوتي جارٍ
+    stopAudio();
     setSpeaking(false);
-  }, [supported]);
+  }, [stopAudio]);
+
+  // تشغيل قائمة مقاطع MP3 (base64) بالتتابع.
+  const playQueue = useCallback(
+    (chunks: string[], runId: number) =>
+      new Promise<void>((resolve) => {
+        let i = 0;
+        const next = () => {
+          if (runRef.current !== runId || i >= chunks.length) {
+            resolve();
+            return;
+          }
+          const a = new Audio(`data:audio/mpeg;base64,${chunks[i]}`);
+          audioRef.current = a;
+          a.onended = () => {
+            i += 1;
+            next();
+          };
+          a.onerror = () => {
+            i += 1;
+            next();
+          };
+          a.play().catch(() => {
+            i += 1;
+            next();
+          });
+        };
+        next();
+      }),
+    [],
+  );
 
   const speak = useCallback(
-    (text: string) => {
-      if (!supported || !text.trim()) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "ar-EG";
-      u.rate = 1;
-      u.pitch = 1;
-      const voices = window.speechSynthesis.getVoices();
-      const arVoice = voices.find((v) => v.lang?.toLowerCase().startsWith("ar"));
-      if (arVoice) u.voice = arVoice;
-      u.onend = () => setSpeaking(false);
-      u.onerror = () => setSpeaking(false);
+    async (text: string) => {
+      const content = text.trim();
+      if (!supported || !content) return;
+      cancel();
+      const runId = runRef.current;
       setSpeaking(true);
-      window.speechSynthesis.speak(u);
+      try {
+        const { audio } = await callTts({ data: { text: content } });
+        if (runRef.current !== runId) return; // اتلغى أثناء التوليد
+        await playQueue(audio, runId);
+      } catch {
+        /* لو فشل التوليد نتجاهل بهدوء */
+      } finally {
+        if (runRef.current === runId) setSpeaking(false);
+      }
     },
-    [supported],
+    [supported, cancel, callTts, playQueue],
   );
 
   useEffect(() => () => cancel(), [cancel]);
 
   return { supported, speaking, speak, cancel };
 }
+
