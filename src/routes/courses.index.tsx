@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { Courses } from "@/components/site/Courses";
+import { useRoles } from "@/hooks/use-roles";
 
 export const Route = createFileRoute("/courses/")({
   head: () => ({
