@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import heroBanner from "@/assets/hero-banner.jpg";
 import { usePlatformStats, useTrackVisit } from "@/hooks/use-stats";
 import { useAuth } from "@/hooks/use-auth";
+import { useRoles } from "@/hooks/use-roles";
 
 function fmt(n: number) {
   if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, "") + "k";
@@ -13,8 +14,11 @@ export function Hero() {
   useTrackVisit();
   const { data: s } = usePlatformStats();
   const { user } = useAuth();
+  const { isAdmin, isTeacher, isStaff } = useRoles();
   const navigate = useNavigate();
   const startLearning = () => navigate({ to: user ? "/courses" : "/auth" });
+  // الزرين يظهروا للزوّار والطلاب والأدمن فقط — مش لحسابات المدرّس أو الطاقم
+  const showCtas = !user || isAdmin || (!isTeacher && !isStaff);
   const stats = [
     { value: fmt(s?.students ?? 0), label: "طالب", icon: Users },
     { value: fmt(s?.courses ?? 0), label: "دورة", icon: BookOpen },
@@ -46,20 +50,22 @@ export function Hero() {
             لتقديم تجربة تعليمية لا مثيل لها لكل المراحل الدراسية.
           </p>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
-            <button
-              onClick={startLearning}
-              className="w-full rounded-xl bg-gradient-gold px-7 py-3.5 text-center text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03] sm:w-auto"
-            >
-              ابدأ التعلم الآن
-            </button>
-            <a
-              href="#stages"
-              className="w-full rounded-xl border border-border bg-card/60 px-7 py-3.5 text-center text-base font-bold text-foreground transition-colors hover:bg-accent sm:w-auto"
-            >
-              اختر مرحلتك
-            </a>
-          </div>
+          {showCtas && (
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row lg:justify-start">
+              <button
+                onClick={startLearning}
+                className="w-full rounded-xl bg-gradient-gold px-7 py-3.5 text-center text-base font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03] sm:w-auto"
+              >
+                ابدأ التعلم الآن
+              </button>
+              <a
+                href="#stages"
+                className="w-full rounded-xl border border-border bg-card/60 px-7 py-3.5 text-center text-base font-bold text-foreground transition-colors hover:bg-accent sm:w-auto"
+              >
+                اختر مرحلتك
+              </a>
+            </div>
+          )}
 
           <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {stats.map((s) => (
