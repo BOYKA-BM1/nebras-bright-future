@@ -115,7 +115,7 @@ function AiTutorPage() {
         </div>
 
         {/* لازم يختار مرحلته وصفّه أولًا */}
-        {!profileLoading && !hasGrade ? (
+        {!loading && !hasGrade ? (
           <div className="mt-6 flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary"><GraduationCap className="h-7 w-7" /></span>
             <h2 className="text-lg font-extrabold">اختر مرحلتك وصفّك الأول</h2>
