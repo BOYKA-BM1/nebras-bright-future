@@ -49,11 +49,52 @@ function AuthPage() {
   const [submitting, setSubmitting] = useState(false);
   const [social, setSocial] = useState<"google" | "apple" | null>(null);
 
+  // استعادة كلمة السر بكود OTP
+  const [reset, setReset] = useState(false);
+  const [resetStep, setResetStep] = useState<"email" | "code">("email");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+
   useEffect(() => {
     if (!loading && user) {
       navigate({ to: "/dashboard" });
     }
   }, [user, loading, navigate]);
+
+  const sendResetCode = async () => {
+    if (!email) { toast.error("اكتب بريدك الإلكتروني الأول."); return; }
+    setResetBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      toast.success("بعتنالك كود تأكيد على بريدك ✉️");
+      setResetStep("code");
+    } catch {
+      toast.error("تعذّر إرسال الكود، تأكد من البريد وحاول تاني.");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  const verifyResetCode = async () => {
+    if (code.trim().length < 6) { toast.error("اكتب الكود المكوّن من 6 أرقام."); return; }
+    if (newPassword.length < 8) { toast.error("كلمة السر الجديدة لازم تكون 8 أحرف على الأقل."); return; }
+    setResetBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: "recovery" });
+      if (error) throw error;
+      const { error: updErr } = await supabase.auth.updateUser({ password: newPassword });
+      if (updErr) throw updErr;
+      toast.success("تم تغيير كلمة السر بنجاح! 🎉");
+      navigate({ to: "/dashboard" });
+    } catch {
+      toast.error("الكود غير صحيح أو انتهت صلاحيته، حاول تاني.");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
 
   const handleSocial = async (provider: "google" | "apple") => {
     setSocial(provider);
