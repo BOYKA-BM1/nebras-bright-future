@@ -230,30 +230,8 @@ function AuthPage() {
               : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
           </p>
 
-          <div className="mt-7 grid gap-3">
-            <button
-              onClick={() => handleSocial("google")}
-              disabled={!!social}
-              className="flex items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
-            >
-              {social === "google" ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
-              المتابعة باستخدام Google
-            </button>
-            <button
-              onClick={() => handleSocial("apple")}
-              disabled={!!social}
-              className="flex items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
-            >
-              {social === "apple" ? <Loader2 className="h-5 w-5 animate-spin" /> : <AppleIcon />}
-              المتابعة باستخدام Apple
-            </button>
-          </div>
+          <div className="mt-7">
 
-          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            أو بالبريد الإلكتروني
-            <span className="h-px flex-1 bg-border" />
-          </div>
 
           <form onSubmit={handleEmail} className="grid gap-4">
             {mode === "signup" && (
