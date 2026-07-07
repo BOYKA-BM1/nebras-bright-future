@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send, XCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
-import { useMyEnrollments, useFavorites } from "@/hooks/use-content";
+import { useMyEnrollments, useFavorites, useUnenroll } from "@/hooks/use-content";
 import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
@@ -25,6 +25,15 @@ function Dashboard() {
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const unenroll = useUnenroll();
+
+  const handleUnenroll = (courseId: string, title: string) => {
+    if (!window.confirm(`متأكد إنك عايز تلغي اشتراكك في "${title}"؟`)) return;
+    unenroll.mutate(courseId, {
+      onSuccess: () => toast.success("تم إلغاء الاشتراك."),
+      onError: () => toast.error("تعذّر إلغاء الاشتراك، حاول تاني."),
+    });
+  };
 
   // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته، والطاقم للوحاتهم
   useEffect(() => {
@@ -135,6 +144,13 @@ function Dashboard() {
                     <Link to="/learn/$courseId" params={{ courseId: c.id }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
                       <ArrowLeft className="h-4 w-4" /> كمّل التعلّم
                     </Link>
+                    <button
+                      onClick={() => handleUnenroll(c.id, c.title)}
+                      disabled={unenroll.isPending}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
+                    >
+                      <XCircle className="h-4 w-4" /> إلغاء الاشتراك
+                    </button>
                   </div>
                 </article>
               );
