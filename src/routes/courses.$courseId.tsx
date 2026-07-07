@@ -40,8 +40,13 @@ function CourseDetail() {
   const { sections, lessons, isLoading: contentLoading } = useCourseContent(courseId);
   const { isEnrolled } = useEnrollment(courseId);
   const enroll = useEnroll();
+  const unenroll = useUnenroll();
   const { favoriteIds, toggle } = useFavorites();
   const { data: profile } = useProfile();
+
+  const [couponCode, setCouponCode] = useState("");
+  const [applying, setApplying] = useState(false);
+  const [coupon, setCoupon] = useState<{ id: string; label: string; finalPrice: number } | null>(null);
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
@@ -50,6 +55,48 @@ function CourseDetail() {
 
   const img = resolveImage(course.image_url) ?? resolveImage(course.teacher?.image_url);
   const isFav = favoriteIds.has(course.id);
+  const finalPrice = coupon ? coupon.finalPrice : course.price;
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+    if (!user) { toast.info("سجّل دخولك الأول علشان تستخدم الكوبون."); router.navigate({ to: "/auth" }); return; }
+    setApplying(true);
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("id, code, course_id, teacher_id, discount_amount, discount_percent, is_active, expires_at, max_uses, used_count")
+        .ilike("code", code)
+        .eq("is_active", true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) { toast.error("الكوبون غير صحيح."); return; }
+      // لازم يكون كوبون الدورة دي أو كوبون المدرّس صاحب الدورة
+      const matchesCourse = !data.course_id || data.course_id === course.id;
+      const matchesTeacher = !data.teacher_id || data.teacher_id === course.teacher_id;
+      if (!matchesCourse || !matchesTeacher) { toast.error("الكوبون ده مش صالح لهذه الدورة."); return; }
+      if (data.expires_at && new Date(data.expires_at) < new Date()) { toast.error("انتهت صلاحية الكوبون."); return; }
+      if (data.max_uses != null && data.used_count >= data.max_uses) { toast.error("تم استهلاك عدد مرات استخدام الكوبون."); return; }
+
+      let discounted = course.price;
+      let label = "";
+      if (data.discount_percent) {
+        discounted = Math.max(0, Math.round(course.price * (1 - data.discount_percent / 100)));
+        label = `خصم ${data.discount_percent}%`;
+      } else if (data.discount_amount) {
+        discounted = Math.max(0, course.price - data.discount_amount);
+        label = `خصم ${data.discount_amount} ج.م`;
+      }
+      setCoupon({ id: data.id, label, finalPrice: discounted });
+      toast.success(`تم تطبيق الكوبون ✅ ${label}`);
+    } catch {
+      toast.error("تعذّر التحقق من الكوبون، حاول تاني.");
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const clearCoupon = () => { setCoupon(null); setCouponCode(""); };
 
   const handleEnroll = () => {
     if (!user) {
@@ -64,7 +111,7 @@ function CourseDetail() {
       return;
     }
     enroll.mutate(
-      { courseId: course.id, price: course.price },
+      { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
       {
         onSuccess: () => {
           toast.success("تم تفعيل اشتراكك! 🎉");
@@ -74,6 +121,15 @@ function CourseDetail() {
       },
     );
   };
+
+  const handleUnenroll = () => {
+    unenroll.mutate(course.id, {
+      onSuccess: () => toast.success("تم إلغاء اشتراكك في الدورة."),
+      onError: () => toast.error("تعذّر إلغاء الاشتراك، حاول تاني."),
+    });
+  };
+
+
 
 
   return (
