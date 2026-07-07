@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle } from "lucide-react";
+import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
-import { useCourses } from "@/hooks/use-catalog";
+import { useCourses, useTeachers } from "@/hooks/use-catalog";
+import { useCoupons } from "@/hooks/use-admin";
 import { Logo } from "@/components/site/Logo";
 import { resolveImage } from "@/lib/catalog";
 
@@ -16,11 +18,29 @@ function TeacherDashboard() {
   const navigate = useNavigate();
   const { isTeacher, isAdmin, isLoading } = useRoles();
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
+  const { data: teachers = [] } = useTeachers();
+  const { data: coupons = [] } = useCoupons();
+
+  const myTeacher = useMemo(
+    () => teachers.find((t) => t.user_id === user?.id) ?? null,
+    [teachers, user?.id],
+  );
+
+  const myCoupons = useMemo(() => {
+    if (isAdmin) return coupons;
+    if (!myTeacher) return [];
+    return coupons.filter((c) => c.teacher_id === myTeacher.id);
+  }, [coupons, isAdmin, myTeacher]);
 
   const myCourses = useMemo(() => {
     if (isAdmin) return courses;
     return courses.filter((c) => c.teacher?.user_id === user?.id);
   }, [courses, isAdmin, user?.id]);
+
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    toast.success("تم نسخ الكود");
+  };
 
   if (isLoading) {
     return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -55,8 +75,52 @@ function TeacherDashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        {/* كوبونات المدرّس */}
+        <section className="mb-10 rounded-2xl border border-primary/30 bg-primary/5 p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary"><Ticket className="h-5 w-5" /></span>
+            <div>
+              <h2 className="text-lg font-extrabold">كوبونات الخصم الخاصة بك</h2>
+              <p className="text-xs text-muted-foreground">شارك الكود ده مع طلابك علشان يستفيدوا بالخصم.</p>
+            </div>
+          </div>
+
+          {myCoupons.length === 0 ? (
+            <p className="mt-4 rounded-xl border border-dashed border-border bg-card/50 p-5 text-center text-sm text-muted-foreground">
+              لا يوجد كوبون مخصّص لك حتى الآن. تواصل مع الإدارة لإنشاء الكوبون الخاص بك.
+            </p>
+          ) : (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {myCoupons.map((c) => (
+                <div key={c.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => copyCode(c.code)}
+                      className="flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1.5 font-mono text-sm font-bold text-primary hover:bg-primary/20"
+                      dir="ltr"
+                      title="نسخ الكود"
+                    >
+                      {c.code} <Copy className="h-3.5 w-3.5" />
+                    </button>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${c.is_active ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}>
+                      {c.is_active ? "فعّال" : "موقوف"}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-lg font-extrabold text-gradient-gold">
+                    {c.discount_percent ? `${c.discount_percent}%` : c.discount_amount ? `${c.discount_amount} ج.م` : "—"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    استُخدم {c.used_count}{c.max_uses ? ` / ${c.max_uses}` : ""} مرة
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
         <h1 className="text-2xl font-extrabold sm:text-3xl">دوراتي</h1>
         <p className="mt-1 text-muted-foreground">{isAdmin ? "بصفتك أدمن تقدر تدير محتوى كل الدورات." : "أدِر محتوى دوراتك ودروسك من هنا."}</p>
+
 
         {coursesLoading ? (
           <div className="mt-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
