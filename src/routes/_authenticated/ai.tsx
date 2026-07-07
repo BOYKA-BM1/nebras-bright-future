@@ -1,12 +1,15 @@
 import { useRef, useState, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Send, Loader2, Bot, User as UserIcon, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@tanstack/react-router";
 import { Navbar } from "@/components/site/Navbar";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/hooks/use-profile";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 import { askTutor } from "@/lib/ai-tutor.functions";
 
 export const Route = createFileRoute("/_authenticated/ai")({
@@ -32,15 +35,32 @@ function stageLabel(grade?: string | null): string {
 
 function AiTutorPage() {
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const { user } = useAuth();
   const callTutor = useServerFn(askTutor);
+
+  // لو المستخدم مدرّس، نجيب مرحلته وسنته من سجل المدرّس كبديل عن ملف الطالب
+  const { data: teacherRow, isLoading: teacherLoading } = useQuery({
+    queryKey: ["my-teacher-grade", user?.id],
+    enabled: !!user && !profile?.grade,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("teachers")
+        .select("grade, stage")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const grade = profile?.grade?.trim() || "";
+  const grade = (profile?.grade?.trim() || teacherRow?.grade?.trim() || "");
   const hasGrade = !!grade;
+  const loading = profileLoading || teacherLoading;
+
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -95,7 +115,7 @@ function AiTutorPage() {
         </div>
 
         {/* لازم يختار مرحلته وصفّه أولًا */}
-        {!profileLoading && !hasGrade ? (
+        {!loading && !hasGrade ? (
           <div className="mt-6 flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border bg-card/40 p-10 text-center">
             <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary"><GraduationCap className="h-7 w-7" /></span>
             <h2 className="text-lg font-extrabold">اختر مرحلتك وصفّك الأول</h2>

@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { useTeachers, useTeacherAdmin } from "@/hooks/use-catalog";
 import { resolveImage, type Teacher } from "@/lib/catalog";
 import { createTeacherAccount } from "@/lib/teacher-admin.functions";
+import { stages } from "@/data/site";
 
 export const Route = createFileRoute("/_authenticated/admin/teachers")({
   component: AdminTeachers,
@@ -36,6 +37,8 @@ export const Route = createFileRoute("/_authenticated/admin/teachers")({
 type FormState = {
   name: string;
   subject: string;
+  stage: string;
+  grade: string;
   bio: string;
   experience_years: string;
   image_url: string;
@@ -49,6 +52,8 @@ type FormState = {
 const empty: FormState = {
   name: "",
   subject: "",
+  stage: "",
+  grade: "",
   bio: "",
   experience_years: "0",
   image_url: "",
@@ -59,8 +64,13 @@ const empty: FormState = {
   user_id: "",
 };
 
-type AcctState = { name: string; subject: string; email: string; password: string; bio: string; image_url: string };
-const emptyAcct: AcctState = { name: "", subject: "", email: "", password: "", bio: "", image_url: "" };
+type AcctState = { name: string; subject: string; stage: string; grade: string; email: string; password: string; bio: string; image_url: string };
+const emptyAcct: AcctState = { name: "", subject: "", stage: "", grade: "", email: "", password: "", bio: "", image_url: "" };
+
+/** صفوف المرحلة المختارة */
+function gradesForStage(stageId: string): readonly string[] {
+  return stages.find((s) => s.id === stageId)?.grades ?? [];
+}
 
 function genPassword() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$%";
@@ -96,6 +106,8 @@ function AdminTeachers() {
     setForm({
       name: t.name,
       subject: t.subject,
+      stage: (t as any).stage ?? "",
+      grade: (t as any).grade ?? "",
       bio: t.bio ?? "",
       experience_years: String(t.experience_years),
       image_url: t.image_url ?? "",
@@ -122,6 +134,8 @@ function AdminTeachers() {
     const payload = {
       name: form.name.trim(),
       subject: form.subject.trim(),
+      stage: form.stage || null,
+      grade: form.grade || null,
       bio: form.bio.trim() || null,
       experience_years: Number(form.experience_years) || 0,
       image_url: form.image_url.trim() || null,
@@ -146,8 +160,8 @@ function AdminTeachers() {
   };
 
   const handleCreateAccount = async () => {
-    if (!acct.name.trim() || !acct.subject.trim() || !acct.email.trim() || acct.password.length < 8) {
-      toast.error("الاسم والمادة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
+    if (!acct.name.trim() || !acct.subject.trim() || !acct.stage || !acct.grade || !acct.email.trim() || acct.password.length < 8) {
+      toast.error("الاسم والمادة والمرحلة والسنة والبريد وكلمة مرور (8 أحرف فأكثر) مطلوبة.");
       return;
     }
     setAcctBusy(true);
@@ -158,6 +172,8 @@ function AdminTeachers() {
           password: acct.password,
           name: acct.name.trim(),
           subject: acct.subject.trim(),
+          stage: acct.stage,
+          grade: acct.grade,
           bio: acct.bio.trim() || null,
           image_url: acct.image_url.trim() || null,
         },
@@ -247,6 +263,12 @@ function AdminTeachers() {
           <div className="grid gap-4 py-2">
             <Field label="الاسم"><Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="أ. محمد علي" /></Field>
             <Field label="المادة"><Input value={form.subject} onChange={(e) => set("subject", e.target.value)} placeholder="الرياضيات" /></Field>
+            <StageGradeFields
+              stage={form.stage}
+              grade={form.grade}
+              onStage={(v) => setForm((f) => ({ ...f, stage: v, grade: "" }))}
+              onGrade={(v) => set("grade", v)}
+            />
             <Field label="النبذة التعريفية"><Textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={3} /></Field>
             <Field label="رابط الصورة (اختياري)"><Input value={form.image_url} onChange={(e) => set("image_url", e.target.value)} placeholder="https://..." dir="ltr" /></Field>
             <div className="grid grid-cols-2 gap-4">
@@ -298,6 +320,12 @@ function AdminTeachers() {
               <div className="grid gap-4 py-2">
                 <Field label="الاسم"><Input value={acct.name} onChange={(e) => setA("name", e.target.value)} placeholder="أ. محمد علي" /></Field>
                 <Field label="المادة"><Input value={acct.subject} onChange={(e) => setA("subject", e.target.value)} placeholder="الرياضيات" /></Field>
+                <StageGradeFields
+                  stage={acct.stage}
+                  grade={acct.grade}
+                  onStage={(v) => setAcct((a) => ({ ...a, stage: v, grade: "" }))}
+                  onGrade={(v) => setA("grade", v)}
+                />
                 <Field label="البريد الإلكتروني"><Input type="email" value={acct.email} onChange={(e) => setA("email", e.target.value)} placeholder="teacher@example.com" dir="ltr" /></Field>
                 <Field label="كلمة المرور">
                   <div className="flex gap-2">
@@ -376,3 +404,41 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+const selectCls =
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-primary/60 disabled:opacity-50";
+
+function StageGradeFields({
+  stage,
+  grade,
+  onStage,
+  onGrade,
+}: {
+  stage: string;
+  grade: string;
+  onStage: (v: string) => void;
+  onGrade: (v: string) => void;
+}) {
+  const grades = gradesForStage(stage);
+  return (
+    <div className="grid grid-cols-2 gap-4">
+      <Field label="المرحلة">
+        <select className={selectCls} value={stage} onChange={(e) => onStage(e.target.value)}>
+          <option value="">اختر المرحلة</option>
+          {stages.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </Field>
+      <Field label="السنة الدراسية">
+        <select className={selectCls} value={grade} onChange={(e) => onGrade(e.target.value)} disabled={!stage}>
+          <option value="">{stage ? "اختر السنة" : "اختر المرحلة أولًا"}</option>
+          {grades.map((g) => (
+            <option key={g} value={g}>{g}</option>
+          ))}
+        </select>
+      </Field>
+    </div>
+  );
+}
+
