@@ -37,7 +37,7 @@ export const listAccounts = createServerFn({ method: "GET" })
 
     const [{ data: roles }, { data: profiles }, { data: banned }] = await Promise.all([
       supabaseAdmin.from("user_roles").select("user_id, role"),
-      supabaseAdmin.from("profiles").select("id, full_name, phone"),
+      supabaseAdmin.from("profiles").select("id, full_name, phone, device_label, device_registered_at"),
       supabaseAdmin.from("banned_emails").select("email"),
     ]);
 
@@ -60,6 +60,8 @@ export const listAccounts = createServerFn({ method: "GET" })
         phone: p?.phone ?? null,
         roles: roleMap.get(u.id) ?? ["student"],
         banned: bannedSet.has((u.email ?? "").toLowerCase()),
+        device_label: p?.device_label ?? null,
+        device_registered_at: p?.device_registered_at ?? null,
       };
     });
   });
