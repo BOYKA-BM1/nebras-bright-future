@@ -56,7 +56,22 @@ export const askTutor = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
 
-    const grade = profile?.grade?.trim() || "";
+    let grade = profile?.grade?.trim() || "";
+    let levelValue = profile?.level ?? "";
+
+    // لو المستخدم مدرّس بدون صف في ملفه، نستخدم مرحلته وسنته من سجل المدرّس
+    if (!grade) {
+      const { data: teacher } = await context.supabase
+        .from("teachers")
+        .select("grade, stage")
+        .eq("user_id", context.userId)
+        .maybeSingle();
+      if (teacher?.grade) {
+        grade = teacher.grade.trim();
+        levelValue = teacher.stage ?? levelValue;
+      }
+    }
+
     if (!grade) {
       return {
         reply:
@@ -64,8 +79,8 @@ export const askTutor = createServerFn({ method: "POST" })
       };
     }
 
-    const stage = ["primary", "prep", "secondary"].includes(profile?.level ?? "")
-      ? (profile!.level as "primary" | "prep" | "secondary")
+    const stage = ["primary", "prep", "secondary"].includes(levelValue)
+      ? (levelValue as "primary" | "prep" | "secondary")
       : levelFromGrade(grade);
 
     // قاعدة المعرفة: محاضرات ومذكرات الطالب المتاحة له فقط (RLS)
