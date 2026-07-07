@@ -99,7 +99,7 @@ function AiLayout() {
                     </Link>
                     <button
                       onClick={() => handleDelete(c.id)}
-                      className="shrink-0 rounded-lg p-1 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                      className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:opacity-70 md:group-hover:opacity-100"
                       aria-label="حذف المحادثة"
                     >
                       <Trash2 className="h-4 w-4" />
