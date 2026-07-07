@@ -134,6 +134,8 @@ function AdminTeachers() {
     const payload = {
       name: form.name.trim(),
       subject: form.subject.trim(),
+      stage: form.stage || null,
+      grade: form.grade || null,
       bio: form.bio.trim() || null,
       experience_years: Number(form.experience_years) || 0,
       image_url: form.image_url.trim() || null,
