@@ -174,23 +174,6 @@ function AccountsPage() {
                       )}
                     </td>
                     <td className="p-3">
-                      {a.device_registered_at ? (
-                        <div className="flex items-start gap-1.5">
-                          <MonitorSmartphone className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                          <div className="min-w-0">
-                            <p className="truncate text-xs font-semibold" title={a.device_label ?? ""}>
-                              {deviceName(a.device_label)}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {new Date(a.device_registered_at).toLocaleString("ar-EG")}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">لم يُسجّل بعد</span>
-                      )}
-                    </td>
-                    <td className="p-3">
                       <div className="flex flex-wrap gap-2">
                         {a.banned ? (
                           <button
