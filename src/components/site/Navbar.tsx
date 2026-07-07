@@ -79,7 +79,7 @@ export function Navbar() {
                 <span className="hidden max-w-[8rem] truncate md:inline">{profile?.full_name || "حسابي"}</span>
               </Link>
               <button
-                onClick={() => signOut()}
+                onClick={() => confirmSignOut()}
                 className="flex items-center gap-2 rounded-xl bg-secondary px-3 py-2 text-sm font-bold transition-colors hover:bg-accent"
                 aria-label="خروج"
               >
