@@ -49,6 +49,7 @@ import {
 } from "@/hooks/use-knowledge";
 import { extractDocText } from "@/lib/knowledge.functions";
 import { gradesByLevel, type Level } from "@/data/grades";
+import { useTeachers } from "@/hooks/use-catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/knowledge")({
   component: AdminKnowledge,
