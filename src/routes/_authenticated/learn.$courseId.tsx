@@ -25,6 +25,29 @@ function LearnPage() {
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const updateProgress = useUpdateProgress(courseId);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
+
+  const downloadPdf = async (url: string, title: string) => {
+    setDownloading(true);
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("fetch failed");
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = `${title || "ملف-المحاضرة"}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      window.open(url, "_blank", "noopener,noreferrer");
+      toast.error("تعذّر التحميل المباشر — تم فتح الملف في تبويب جديد.");
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   const completedIds = useMemo(() => new Set(progress.filter((p) => p.completed).map((p) => p.lesson_id)), [progress]);
   const pct = lessons.length ? Math.round((completedIds.size / lessons.length) * 100) : 0;
