@@ -105,6 +105,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
     if (!content || busy) return;
 
     const history: ChatMsg[] = [...messages, { role: "user", content }];
+    stickToBottom.current = true; // عند إرسال رسالة جديدة نرجع لآخر الشات
     setMessages(history);
     setInput("");
     setBusy(true);
