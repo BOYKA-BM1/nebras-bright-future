@@ -125,7 +125,6 @@ function ManageCourse() {
       pdf_url: lesForm.pdf_url.trim() || null,
       duration_minutes: Number(lesForm.duration_minutes) || 0,
       is_free: lesForm.is_free,
-      transcript: lesForm.transcript.trim() || null,
     };
     const onErr = () => toast.error("حصل خطأ.");
     if (editLes) {
