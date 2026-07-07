@@ -24,7 +24,6 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLecturesRouteImport } from './routes/_authenticated/lectures'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -113,11 +112,6 @@ const AuthenticatedLecturesRoute = AuthenticatedLecturesRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
-  id: '/ai',
-  path: '/ai',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -214,7 +208,6 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/ai': typeof AuthenticatedAiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -245,7 +238,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
-  '/ai': typeof AuthenticatedAiRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
@@ -278,7 +270,6 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
-  '/_authenticated/ai': typeof AuthenticatedAiRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
@@ -312,7 +303,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/support'
     | '/admin'
-    | '/ai'
     | '/dashboard'
     | '/lectures'
     | '/onboarding'
@@ -343,7 +333,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
-    | '/ai'
     | '/dashboard'
     | '/lectures'
     | '/onboarding'
@@ -375,7 +364,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/support'
     | '/_authenticated/admin'
-    | '/_authenticated/ai'
     | '/_authenticated/dashboard'
     | '/_authenticated/lectures'
     | '/_authenticated/onboarding'
@@ -519,13 +507,6 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/ai': {
-      id: '/_authenticated/ai'
-      path: '/ai'
-      fullPath: '/ai'
-      preLoaderRoute: typeof AuthenticatedAiRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
@@ -680,7 +661,6 @@ const AuthenticatedStaffRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
-  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
@@ -693,7 +673,6 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
-  AuthenticatedAiRoute: AuthenticatedAiRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
