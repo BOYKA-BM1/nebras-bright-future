@@ -55,7 +55,11 @@ function AiTutorPage() {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingTimer = useRef<number | null>(null);
+
+  useEffect(() => () => { if (typingTimer.current) clearTimeout(typingTimer.current); }, []);
 
   const grade = (teacherRow?.grade?.trim() || profile?.grade?.trim() || "");
   const hasGrade = !!grade;
