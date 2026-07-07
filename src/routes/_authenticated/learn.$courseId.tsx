@@ -45,7 +45,7 @@ function LearnPage() {
       window.open(url, "_blank", "noopener,noreferrer");
       toast.error("تعذّر التحميل المباشر — تم فتح الملف في تبويب جديد.");
     } finally {
-      setDownloading(false);
+      setDownloadingUrl(null);
     }
   };
 
