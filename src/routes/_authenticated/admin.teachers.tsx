@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { useTeachers, useTeacherAdmin } from "@/hooks/use-catalog";
 import { resolveImage, type Teacher } from "@/lib/catalog";
 import { createTeacherAccount } from "@/lib/teacher-admin.functions";
+import { stages } from "@/data/site";
 
 export const Route = createFileRoute("/_authenticated/admin/teachers")({
   component: AdminTeachers,
