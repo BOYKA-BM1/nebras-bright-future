@@ -89,6 +89,23 @@ function AuthPage() {
     }
   };
 
+  const handleGoogle = async () => {
+    setGoogleBusy(true);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/dashboard",
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (error) throw error;
+      // المتصفح هيتحوّل مباشرة لصفحة جوجل ثم يرجع للمنصة
+    } catch {
+      setGoogleBusy(false);
+      toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
+    }
+  };
 
 
   const handleEmail = async (e: React.FormEvent) => {
