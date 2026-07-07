@@ -15,6 +15,7 @@ const navItems = [
   { to: "/admin/courses", label: "الدورات", icon: BookOpen, exact: false },
   { to: "/admin/teachers", label: "المدرّسون", icon: Users, exact: false },
   { to: "/admin/accounts", label: "الحسابات", icon: UsersRound, exact: false },
+  { to: "/admin/devices", label: "الأجهزة", icon: MonitorSmartphone, exact: false },
   { to: "/admin/stages", label: "المراحل", icon: GraduationCap, exact: false },
   { to: "/admin/coupons", label: "الكوبونات", icon: Ticket, exact: false },
 ];
