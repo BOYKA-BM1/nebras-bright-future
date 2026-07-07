@@ -27,6 +27,9 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { createConversation, saveMessage } = useConversationActions();
+  const voice = useSpeechRecognition();
+  const tts = useSpeech();
+  const [autoSpeak, setAutoSpeak] = useState(false);
 
   const { data: loaded } = useMessages(conversationId);
 
