@@ -151,11 +151,14 @@ function AdminKnowledge() {
       toast.error("اكتب المحتوى أو ارفع ملف واستخرج نصه.");
       return;
     }
+    const teacher = teachers.find((t) => t.id === form.teacher_id);
     const payload = {
       title: form.title.trim(),
       stage: form.stage === ALL ? null : form.stage,
       grade: form.grade === ALL ? null : form.grade,
-      subject: form.subject.trim() || null,
+      subject: form.subject.trim() || teacher?.subject || null,
+      teacher_id: form.teacher_id === ALL ? null : form.teacher_id,
+      teacher_name: teacher?.name || null,
       content: form.content.trim(),
       file_url: form.file_url || null,
     };
