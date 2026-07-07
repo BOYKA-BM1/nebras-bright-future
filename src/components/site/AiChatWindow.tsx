@@ -309,6 +309,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
             className={`h-12 w-12 shrink-0 rounded-2xl border ${voice.listening ? "animate-pulse border-destructive bg-destructive/15 text-destructive" : "border-border bg-background text-muted-foreground hover:bg-accent"}`}
           >
             <Mic className="h-5 w-5" />
+          </Button>
           {busy ? (
             <Button
               type="button"
