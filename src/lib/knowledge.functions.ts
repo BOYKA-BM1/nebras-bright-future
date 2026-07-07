@@ -4,7 +4,6 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MAX_BYTES = 18 * 1024 * 1024; // حد استخراج النص من الكتاب
 
 /* =========================================================
    استخراج نص كتاب/مذكرة PDF لاستخدامه في قاعدة معرفة الذكاء
