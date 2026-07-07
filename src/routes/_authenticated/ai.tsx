@@ -38,10 +38,10 @@ function AiTutorPage() {
   const { user } = useAuth();
   const callTutor = useServerFn(askTutor);
 
-  // لو المستخدم مدرّس، نجيب مرحلته وسنته من سجل المدرّس كبديل عن ملف الطالب
+  // سجل المدرّس له الأولوية لو المستخدم مدرّس (ممكن يكون عنده ملف طالب قديم)
   const { data: teacherRow, isLoading: teacherLoading } = useQuery({
     queryKey: ["my-teacher-grade", user?.id],
-    enabled: !!user && !profile?.grade,
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase
         .from("teachers")
@@ -57,7 +57,7 @@ function AiTutorPage() {
   const [busy, setBusy] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const grade = (profile?.grade?.trim() || teacherRow?.grade?.trim() || "");
+  const grade = (teacherRow?.grade?.trim() || profile?.grade?.trim() || "");
   const hasGrade = !!grade;
   const loading = profileLoading || teacherLoading;
 
