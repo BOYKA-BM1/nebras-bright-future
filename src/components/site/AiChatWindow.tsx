@@ -39,6 +39,9 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const loadedFor = useRef<string | null | undefined>(undefined);
   // لو المستخدم عمل سكرول لفوق بنفسه، نوقّف المتابعة التلقائية لحد ما يرجع لتحت
   const stickToBottom = useRef(true);
+  // إيقاف الرد + تتبّع النص اللي ظهر لحد لحظة الإيقاف
+  const stoppedRef = useRef(false);
+  const shownRef = useRef("");
 
   // مزامنة الرسائل عند تبديل المحادثة أو تحميلها من قاعدة البيانات
   useEffect(() => {
