@@ -27,6 +27,7 @@ import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authentic
 import { Route as AuthenticatedLecturesRouteImport } from './routes/_authenticated/lectures'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCommunityRouteImport } from './routes/_authenticated/community'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff.index'
@@ -138,6 +139,11 @@ const AuthenticatedLeaderboardRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCommunityRoute = AuthenticatedCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
@@ -274,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/ai': typeof AuthenticatedAiRouteWithChildren
+  '/community': typeof AuthenticatedCommunityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
@@ -313,6 +320,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
+  '/community': typeof AuthenticatedCommunityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/ai': typeof AuthenticatedAiRouteWithChildren
+  '/_authenticated/community': typeof AuthenticatedCommunityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin'
     | '/ai'
+    | '/community'
     | '/dashboard'
     | '/leaderboard'
     | '/lectures'
@@ -437,6 +447,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
+    | '/community'
     | '/dashboard'
     | '/leaderboard'
     | '/lectures'
@@ -478,6 +489,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/_authenticated/admin'
     | '/_authenticated/ai'
+    | '/_authenticated/community'
     | '/_authenticated/dashboard'
     | '/_authenticated/leaderboard'
     | '/_authenticated/lectures'
@@ -652,6 +664,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/community': {
+      id: '/_authenticated/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof AuthenticatedCommunityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ai': {
@@ -878,6 +897,7 @@ const AuthenticatedStaffRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAiRoute: typeof AuthenticatedAiRouteWithChildren
+  AuthenticatedCommunityRoute: typeof AuthenticatedCommunityRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
@@ -893,6 +913,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAiRoute: AuthenticatedAiRouteWithChildren,
+  AuthenticatedCommunityRoute: AuthenticatedCommunityRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,

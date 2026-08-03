@@ -2,18 +2,30 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (error) throw new Error("تعذّر التحقق من الصلاحيات.");
-  if (!data) throw new Error("غير مصرّح: هذه العملية للإدارة فقط.");
+/** يتحقّق إن المستخدم أدمن (كامل أو ثانوي) ويرجّع نوعه. */
+async function assertAdmin(context: { supabase: any; userId: string }): Promise<{ full: boolean }> {
+  const [{ data: full, error: e1 }, { data: secondary, error: e2 }] = await Promise.all([
+    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
+    context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin_secondary" }),
+  ]);
+  if (e1 || e2) throw new Error("تعذّر التحقق من الصلاحيات.");
+  if (!full && !secondary) throw new Error("غير مصرّح: هذه العملية للإدارة فقط.");
+  return { full: !!full };
+}
+
+/** إخفاء جزء من البريد للأدمن الثانوي: ah***@gmail.com */
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return "****";
+  const head = local.slice(0, 2);
+  return `${head}${"*".repeat(Math.max(3, local.length - 2))}@${domain}`;
 }
 
 export type AccountRow = {
   id: string;
   email: string;
+  /** البريد الحقيقي — للأدمن الكامل فقط، وnull للأدمن الثانوي */
+  real_email: string | null;
   created_at: string;
   full_name: string | null;
   phone: string | null;
@@ -26,7 +38,7 @@ export type AccountRow = {
 export const listAccounts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AccountRow[]> => {
-    await assertAdmin(context);
+    const { full } = await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: usersData, error: usersErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -54,7 +66,8 @@ export const listAccounts = createServerFn({ method: "GET" })
       const p = profileMap.get(u.id) as any;
       return {
         id: u.id,
-        email: u.email ?? "",
+        real_email: full ? (u.email ?? "") : null,
+        email: full ? (u.email ?? "") : maskEmail(u.email ?? ""),
         created_at: u.created_at,
         full_name: p?.full_name ?? (u.user_metadata?.full_name as string) ?? null,
         phone: p?.phone ?? null,
@@ -72,7 +85,8 @@ export const banAccount = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), email: z.string().email(), reason: z.string().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await assertAdmin(context);
+    if (!full) throw new Error("الحظر متاح للأدمن الرئيسي فقط.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("banned_emails")
@@ -88,7 +102,8 @@ export const unbanAccount = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), email: z.string().email() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await assertAdmin(context);
+    if (!full) throw new Error("رفع الحظر متاح للأدمن الرئيسي فقط.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("banned_emails").delete().eq("email", data.email.toLowerCase());
     await supabaseAdmin.auth.admin.updateUserById(data.userId, { ban_duration: "none" });
@@ -101,7 +116,8 @@ export const deleteAccount = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), email: z.string().email(), alsoBan: z.boolean().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await assertAdmin(context);
+    if (!full) throw new Error("حذف الحسابات متاح للأدمن الرئيسي فقط.");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.alsoBan) {
       await supabaseAdmin
@@ -115,6 +131,8 @@ export const deleteAccount = createServerFn({ method: "POST" })
 
 export const ASSIGNABLE_ROLES = [
   "admin",
+  "admin_secondary",
+  "psychologist",
   "teacher",
   "student",
   "customer_service",
@@ -133,7 +151,10 @@ export const setUserRole = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await assertAdmin(context);
+    if (!full && (data.role === "admin" || data.role === "admin_secondary")) {
+      throw new Error("تعيين صلاحيات الإدارة متاح للأدمن الرئيسي فقط.");
+    }
     if (data.userId === context.userId && data.role !== "admin") {
       throw new Error("لا يمكنك تغيير صلاحيتك بنفسك.");
     }
