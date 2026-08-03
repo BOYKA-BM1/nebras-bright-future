@@ -27,6 +27,8 @@ type AppRoleName = (typeof ASSIGNABLE_ROLES)[number];
 
 const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
   admin: { text: "أدمن", cls: "bg-primary/15 text-primary" },
+  admin_secondary: { text: "أدمن ثانوي", cls: "bg-primary/10 text-primary" },
+  psychologist: { text: "دكتور نفسي", cls: "bg-pink-500/15 text-pink-400" },
   teacher: { text: "مدرّس", cls: "bg-blue-500/15 text-blue-400" },
   student: { text: "طالب", cls: "bg-secondary text-muted-foreground" },
   customer_service: { text: "خدمة عملاء", cls: "bg-emerald-500/15 text-emerald-400" },
@@ -36,7 +38,7 @@ const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
 
 
 function roleLabel(roles: string[]) {
-  const order: AppRoleName[] = ["admin", "teacher", "customer_service", "secretary", "montage"];
+  const order: AppRoleName[] = ["admin", "admin_secondary", "psychologist", "teacher", "customer_service", "secretary", "montage"];
   for (const r of order) {
     if (roles.includes(r)) return ROLE_META[r];
   }

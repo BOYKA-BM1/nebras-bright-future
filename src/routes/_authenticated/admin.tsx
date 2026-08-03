@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, ShieldCheck, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone, Database, Film, MessageCircle } from "lucide-react";
+import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, ShieldCheck, Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone, Database, Film, MessageCircle, HeartHandshake } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
@@ -7,6 +7,9 @@ import { Logo } from "@/components/site/Logo";
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
+
+// الأقسام الحسّاسة اللي مش متاحة للأدمن الثانوي
+const FULL_ADMIN_ONLY = ["/admin/earnings", "/admin/security", "/admin/devices", "/admin/accounts"];
 
 const navItems = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
@@ -20,6 +23,7 @@ const navItems = [
   { to: "/admin/stages", label: "المراحل", icon: GraduationCap, exact: false },
   { to: "/admin/knowledge", label: "معرفة الذكاء", icon: Database, exact: false },
   { to: "/admin/coupons", label: "الكوبونات", icon: Ticket, exact: false },
+  { to: "/psych", label: "الغرفة النفسية", icon: HeartHandshake, exact: false },
   // لوحات الطاقم — الأدمن يقدر يفتحها ويتابعها مباشرة
   { to: "/staff/montage", label: "المونتاج", icon: Film, exact: false },
   { to: "/staff/students", label: "الطلاب (سكرتارية)", icon: Users, exact: false },
@@ -30,7 +34,7 @@ const navItems = [
 
 function AdminLayout() {
   const { confirmSignOut } = useAuth();
-  const { isAdmin, isLoading } = useRoles();
+  const { isAdmin, isFullAdmin, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -70,7 +74,7 @@ function AdminLayout() {
           <div className="flex items-center gap-3">
             <Logo />
             <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
-              لوحة الإدارة
+              {isFullAdmin ? "لوحة الإدارة" : "لوحة إدارة (ثانوي)"}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -88,7 +92,7 @@ function AdminLayout() {
           </div>
         </div>
         <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
-          {navItems.map((item) => {
+          {navItems.filter((item) => isFullAdmin || !FULL_ADMIN_ONLY.includes(item.to)).map((item) => {
             const active = item.exact
               ? location.pathname === item.to
               : location.pathname.startsWith(item.to);
