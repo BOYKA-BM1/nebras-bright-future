@@ -21,11 +21,13 @@ import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
+import { Route as AuthenticatedPsychRouteImport } from './routes/_authenticated/psych'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLecturesRouteImport } from './routes/_authenticated/lectures'
 import { Route as AuthenticatedLeaderboardRouteImport } from './routes/_authenticated/leaderboard'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCommunityRouteImport } from './routes/_authenticated/community'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff.index'
@@ -108,6 +110,11 @@ const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPsychRoute = AuthenticatedPsychRouteImport.update({
+  id: '/psych',
+  path: '/psych',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -132,6 +139,11 @@ const AuthenticatedLeaderboardRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCommunityRoute = AuthenticatedCommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({
@@ -268,11 +280,13 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/ai': typeof AuthenticatedAiRouteWithChildren
+  '/community': typeof AuthenticatedCommunityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/psych': typeof AuthenticatedPsychRoute
   '/staff': typeof AuthenticatedStaffRouteWithChildren
   '/teacher': typeof AuthenticatedTeacherRoute
   '/api/tts': typeof ApiTtsRoute
@@ -306,11 +320,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
+  '/community': typeof AuthenticatedCommunityRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/psych': typeof AuthenticatedPsychRoute
   '/teacher': typeof AuthenticatedTeacherRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
@@ -347,11 +363,13 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/ai': typeof AuthenticatedAiRouteWithChildren
+  '/_authenticated/community': typeof AuthenticatedCommunityRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/leaderboard': typeof AuthenticatedLeaderboardRoute
   '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/psych': typeof AuthenticatedPsychRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRouteWithChildren
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
   '/api/tts': typeof ApiTtsRoute
@@ -389,11 +407,13 @@ export interface FileRouteTypes {
     | '/support'
     | '/admin'
     | '/ai'
+    | '/community'
     | '/dashboard'
     | '/leaderboard'
     | '/lectures'
     | '/onboarding'
     | '/profile'
+    | '/psych'
     | '/staff'
     | '/teacher'
     | '/api/tts'
@@ -427,11 +447,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
+    | '/community'
     | '/dashboard'
     | '/leaderboard'
     | '/lectures'
     | '/onboarding'
     | '/profile'
+    | '/psych'
     | '/teacher'
     | '/api/tts'
     | '/courses/$courseId'
@@ -467,11 +489,13 @@ export interface FileRouteTypes {
     | '/support'
     | '/_authenticated/admin'
     | '/_authenticated/ai'
+    | '/_authenticated/community'
     | '/_authenticated/dashboard'
     | '/_authenticated/leaderboard'
     | '/_authenticated/lectures'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
+    | '/_authenticated/psych'
     | '/_authenticated/staff'
     | '/_authenticated/teacher'
     | '/api/tts'
@@ -600,6 +624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStaffRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/psych': {
+      id: '/_authenticated/psych'
+      path: '/psych'
+      fullPath: '/psych'
+      preLoaderRoute: typeof AuthenticatedPsychRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -633,6 +664,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/community': {
+      id: '/_authenticated/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof AuthenticatedCommunityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/ai': {
@@ -859,11 +897,13 @@ const AuthenticatedStaffRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAiRoute: typeof AuthenticatedAiRouteWithChildren
+  AuthenticatedCommunityRoute: typeof AuthenticatedCommunityRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLeaderboardRoute: typeof AuthenticatedLeaderboardRoute
   AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedPsychRoute: typeof AuthenticatedPsychRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRouteWithChildren
   AuthenticatedTeacherRoute: typeof AuthenticatedTeacherRoute
   AuthenticatedLearnCourseIdRoute: typeof AuthenticatedLearnCourseIdRoute
@@ -873,11 +913,13 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAiRoute: AuthenticatedAiRouteWithChildren,
+  AuthenticatedCommunityRoute: AuthenticatedCommunityRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLeaderboardRoute: AuthenticatedLeaderboardRoute,
   AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedPsychRoute: AuthenticatedPsychRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRouteWithChildren,
   AuthenticatedTeacherRoute: AuthenticatedTeacherRoute,
   AuthenticatedLearnCourseIdRoute: AuthenticatedLearnCourseIdRoute,
@@ -902,13 +944,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

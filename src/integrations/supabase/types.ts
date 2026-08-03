@@ -162,6 +162,30 @@ export type Database = {
           },
         ]
       }
+      class_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          room: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          room: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          room?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -904,6 +928,66 @@ export type Database = {
           },
         ]
       }
+      psych_call_requests: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          note: string | null
+          phone: string
+          preferred_time: string | null
+          status: string
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          note?: string | null
+          phone: string
+          preferred_time?: string | null
+          status?: string
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          note?: string | null
+          phone?: string
+          preferred_time?: string | null
+          status?: string
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      psych_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          sender_id: string
+          student_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          sender_id: string
+          student_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+          student_id?: string
+        }
+        Relationships: []
+      }
       questions: {
         Row: {
           correct_answer: string | null
@@ -1436,6 +1520,7 @@ export type Database = {
         Returns: boolean
       }
       increment_visits: { Args: never; Returns: number }
+      is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_email_banned: { Args: { _email: string }; Returns: boolean }
       is_enrolled: {
         Args: { _course_id: string; _user_id: string }
@@ -1451,6 +1536,7 @@ export type Database = {
           xp: number
         }[]
       }
+      my_class_room: { Args: never; Returns: string }
       my_xp: { Args: never; Returns: number }
       owns_course: {
         Args: { _course_id: string; _user_id: string }
@@ -1495,6 +1581,8 @@ export type Database = {
         | "customer_service"
         | "secretary"
         | "montage"
+        | "psychologist"
+        | "admin_secondary"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1629,6 +1717,8 @@ export const Constants = {
         "customer_service",
         "secretary",
         "montage",
+        "psychologist",
+        "admin_secondary",
       ],
     },
   },
