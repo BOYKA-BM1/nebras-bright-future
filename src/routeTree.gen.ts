@@ -21,6 +21,7 @@ import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
+import { Route as AuthenticatedPsychRouteImport } from './routes/_authenticated/psych'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedLecturesRouteImport } from './routes/_authenticated/lectures'
@@ -106,6 +107,11 @@ const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
 const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   id: '/staff',
   path: '/staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPsychRoute = AuthenticatedPsychRouteImport.update({
+  id: '/psych',
+  path: '/psych',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/psych': typeof AuthenticatedPsychRoute
   '/staff': typeof AuthenticatedStaffRouteWithChildren
   '/teacher': typeof AuthenticatedTeacherRoute
   '/api/tts': typeof ApiTtsRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/lectures': typeof AuthenticatedLecturesRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/psych': typeof AuthenticatedPsychRoute
   '/teacher': typeof AuthenticatedTeacherRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/_authenticated/lectures': typeof AuthenticatedLecturesRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/psych': typeof AuthenticatedPsychRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRouteWithChildren
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
   '/api/tts': typeof ApiTtsRoute
@@ -394,6 +403,7 @@ export interface FileRouteTypes {
     | '/lectures'
     | '/onboarding'
     | '/profile'
+    | '/psych'
     | '/staff'
     | '/teacher'
     | '/api/tts'
@@ -432,6 +442,7 @@ export interface FileRouteTypes {
     | '/lectures'
     | '/onboarding'
     | '/profile'
+    | '/psych'
     | '/teacher'
     | '/api/tts'
     | '/courses/$courseId'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/_authenticated/lectures'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
+    | '/_authenticated/psych'
     | '/_authenticated/staff'
     | '/_authenticated/teacher'
     | '/api/tts'
@@ -598,6 +610,13 @@ declare module '@tanstack/react-router' {
       path: '/staff'
       fullPath: '/staff'
       preLoaderRoute: typeof AuthenticatedStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/psych': {
+      id: '/_authenticated/psych'
+      path: '/psych'
+      fullPath: '/psych'
+      preLoaderRoute: typeof AuthenticatedPsychRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/profile': {
@@ -864,6 +883,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLecturesRoute: typeof AuthenticatedLecturesRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedPsychRoute: typeof AuthenticatedPsychRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRouteWithChildren
   AuthenticatedTeacherRoute: typeof AuthenticatedTeacherRoute
   AuthenticatedLearnCourseIdRoute: typeof AuthenticatedLearnCourseIdRoute
@@ -878,6 +898,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLecturesRoute: AuthenticatedLecturesRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedPsychRoute: AuthenticatedPsychRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRouteWithChildren,
   AuthenticatedTeacherRoute: AuthenticatedTeacherRoute,
   AuthenticatedLearnCourseIdRoute: AuthenticatedLearnCourseIdRoute,
