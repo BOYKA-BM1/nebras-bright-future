@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send, XCircle,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send, XCircle, HeartHandshake, MessagesSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const { user, confirmSignOut } = useAuth();
   const navigate = useNavigate();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isLoading: rolesLoading } = useRoles();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPsychologist, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
@@ -44,7 +44,8 @@ function Dashboard() {
     if (isMontage) { navigate({ to: "/staff/montage" }); return; }
     if (isCustomerService) { navigate({ to: "/staff/support" }); return; }
     if (isSecretary) { navigate({ to: "/staff/students" }); return; }
-  }, [rolesLoading, isTeacher, isAdmin, isMontage, isCustomerService, isSecretary, navigate]);
+    if (isPsychologist) { navigate({ to: "/psych" }); return; }
+  }, [rolesLoading, isTeacher, isAdmin, isMontage, isCustomerService, isSecretary, isPsychologist, navigate]);
 
   const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary;
 
@@ -118,6 +119,25 @@ function Dashboard() {
           <StatCard icon={BookOpen} label="دوراتي" value={String(myCourses.length)} />
           <StatCard icon={Wallet} label="إجمالي القيمة" value={`${totalSpent} ج.م`} />
           <StatCard icon={Heart} label="المفضّلة" value={String(favoriteIds.size)} />
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <Link to="/psych" className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4 transition-colors hover:bg-primary/15">
+            <HeartHandshake className="h-6 w-6 shrink-0 text-primary" />
+            <div className="flex-1">
+              <p className="font-bold">الغرفة النفسية</p>
+              <p className="text-xs text-muted-foreground">كلام سرّي مع دكتور نفسي أو اطلب مكالمة.</p>
+            </div>
+            <ArrowLeft className="h-4 w-4 text-primary" />
+          </Link>
+          <Link to="/community" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-accent">
+            <MessagesSquare className="h-6 w-6 shrink-0 text-primary" />
+            <div className="flex-1">
+              <p className="font-bold">غرفة صفّي</p>
+              <p className="text-xs text-muted-foreground">دردشة جماعية مع زمايلك في نفس الصف.</p>
+            </div>
+            <ArrowLeft className="h-4 w-4 text-primary" />
+          </Link>
         </div>
 
         <h2 className="mt-12 text-xl font-extrabold">إنجازاتي ونقاطي</h2>

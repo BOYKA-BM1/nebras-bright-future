@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 // الأقسام الحسّاسة اللي مش متاحة للأدمن الثانوي
-const FULL_ADMIN_ONLY = ["/admin/earnings", "/admin/security", "/admin/devices", "/admin/accounts"];
+const FULL_ADMIN_ONLY = ["/admin/earnings", "/admin/security", "/admin/devices"];
 
 const navItems = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
