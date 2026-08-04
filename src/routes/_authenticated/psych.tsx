@@ -220,7 +220,8 @@ function CallRequestForm({ defaultName, defaultPhone }: { defaultName: string; d
 /* ================= الدكتور النفسي / الإدارة ================= */
 
 function DoctorPanel() {
-  const { user } = useAuth();
+
+
   const { data: threads = [], isLoading } = usePsychThreads();
   const { data: calls = [] } = useAllCallRequests();
   const updateCall = useUpdateCallRequest();
