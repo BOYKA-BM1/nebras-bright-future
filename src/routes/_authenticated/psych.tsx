@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { HeartHandshake, Loader2, Send, Phone, ArrowLeft, CheckCircle2, XCircle, Users } from "lucide-react";
+import { HeartHandshake, Loader2, Send, Phone, ArrowLeft, CheckCircle2, XCircle, Users, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -55,20 +55,22 @@ function ChatBubble({
   showLabel?: boolean;
 }) {
   return (
-    // في الاتجاه من اليمين لليسار: flex-start = يمين (الدكتورة) و flex-end = شمال (الطالب)
-    <div className={`flex ${fromDoctor ? "justify-start" : "justify-end"}`}>
+    <div className="flex w-full">
       <div
-        className={`max-w-[80%] px-4 py-2 text-sm leading-relaxed shadow-sm ${
+        className={`max-w-[78%] px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
           fromDoctor
-            ? "rounded-2xl rounded-tr-md border border-emerald-500/25 bg-emerald-500/12 text-foreground"
-            : "rounded-2xl rounded-tl-md bg-primary text-primary-foreground"
+            ? "me-auto rounded-2xl rounded-tr-sm border border-emerald-500/30 bg-emerald-600/20 text-foreground"
+            : "ms-auto rounded-2xl rounded-tl-sm bg-primary text-primary-foreground"
         }`}
       >
         {showLabel && fromDoctor && (
-          <p className="mb-1 text-xs font-bold text-emerald-500">الدكتورة النفسية</p>
+          <p className="mb-1 text-xs font-bold text-emerald-400">الدكتورة النفسية</p>
         )}
-        <p className="whitespace-pre-wrap">{body}</p>
-        <p className={`mt-1 text-[10px] ${fromDoctor ? "text-muted-foreground" : "opacity-70"}`} dir="ltr">
+        <p className="whitespace-pre-wrap break-words">{body}</p>
+        <p
+          className={`mt-1 text-end text-[10px] ${fromDoctor ? "text-muted-foreground" : "text-primary-foreground/70"}`}
+          dir="ltr"
+        >
           {new Date(at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
@@ -220,8 +222,7 @@ function CallRequestForm({ defaultName, defaultPhone }: { defaultName: string; d
 /* ================= الدكتور النفسي / الإدارة ================= */
 
 function DoctorPanel() {
-
-
+  const { confirmSignOut } = useAuth();
   const { data: threads = [], isLoading } = usePsychThreads();
   const { data: calls = [] } = useAllCallRequests();
   const updateCall = useUpdateCallRequest();
@@ -245,10 +246,21 @@ function DoctorPanel() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <h1 className="flex items-center gap-2 text-2xl font-extrabold">
-          <HeartHandshake className="h-6 w-6 text-primary" /> لوحة الغرفة النفسية
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">محادثات الطلاب السرّية وطلبات المكالمات.</p>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="min-w-0">
+            <h1 className="flex items-center gap-2 text-2xl font-extrabold">
+              <HeartHandshake className="h-6 w-6 shrink-0 text-primary" /> لوحة الغرفة النفسية
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">محادثات الطلاب السرّية وطلبات المكالمات.</p>
+          </div>
+          <button
+            onClick={() => confirmSignOut()}
+            className="flex shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/10"
+          >
+            <LogOut className="h-4 w-4" /> خروج
+          </button>
+        </div>
+
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[280px_1fr]">
           <aside className="rounded-2xl border border-border bg-card p-3">
