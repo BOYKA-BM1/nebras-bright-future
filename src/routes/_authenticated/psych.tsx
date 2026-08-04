@@ -55,20 +55,22 @@ function ChatBubble({
   showLabel?: boolean;
 }) {
   return (
-    // في الاتجاه من اليمين لليسار: flex-start = يمين (الدكتورة) و flex-end = شمال (الطالب)
-    <div className={`flex ${fromDoctor ? "justify-start" : "justify-end"}`}>
+    <div className="flex w-full">
       <div
-        className={`max-w-[80%] px-4 py-2 text-sm leading-relaxed shadow-sm ${
+        className={`max-w-[78%] px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
           fromDoctor
-            ? "rounded-2xl rounded-tr-md border border-emerald-500/25 bg-emerald-500/12 text-foreground"
-            : "rounded-2xl rounded-tl-md bg-primary text-primary-foreground"
+            ? "me-auto rounded-2xl rounded-tr-sm border border-emerald-500/30 bg-emerald-600/20 text-foreground"
+            : "ms-auto rounded-2xl rounded-tl-sm bg-primary text-primary-foreground"
         }`}
       >
         {showLabel && fromDoctor && (
-          <p className="mb-1 text-xs font-bold text-emerald-500">الدكتورة النفسية</p>
+          <p className="mb-1 text-xs font-bold text-emerald-400">الدكتورة النفسية</p>
         )}
-        <p className="whitespace-pre-wrap">{body}</p>
-        <p className={`mt-1 text-[10px] ${fromDoctor ? "text-muted-foreground" : "opacity-70"}`} dir="ltr">
+        <p className="whitespace-pre-wrap break-words">{body}</p>
+        <p
+          className={`mt-1 text-end text-[10px] ${fromDoctor ? "text-muted-foreground" : "text-primary-foreground/70"}`}
+          dir="ltr"
+        >
           {new Date(at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
