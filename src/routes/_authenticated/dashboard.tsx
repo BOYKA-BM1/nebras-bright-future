@@ -36,16 +36,27 @@ function Dashboard() {
     });
   };
 
-  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته، والطاقم للوحاتهم
+  // كل حساب يروح لصفحته الخاصة على طول
+  const roleHome = rolesLoading
+    ? null
+    : isAdmin
+      ? "/admin"
+      : isTeacher
+        ? "/teacher"
+        : isPsychologist
+          ? "/psych"
+          : isMontage
+            ? "/staff/montage"
+            : isCustomerService
+              ? "/staff/support"
+              : isSecretary
+                ? "/staff/students"
+                : null;
+
   useEffect(() => {
-    if (rolesLoading) return;
-    if (isAdmin) { navigate({ to: "/admin" }); return; }
-    if (isTeacher) { navigate({ to: "/teacher" }); return; }
-    if (isMontage) { navigate({ to: "/staff/montage" }); return; }
-    if (isCustomerService) { navigate({ to: "/staff/support" }); return; }
-    if (isSecretary) { navigate({ to: "/staff/students" }); return; }
-    if (isPsychologist) { navigate({ to: "/psych" }); return; }
-  }, [rolesLoading, isTeacher, isAdmin, isMontage, isCustomerService, isSecretary, isPsychologist, navigate]);
+    if (roleHome) navigate({ to: roleHome });
+  }, [roleHome, navigate]);
+
 
   const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary;
 
@@ -71,6 +82,17 @@ function Dashboard() {
   const totalSpent = useMemo(() => myCourses.reduce((s, c) => s + (c.price || 0), 0), [myCourses]);
 
   const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
+
+  // ماننتظر تحديد الدور قبل عرض لوحة الطالب — علشان محصلش وميض للوحة الغلط
+  if (rolesLoading || roleHome) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+
 
 
   return (
