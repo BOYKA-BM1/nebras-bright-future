@@ -36,16 +36,27 @@ function Dashboard() {
     });
   };
 
-  // الأدمن يروح لوحة الإدارة مباشرة، والمدرّس للوحته، والطاقم للوحاتهم
+  // كل حساب يروح لصفحته الخاصة على طول
+  const roleHome = rolesLoading
+    ? null
+    : isAdmin
+      ? "/admin"
+      : isTeacher
+        ? "/teacher"
+        : isPsychologist
+          ? "/psych"
+          : isMontage
+            ? "/staff/montage"
+            : isCustomerService
+              ? "/staff/support"
+              : isSecretary
+                ? "/staff/students"
+                : null;
+
   useEffect(() => {
-    if (rolesLoading) return;
-    if (isAdmin) { navigate({ to: "/admin" }); return; }
-    if (isTeacher) { navigate({ to: "/teacher" }); return; }
-    if (isMontage) { navigate({ to: "/staff/montage" }); return; }
-    if (isCustomerService) { navigate({ to: "/staff/support" }); return; }
-    if (isSecretary) { navigate({ to: "/staff/students" }); return; }
-    if (isPsychologist) { navigate({ to: "/psych" }); return; }
-  }, [rolesLoading, isTeacher, isAdmin, isMontage, isCustomerService, isSecretary, isPsychologist, navigate]);
+    if (roleHome) navigate({ to: roleHome });
+  }, [roleHome, navigate]);
+
 
   const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary;
 
