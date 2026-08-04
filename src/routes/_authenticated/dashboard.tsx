@@ -83,6 +83,17 @@ function Dashboard() {
 
   const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
 
+  // ماننتظر تحديد الدور قبل عرض لوحة الطالب — علشان محصلش وميض للوحة الغلط
+  if (rolesLoading || roleHome) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+
+
 
   return (
     <div className="min-h-screen bg-background">
