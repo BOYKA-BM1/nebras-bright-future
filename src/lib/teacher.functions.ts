@@ -20,6 +20,7 @@ export type TeacherDashboard = {
   students: number; // عدد الطلاب الفعليين (فريد)
   activeEnrollments: number; // عدد الاشتراكات النشطة
   lessons: number; // إجمالي الدروس
+  exams: number; // إجمالي الامتحانات
   courses: TeacherCourseStat[]; // مرتّبة بالأكثر مبيعًا
 };
 
@@ -43,6 +44,7 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
       students: 0,
       activeEnrollments: 0,
       lessons: 0,
+      exams: 0,
       courses: [],
     };
 
@@ -62,14 +64,17 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
     const courseList = courses ?? [];
     const courseIds = courseList.map((c) => c.id);
 
+    let exams = 0;
     let payments: Array<{ amount: number | null; course_id: string | null; status: string | null }> = [];
     let enrollments: Array<{ course_id: string; user_id: string; status: string | null }> = [];
 
     if (courseIds.length) {
-      const [payRes, enrRes] = await Promise.all([
+      const [payRes, enrRes, quizRes] = await Promise.all([
         supabaseAdmin.from("payments").select("amount, course_id, status").in("course_id", courseIds),
         supabaseAdmin.from("enrollments").select("course_id, user_id, status").in("course_id", courseIds),
+        supabaseAdmin.from("quizzes").select("id", { count: "exact", head: true }).in("course_id", courseIds),
       ]);
+      exams = quizRes.count ?? 0;
       payments = (payRes.data ?? []).filter((p) => p.status === "paid");
       enrollments = (enrRes.data ?? []).filter((e) => e.status === "active");
     }
@@ -111,6 +116,7 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
       students,
       activeEnrollments: enrollments.length,
       lessons,
+      exams,
       courses: courseStats,
     };
   });
