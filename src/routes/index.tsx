@@ -1,8 +1,4 @@
-import { useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
-import { useRoleHome } from "@/hooks/use-role-home";
+import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/site/Navbar";
 import { Hero } from "@/components/site/Hero";
 import { About } from "@/components/site/About";
@@ -47,22 +43,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { user } = useAuth();
-  const { path, lockedToPanel, isLoading } = useRoleHome();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user && lockedToPanel && path) navigate({ to: path, replace: true });
-  }, [user, lockedToPanel, path, navigate]);
-
-  if (user && (isLoading || lockedToPanel)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

@@ -15,6 +15,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "@/components/ui/sonner";
 import { DeviceGuard } from "@/components/site/DeviceGuard";
+import { RoleLock } from "@/components/site/RoleLock";
 
 function NotFoundComponent() {
   return (
@@ -154,8 +155,10 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <DeviceGuard>
-          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-          <Outlet />
+          <RoleLock>
+            {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+            <Outlet />
+          </RoleLock>
         </DeviceGuard>
         <Toaster position="top-center" richColors />
       </AuthProvider>
