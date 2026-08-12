@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp } from "lucide-react";
+import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp, UserRound } from "lucide-react";
+import { ComplaintButton } from "@/components/site/ComplaintButton";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -79,11 +81,48 @@ function TeacherDashboard() {
             <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">لوحة المدرّس</span>
           </div>
           <div className="flex items-center gap-2">
+            {stats?.isTeacher && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20">
+                    <UserRound className="h-4 w-4" /><span className="hidden sm:inline">بياناتي</span>
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>بياناتي</DialogTitle>
+                    <DialogDescription>ملخّص حسابك وأرباحك على المنصة.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-2 text-sm">
+                    {[
+                      { l: "الاسم", v: stats.name ?? "—" },
+                      { l: "البريد", v: user?.email ?? "—" },
+                      { l: "التقييم", v: `${stats.rating.toFixed(1)} / 5` },
+                      { l: "نسبة الربح", v: `${stats.profitPercentage}%` },
+                      { l: "إجمالي الدخل", v: `${fmt(stats.revenue)} ج.م` },
+                      { l: "أرباحي", v: `${fmt(stats.profit)} ج.م` },
+                      { l: "عدد الكورسات", v: fmt(stats.courses.length) },
+                      { l: "عدد الطلاب", v: fmt(stats.students) },
+                      { l: "الاشتراكات النشطة", v: fmt(stats.activeEnrollments) },
+                      { l: "عدد الدروس", v: fmt(stats.lessons) },
+                      { l: "عدد الامتحانات", v: fmt(stats.exams) },
+                    ].map((r) => (
+                      <div key={r.l} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-background/50 px-3 py-2">
+                        <span className="text-muted-foreground">{r.l}</span>
+                        <span className="font-extrabold">{r.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            <ComplaintButton />
             {isAdmin && (
               <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"><Home className="h-4 w-4" /><span className="hidden sm:inline">الموقع</span></Link>
             )}
             <button onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"><LogOut className="h-4 w-4" /><span className="hidden sm:inline">خروج</span></button>
           </div>
+
         </div>
       </header>
 

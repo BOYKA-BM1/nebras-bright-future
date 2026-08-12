@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { HeartHandshake, Loader2, Send, Phone, ArrowLeft, CheckCircle2, XCircle, Users, LogOut } from "lucide-react";
+import { ComplaintButton } from "@/components/site/ComplaintButton";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -59,8 +60,8 @@ function ChatBubble({
       <div
         className={`max-w-[78%] px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
           fromDoctor
-            ? "me-auto rounded-2xl rounded-tr-sm border border-emerald-500/30 bg-emerald-600/20 text-foreground"
-            : "ms-auto rounded-2xl rounded-tl-sm bg-primary text-primary-foreground"
+            ? "ml-auto rounded-2xl rounded-tr-sm border border-emerald-500/40 bg-emerald-600/25 text-foreground"
+            : "mr-auto rounded-2xl rounded-tl-sm bg-primary text-primary-foreground"
         }`}
       >
         {showLabel && fromDoctor && (
@@ -68,7 +69,7 @@ function ChatBubble({
         )}
         <p className="whitespace-pre-wrap break-words">{body}</p>
         <p
-          className={`mt-1 text-end text-[10px] ${fromDoctor ? "text-muted-foreground" : "text-primary-foreground/70"}`}
+          className={`mt-1 text-end text-[10px] ${fromDoctor ? "text-emerald-300/80" : "text-primary-foreground/70"}`}
           dir="ltr"
         >
           {new Date(at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
@@ -77,6 +78,7 @@ function ChatBubble({
     </div>
   );
 }
+
 
 /* ================= الطالب ================= */
 
@@ -253,12 +255,16 @@ function DoctorPanel() {
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">محادثات الطلاب السرّية وطلبات المكالمات.</p>
           </div>
-          <button
-            onClick={() => confirmSignOut()}
-            className="flex shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/10"
-          >
-            <LogOut className="h-4 w-4" /> خروج
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <ComplaintButton />
+            <button
+              onClick={() => confirmSignOut()}
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" /> خروج
+            </button>
+          </div>
+
         </div>
 
 

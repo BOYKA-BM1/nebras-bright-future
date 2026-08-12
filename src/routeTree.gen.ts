@@ -36,6 +36,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as AuthenticatedStaffSupportRouteImport } from './routes/_authenticated/staff.support'
 import { Route as AuthenticatedStaffStudentsRouteImport } from './routes/_authenticated/staff.students'
 import { Route as AuthenticatedStaffMontageRouteImport } from './routes/_authenticated/staff.montage'
+import { Route as AuthenticatedStaffComplaintsRouteImport } from './routes/_authenticated/staff.complaints'
 import { Route as AuthenticatedManageCourseIdRouteImport } from './routes/_authenticated/manage.$courseId'
 import { Route as AuthenticatedLearnCourseIdRouteImport } from './routes/_authenticated/learn.$courseId'
 import { Route as AuthenticatedAiThreadIdRouteImport } from './routes/_authenticated/ai.$threadId'
@@ -189,6 +190,12 @@ const AuthenticatedStaffMontageRoute =
     path: '/montage',
     getParentRoute: () => AuthenticatedStaffRoute,
   } as any)
+const AuthenticatedStaffComplaintsRoute =
+  AuthenticatedStaffComplaintsRouteImport.update({
+    id: '/complaints',
+    path: '/complaints',
+    getParentRoute: () => AuthenticatedStaffRoute,
+  } as any)
 const AuthenticatedManageCourseIdRoute =
   AuthenticatedManageCourseIdRouteImport.update({
     id: '/manage/$courseId',
@@ -308,6 +315,7 @@ export interface FileRoutesByFullPath {
   '/ai/$threadId': typeof AuthenticatedAiThreadIdRoute
   '/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
+  '/staff/complaints': typeof AuthenticatedStaffComplaintsRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
@@ -347,6 +355,7 @@ export interface FileRoutesByTo {
   '/ai/$threadId': typeof AuthenticatedAiThreadIdRoute
   '/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
+  '/staff/complaints': typeof AuthenticatedStaffComplaintsRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
@@ -391,6 +400,7 @@ export interface FileRoutesById {
   '/_authenticated/ai/$threadId': typeof AuthenticatedAiThreadIdRoute
   '/_authenticated/learn/$courseId': typeof AuthenticatedLearnCourseIdRoute
   '/_authenticated/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
+  '/_authenticated/staff/complaints': typeof AuthenticatedStaffComplaintsRoute
   '/_authenticated/staff/montage': typeof AuthenticatedStaffMontageRoute
   '/_authenticated/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/_authenticated/staff/support': typeof AuthenticatedStaffSupportRoute
@@ -435,6 +445,7 @@ export interface FileRouteTypes {
     | '/ai/$threadId'
     | '/learn/$courseId'
     | '/manage/$courseId'
+    | '/staff/complaints'
     | '/staff/montage'
     | '/staff/students'
     | '/staff/support'
@@ -474,6 +485,7 @@ export interface FileRouteTypes {
     | '/ai/$threadId'
     | '/learn/$courseId'
     | '/manage/$courseId'
+    | '/staff/complaints'
     | '/staff/montage'
     | '/staff/students'
     | '/staff/support'
@@ -517,6 +529,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ai/$threadId'
     | '/_authenticated/learn/$courseId'
     | '/_authenticated/manage/$courseId'
+    | '/_authenticated/staff/complaints'
     | '/_authenticated/staff/montage'
     | '/_authenticated/staff/students'
     | '/_authenticated/staff/support'
@@ -729,6 +742,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStaffMontageRouteImport
       parentRoute: typeof AuthenticatedStaffRoute
     }
+    '/_authenticated/staff/complaints': {
+      id: '/_authenticated/staff/complaints'
+      path: '/complaints'
+      fullPath: '/staff/complaints'
+      preLoaderRoute: typeof AuthenticatedStaffComplaintsRouteImport
+      parentRoute: typeof AuthenticatedStaffRoute
+    }
     '/_authenticated/manage/$courseId': {
       id: '/_authenticated/manage/$courseId'
       path: '/manage/$courseId'
@@ -878,6 +898,7 @@ const AuthenticatedAiRouteWithChildren = AuthenticatedAiRoute._addFileChildren(
 )
 
 interface AuthenticatedStaffRouteChildren {
+  AuthenticatedStaffComplaintsRoute: typeof AuthenticatedStaffComplaintsRoute
   AuthenticatedStaffMontageRoute: typeof AuthenticatedStaffMontageRoute
   AuthenticatedStaffStudentsRoute: typeof AuthenticatedStaffStudentsRoute
   AuthenticatedStaffSupportRoute: typeof AuthenticatedStaffSupportRoute
@@ -885,6 +906,7 @@ interface AuthenticatedStaffRouteChildren {
 }
 
 const AuthenticatedStaffRouteChildren: AuthenticatedStaffRouteChildren = {
+  AuthenticatedStaffComplaintsRoute: AuthenticatedStaffComplaintsRoute,
   AuthenticatedStaffMontageRoute: AuthenticatedStaffMontageRoute,
   AuthenticatedStaffStudentsRoute: AuthenticatedStaffStudentsRoute,
   AuthenticatedStaffSupportRoute: AuthenticatedStaffSupportRoute,

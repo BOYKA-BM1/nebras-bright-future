@@ -67,6 +67,14 @@ export function Navbar() {
           {user ? (
             <>
               <Link
+                to="/dashboard"
+                className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary/20"
+                aria-label="لوحتي"
+              >
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="hidden sm:inline">لوحتي</span>
+              </Link>
+              <Link
                 to={accountTo}
                 className="flex items-center gap-2 rounded-full border border-border p-0.5 pl-3 text-sm font-bold text-foreground transition-colors hover:bg-accent"
                 aria-label="حسابي"
@@ -123,11 +131,18 @@ export function Navbar() {
             {user ? (
               <>
                 <Link
+                  to="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-center text-sm font-bold text-primary"
+                >
+                  <LayoutDashboard className="h-4 w-4" /> لوحتي
+                </Link>
+                <Link
                   to={accountTo}
                   onClick={() => setOpen(false)}
                   className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border px-4 py-2 text-center text-sm font-bold"
                 >
-                  <LayoutDashboard className="h-4 w-4" /> حسابي
+                  حسابي
                 </Link>
                 <button
                   onClick={() => { setOpen(false); confirmSignOut(); }}
