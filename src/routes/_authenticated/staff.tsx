@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LogOut, Home, ShieldAlert, Film, Users, MessageCircle } from "lucide-react";
+import { Loader2, LogOut, Home, ShieldAlert, Film, Users, MessageCircle, AlertOctagon } from "lucide-react";
+import { ComplaintButton } from "@/components/site/ComplaintButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
@@ -48,6 +49,7 @@ function StaffLayout() {
   if (isMontage || isAdmin) nav.push({ to: "/staff/montage", label: "المونتاج", icon: Film });
   if (isCustomerService || isSecretary || isAdmin) nav.push({ to: "/staff/students", label: "الطلاب", icon: Users });
   if (isCustomerService || isAdmin) nav.push({ to: "/staff/support", label: "الاستفسارات", icon: MessageCircle });
+  if (isSecretary || isAdmin) nav.push({ to: "/staff/complaints", label: "الشكاوى", icon: AlertOctagon });
 
   const label =
     (isMontage && ROLE_LABEL.montage) ||
@@ -73,6 +75,7 @@ function StaffLayout() {
                 <Home className="h-4 w-4" /> <span className="hidden sm:inline">الموقع</span>
               </Link>
             )}
+            {(isMontage || isCustomerService) && !isSecretary && <ComplaintButton />}
             <button onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent">
               <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
             </button>
