@@ -254,12 +254,16 @@ function DoctorPanel() {
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">محادثات الطلاب السرّية وطلبات المكالمات.</p>
           </div>
-          <button
-            onClick={() => confirmSignOut()}
-            className="flex shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/10"
-          >
-            <LogOut className="h-4 w-4" /> خروج
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <ComplaintButton />
+            <button
+              onClick={() => confirmSignOut()}
+              className="flex shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" /> خروج
+            </button>
+          </div>
+
         </div>
 
 
