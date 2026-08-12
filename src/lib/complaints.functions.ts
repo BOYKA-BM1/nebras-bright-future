@@ -38,7 +38,7 @@ export const getStaffComplaints = createServerFn({ method: "GET" })
     const { data: staffRoles } = await supabaseAdmin
       .from("user_roles")
       .select("user_id, role")
-      .in("role", STAFF_ROLES as unknown as string[]);
+      .in("role", [...STAFF_ROLES]);
 
     const roleMap = new Map<string, string>();
     for (const r of staffRoles ?? []) if (!roleMap.has(r.user_id)) roleMap.set(r.user_id, r.role as string);
