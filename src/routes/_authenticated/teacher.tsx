@@ -79,7 +79,9 @@ function TeacherDashboard() {
             <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">لوحة المدرّس</span>
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"><Home className="h-4 w-4" /><span className="hidden sm:inline">الموقع</span></Link>
+            {isAdmin && (
+              <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"><Home className="h-4 w-4" /><span className="hidden sm:inline">الموقع</span></Link>
+            )}
             <button onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"><LogOut className="h-4 w-4" /><span className="hidden sm:inline">خروج</span></button>
           </div>
         </div>
