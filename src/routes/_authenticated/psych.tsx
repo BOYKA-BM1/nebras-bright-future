@@ -59,8 +59,8 @@ function ChatBubble({
       <div
         className={`max-w-[78%] px-3.5 py-2 text-sm leading-relaxed shadow-sm ${
           fromDoctor
-            ? "me-auto rounded-2xl rounded-tr-sm border border-emerald-500/30 bg-emerald-600/20 text-foreground"
-            : "ms-auto rounded-2xl rounded-tl-sm bg-primary text-primary-foreground"
+            ? "ml-auto rounded-2xl rounded-tr-sm border border-emerald-500/40 bg-emerald-600/25 text-foreground"
+            : "mr-auto rounded-2xl rounded-tl-sm bg-primary text-primary-foreground"
         }`}
       >
         {showLabel && fromDoctor && (
@@ -68,7 +68,7 @@ function ChatBubble({
         )}
         <p className="whitespace-pre-wrap break-words">{body}</p>
         <p
-          className={`mt-1 text-end text-[10px] ${fromDoctor ? "text-muted-foreground" : "text-primary-foreground/70"}`}
+          className={`mt-1 text-end text-[10px] ${fromDoctor ? "text-emerald-300/80" : "text-primary-foreground/70"}`}
           dir="ltr"
         >
           {new Date(at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
@@ -77,6 +77,7 @@ function ChatBubble({
     </div>
   );
 }
+
 
 /* ================= الطالب ================= */
 
