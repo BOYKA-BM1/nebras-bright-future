@@ -36,7 +36,7 @@ function ManageCourse() {
   const { courseId } = Route.useParams();
   const { isAdmin, isTeacher, isLoading: rolesLoading } = useRoles();
   const { data: course } = useCourse(courseId);
-  const { sections, isLoading } = useCourseContent(courseId);
+  const { sections, isLoading } = useCourseContent(courseId, { includePending: true });
   const sectionAdmin = useSectionAdmin(courseId);
   const lessonAdmin = useLessonAdmin(courseId);
   const courseAdmin = useCourseAdmin();
