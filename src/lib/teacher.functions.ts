@@ -8,10 +8,14 @@ export type TeacherCourseStat = {
   income: number;
   subscribers: number;
   lessons: number;
+  subject: string | null;
+  image_url: string | null;
+  is_published: boolean;
 };
 
 export type TeacherDashboard = {
   isTeacher: boolean;
+  teacherId: string | null;
   name: string | null;
   rating: number;
   profitPercentage: number;
@@ -36,6 +40,7 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
 
     const empty: TeacherDashboard = {
       isTeacher: false,
+      teacherId: null,
       name: null,
       rating: 0,
       profitPercentage: 0,
@@ -58,7 +63,7 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
 
     const { data: courses } = await supabaseAdmin
       .from("courses")
-      .select("id, title, price, lessons_count")
+      .select("id, title, price, lessons_count, subject, image_url, is_published")
       .eq("teacher_id", teacher.id);
 
     const courseList = courses ?? [];
@@ -97,6 +102,9 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
         income: incomeByCourse.get(c.id) ?? 0,
         subscribers: subsByCourse.get(c.id) ?? 0,
         lessons: Number(c.lessons_count || 0),
+        subject: c.subject ?? null,
+        image_url: c.image_url ?? null,
+        is_published: !!c.is_published,
       }))
       .sort((a, b) => b.income - a.income || b.subscribers - a.subscribers);
 
@@ -108,6 +116,7 @@ export const getMyTeacherDashboard = createServerFn({ method: "GET" })
 
     return {
       isTeacher: true,
+      teacherId: teacher.id,
       name: teacher.name,
       rating: Number(teacher.rating ?? 0),
       profitPercentage: pct,
