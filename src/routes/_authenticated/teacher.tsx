@@ -34,21 +34,37 @@ function TeacherDashboard() {
   });
   const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
 
-  const myTeacher = useMemo(
-    () => teachers.find((t) => t.user_id === user?.id) ?? null,
-    [teachers, user?.id],
-  );
+  const myTeacherId = stats?.teacherId ?? teachers.find((t) => t.user_id === user?.id)?.id ?? null;
 
   const myCoupons = useMemo(() => {
     if (isAdmin) return coupons;
-    if (!myTeacher) return [];
-    return coupons.filter((c) => c.teacher_id === myTeacher.id);
-  }, [coupons, isAdmin, myTeacher]);
+    if (!myTeacherId) return [];
+    return coupons.filter((c) => c.teacher_id === myTeacherId);
+  }, [coupons, isAdmin, myTeacherId]);
 
+  // دورات المدرّس تُحسب على الخادم (RLS مايسمحش بقراءة user_id للمدرّس من العميل)
   const myCourses = useMemo(() => {
-    if (isAdmin) return courses;
-    return courses.filter((c) => c.teacher?.user_id === user?.id);
-  }, [courses, isAdmin, user?.id]);
+    if (isAdmin) {
+      return courses.map((c) => ({
+        id: c.id,
+        title: c.title,
+        subject: c.subject ?? null,
+        image_url: c.image_url ?? null,
+        is_published: !!c.is_published,
+        lessons: Number(c.lessons_count || 0),
+        teacherImage: c.teacher?.image_url ?? null,
+      }));
+    }
+    return (stats?.courses ?? []).map((c) => ({
+      id: c.id,
+      title: c.title,
+      subject: c.subject,
+      image_url: c.image_url,
+      is_published: c.is_published,
+      lessons: c.lessons,
+      teacherImage: null as string | null,
+    }));
+  }, [courses, isAdmin, stats?.courses]);
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -218,7 +234,7 @@ function TeacherDashboard() {
         <p className="mt-1 text-muted-foreground">{isAdmin ? "بصفتك أدمن تقدر تدير محتوى كل الدورات." : "أدِر محتوى دوراتك ودروسك من هنا."}</p>
 
 
-        {coursesLoading ? (
+        {(isAdmin ? coursesLoading : !stats) ? (
           <div className="mt-12 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
         ) : myCourses.length === 0 ? (
           <div className="mt-10 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
@@ -228,7 +244,7 @@ function TeacherDashboard() {
         ) : (
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {myCourses.map((c) => {
-              const img = resolveImage(c.image_url) ?? resolveImage(c.teacher?.image_url);
+              const img = resolveImage(c.image_url) ?? resolveImage(c.teacherImage);
               return (
                 <div key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                   {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
@@ -236,7 +252,7 @@ function TeacherDashboard() {
                     <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">{c.subject}</p>
                     <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5 text-primary" />{c.lessons_count} درس</span>
+                      <span className="flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5 text-primary" />{c.lessons} درس</span>
                       <span className={`rounded-full px-2 py-0.5 ${c.is_published ? "bg-primary/10 text-primary" : "bg-secondary"}`}>{c.is_published ? "منشورة" : "مسودّة"}</span>
                     </div>
                     <Link to="/manage/$courseId" params={{ courseId: c.id }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
