@@ -113,10 +113,11 @@ export function useCourseContent(
 
   return {
     sections: grouped,
-    lessons: lessonsQ.data ?? [],
+    lessons: visibleLessons,
     isLoading: sectionsQ.isLoading || lessonsQ.isLoading,
   };
 }
+
 
 /* ===================== الاشتراك ===================== */
 
