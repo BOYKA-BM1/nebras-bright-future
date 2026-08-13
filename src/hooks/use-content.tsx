@@ -72,14 +72,25 @@ export function useLessons(courseId: string | undefined) {
   });
 }
 
-/** يجمّع الوحدات مع دروسها (والدروس غير المرتبطة بوحدة تحت "بدون وحدة") */
-export function useCourseContent(courseId: string | undefined) {
+/** يجمّع الوحدات مع دروسها (والدروس غير المرتبطة بوحدة تحت "بدون وحدة")
+ *  includePending: تُظهر الدروس التي لم يعتمدها المونتاج بعد (لوحة الإدارة/المدرّس فقط) */
+export function useCourseContent(
+  courseId: string | undefined,
+  opts?: { includePending?: boolean },
+) {
+  const includePending = opts?.includePending ?? false;
   const sectionsQ = useSections(courseId);
   const lessonsQ = useLessons(courseId);
 
+  const visibleLessons = useMemo<Lesson[]>(() => {
+    const lessons = lessonsQ.data ?? [];
+    if (includePending) return lessons;
+    return lessons.filter((l) => (l.review_status ?? "approved") !== "pending");
+  }, [lessonsQ.data, includePending]);
+
   const grouped = useMemo<SectionWithLessons[]>(() => {
     const sections = sectionsQ.data ?? [];
-    const lessons = lessonsQ.data ?? [];
+    const lessons = visibleLessons;
     const result: SectionWithLessons[] = sections.map((s) => ({
       ...s,
       lessons: lessons.filter((l) => l.section_id === s.id),
@@ -97,7 +108,8 @@ export function useCourseContent(courseId: string | undefined) {
       } as SectionWithLessons);
     }
     return result;
-  }, [sectionsQ.data, lessonsQ.data, courseId]);
+  }, [sectionsQ.data, visibleLessons, courseId]);
+
 
   return {
     sections: grouped,
