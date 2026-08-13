@@ -168,7 +168,18 @@ function ManageCourse() {
     };
     const onErr = () => toast.error("حصل خطأ.");
     if (editLes) {
-      lessonAdmin.update.mutate({ id: editLes.id, ...payload }, { onSuccess: () => { toast.success("تم التحديث."); setLesOpen(false); }, onError: onErr });
+      // المدرّس: لو غيّر/أضاف فيديو، الدرس يرجع للمونتاج للمراجعة قبل النشر
+      const needsReview = !isAdmin && !!payload.video_url && payload.video_url !== editLes.video_url;
+      lessonAdmin.update.mutate(
+        { id: editLes.id, ...payload, ...(needsReview ? { review_status: "pending" } : {}) },
+        {
+          onSuccess: () => {
+            toast.success(needsReview ? "تم إرسال الفيديو للمونتاج (قيد المراجعة) ⏳" : "تم التحديث.");
+            setLesOpen(false);
+          },
+          onError: onErr,
+        },
+      );
     } else {
       const count = sections.find((s) => s.id === (lesSectionId ?? "__orphan__"))?.lessons.length ?? 0;
       // المدرّس: الدرس الذي يحتوي فيديو يذهب للمونتاج (قيد المراجعة). الأدمن ينشر مباشرة.
