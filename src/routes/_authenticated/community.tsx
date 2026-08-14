@@ -40,7 +40,13 @@ function CommunityRoom() {
     if (!text.trim() || !room) return;
     const body = text;
     setText("");
-    send.mutate({ room, body }, { onError: () => toast.error("تعذّر إرسال الرسالة.") });
+    send.mutate(
+      { room, body },
+      {
+        onError: (e: unknown) =>
+          toast.error(e instanceof Error ? e.message : "تعذّر إرسال الرسالة."),
+      },
+    );
   };
 
   const roomLabel = (profile?.grade ?? "").trim() || "الغرفة العامة";
@@ -57,7 +63,8 @@ function CommunityRoom() {
             <MessagesSquare className="h-6 w-6 text-primary" /> غرفة {roomLabel}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            الغرفة دي لطلاب صفّك بس — اتكلموا وذاكروا مع بعض واحترموا زمايلكم.
+            الغرفة دي لطلاب صفّك بس — الرسايل بتظهر لكل طلاب الصف فورًا. ممنوع أي ألفاظ خارجة أو سباب،
+            والرسالة اللي فيها كلام غير لائق مش هتتبعت أصلًا.
           </p>
         </header>
 
@@ -72,7 +79,7 @@ function CommunityRoom() {
                 const mine = m.user_id === user?.id;
                 return (
                   <div key={m.id} className={`group flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
-                    {(mine || isAdmin) && (
+                    {(mine || isAdmin) && !m.id.startsWith("tmp-") && (
                       <button
                         onClick={() => del.mutate(m.id)}
                         title="حذف الرسالة"
