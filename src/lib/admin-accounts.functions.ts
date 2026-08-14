@@ -13,14 +13,6 @@ async function assertAdmin(context: { supabase: any; userId: string }): Promise<
   return { full: !!full };
 }
 
-/** إخفاء جزء من البريد للأدمن الثانوي: ah***@gmail.com */
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  if (!domain) return "****";
-  const head = local.slice(0, 2);
-  return `${head}${"*".repeat(Math.max(3, local.length - 2))}@${domain}`;
-}
-
 export type AccountRow = {
   id: string;
   email: string;
@@ -38,7 +30,7 @@ export type AccountRow = {
 export const listAccounts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AccountRow[]> => {
-    const { full } = await assertAdmin(context);
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: usersData, error: usersErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -66,8 +58,8 @@ export const listAccounts = createServerFn({ method: "GET" })
       const p = profileMap.get(u.id) as any;
       return {
         id: u.id,
-        real_email: full ? (u.email ?? "") : null,
-        email: full ? (u.email ?? "") : maskEmail(u.email ?? ""),
+        real_email: u.email ?? "",
+        email: u.email ?? "",
         created_at: u.created_at,
         full_name: p?.full_name ?? (u.user_metadata?.full_name as string) ?? null,
         phone: p?.phone ?? null,
@@ -85,8 +77,7 @@ export const banAccount = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), email: z.string().email(), reason: z.string().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { full } = await assertAdmin(context);
-    if (!full) throw new Error("الحظر متاح للأدمن الرئيسي فقط.");
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("banned_emails")
@@ -102,8 +93,7 @@ export const unbanAccount = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), email: z.string().email() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { full } = await assertAdmin(context);
-    if (!full) throw new Error("رفع الحظر متاح للأدمن الرئيسي فقط.");
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("banned_emails").delete().eq("email", data.email.toLowerCase());
     await supabaseAdmin.auth.admin.updateUserById(data.userId, { ban_duration: "none" });
@@ -116,8 +106,7 @@ export const deleteAccount = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), email: z.string().email(), alsoBan: z.boolean().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { full } = await assertAdmin(context);
-    if (!full) throw new Error("حذف الحسابات متاح للأدمن الرئيسي فقط.");
+    await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.alsoBan) {
       await supabaseAdmin
@@ -151,10 +140,7 @@ export const setUserRole = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { full } = await assertAdmin(context);
-    if (!full && (data.role === "admin" || data.role === "admin_secondary")) {
-      throw new Error("تعيين صلاحيات الإدارة متاح للأدمن الرئيسي فقط.");
-    }
+    await assertAdmin(context);
     if (data.userId === context.userId && data.role !== "admin") {
       throw new Error("لا يمكنك تغيير صلاحيتك بنفسك.");
     }

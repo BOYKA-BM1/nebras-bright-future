@@ -23,9 +23,21 @@ function Onboarding() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const update = useUpdateProfile();
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [stageId, setStageId] = useState<string | null>(null);
   const [level, setLevel] = useState<Level | null>(null);
+
+  // بيانات الحساب
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+
+
+  // تعبئة الاسم المسجّل مسبقًا
+  useEffect(() => {
+    if (profile?.full_name && !fullName) setFullName(profile.full_name);
+  }, [profile?.full_name]);
 
   // إعادة التوجيه حسب الدور/الحالة
   useEffect(() => {
@@ -43,13 +55,37 @@ function Onboarding() {
   const pickStage = (id: string, lvl: Level) => {
     setStageId(id);
     setLevel(lvl);
+    setStep(3);
+  };
+
+  const digits = (v: string) => v.replace(/\D/g, "").slice(0, 11);
+  const infoValid =
+    fullName.trim().split(/\s+/).length >= 2 &&
+    phone.length === 11 &&
+    parentPhone.length === 11 &&
+    whatsapp.length === 11;
+
+  const submitInfo = () => {
+    if (!infoValid) {
+      toast.error("اكتب اسمك بالكامل وكل رقم لازم يكون 11 رقم بالظبط.");
+      return;
+    }
     setStep(2);
   };
 
   const finish = (grade: string) => {
     if (!stageId || !level) return;
     update.mutate(
-      { stage_id: stageId, level, grade, onboarded: true },
+      {
+        stage_id: stageId,
+        level,
+        grade,
+        onboarded: true,
+        full_name: fullName.trim(),
+        phone: `+20${phone}`,
+        parent_phone: `+20${parentPhone}`,
+        whatsapp: `+20${whatsapp}`,
+      },
       {
         onSuccess: () => { toast.success("تم تجهيز حسابك 🎉"); navigate({ to: "/dashboard" }); },
         onError: () => toast.error("حصل خطأ، حاول تاني."),
@@ -70,13 +106,44 @@ function Onboarding() {
 
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
         <div className="mx-auto mb-8 flex max-w-md items-center gap-3">
-          <StepDot active={step >= 1} done={step > 1} n={1} label="المرحلة" />
+          <StepDot active={step >= 1} done={step > 1} n={1} label="بياناتك" />
           <span className="h-px flex-1 bg-border" />
-          <StepDot active={step >= 2} done={false} n={2} label="السنة الدراسية" />
+          <StepDot active={step >= 2} done={step > 2} n={2} label="المرحلة" />
+          <span className="h-px flex-1 bg-border" />
+          <StepDot active={step >= 3} done={false} n={3} label="السنة الدراسية" />
         </div>
 
         {step === 1 ? (
+          <section className="mx-auto max-w-xl">
+            <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اكتب <span className="text-gradient-gold">بياناتك</span></h1>
+            <p className="mt-2 text-center text-muted-foreground">محتاجين البيانات دي لتأكيد حسابك والتواصل معاك.</p>
+            <div className="mt-8 grid gap-4 rounded-3xl border border-border bg-card p-6 shadow-card">
+              <label className="grid gap-2 text-right">
+                <span className="text-sm font-bold">الاسم بالكامل</span>
+                <input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="مثال: أحمد محمد علي"
+                  className="rounded-xl border border-border bg-background px-4 py-3 text-right outline-none focus:border-primary"
+                />
+              </label>
+
+              <PhoneField label="رقم الهاتف" value={phone} onChange={(v) => setPhone(digits(v))} />
+              <PhoneField label="رقم ولي الأمر" value={parentPhone} onChange={(v) => setParentPhone(digits(v))} />
+              <PhoneField label="رقم الواتساب" value={whatsapp} onChange={(v) => setWhatsapp(digits(v))} />
+
+              <button
+                onClick={submitInfo}
+                disabled={!infoValid}
+                className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-6 py-3 font-bold text-primary-foreground shadow-gold disabled:opacity-50"
+              >
+                التالي: اختيار المرحلة <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
+          </section>
+        ) : step === 2 ? (
           <section>
+            <button onClick={() => setStep(1)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع للبيانات</button>
             <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اختر <span className="text-gradient-gold">مرحلتك الدراسية</span></h1>
             <p className="mt-2 text-center text-muted-foreground">هنعرضلك المحتوى الخاص بمرحلتك بس.</p>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -99,7 +166,7 @@ function Onboarding() {
           </section>
         ) : (
           <section>
-            <button onClick={() => setStep(1)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع للمراحل</button>
+            <button onClick={() => setStep(2)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع للمراحل</button>
             <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اختر <span className="text-gradient-gold">سنتك الدراسية</span></h1>
             <p className="mt-2 text-center text-muted-foreground">{stages.find((s) => s.id === stageId)?.name}</p>
             <div className="mx-auto mt-8 grid max-w-xl gap-3">
@@ -119,6 +186,28 @@ function Onboarding() {
         )}
       </main>
     </div>
+  );
+}
+
+function PhoneField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const ok = value.length === 11;
+  return (
+    <label className="grid gap-2 text-right">
+      <span className="text-sm font-bold">{label}</span>
+      <div className="flex items-center overflow-hidden rounded-xl border border-border bg-background focus-within:border-primary" dir="ltr">
+        <span className="select-none border-e border-border bg-secondary px-3 py-3 text-sm font-extrabold text-muted-foreground">+20</span>
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          inputMode="numeric"
+          placeholder="01xxxxxxxxx"
+          className="flex-1 bg-transparent px-3 py-3 outline-none"
+        />
+      </div>
+      <span className={`text-xs font-bold ${value.length === 0 ? "text-muted-foreground" : ok ? "text-emerald-500" : "text-destructive"}`}>
+        {ok ? "تمام ✓" : `لازم 11 رقم بالظبط (${value.length}/11)`}
+      </span>
+    </label>
   );
 }
 

@@ -8,9 +8,6 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
-// الأقسام الحسّاسة اللي مش متاحة للأدمن الثانوي
-const FULL_ADMIN_ONLY = ["/admin/earnings", "/admin/security", "/admin/devices"];
-
 const navItems = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
   { to: "/admin/payments", label: "الدفع", icon: Wallet, exact: false },
@@ -92,7 +89,7 @@ function AdminLayout() {
           </div>
         </div>
         <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
-          {navItems.filter((item) => isFullAdmin || !FULL_ADMIN_ONLY.includes(item.to)).map((item) => {
+          {navItems.map((item) => {
             const active = item.exact
               ? location.pathname === item.to
               : location.pathname.startsWith(item.to);
