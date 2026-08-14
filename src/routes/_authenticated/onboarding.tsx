@@ -34,6 +34,11 @@ function Onboarding() {
   const [whatsapp, setWhatsapp] = useState("");
 
 
+  // تعبئة الاسم المسجّل مسبقًا
+  useEffect(() => {
+    if (profile?.full_name && !fullName) setFullName(profile.full_name);
+  }, [profile?.full_name]);
+
   // إعادة التوجيه حسب الدور/الحالة
   useEffect(() => {
     if (!rolesLoading && (isAdmin || isTeacher)) {
