@@ -127,7 +127,7 @@ export function ProtectedVideo({
         comp.attack.value = 0.004;
         comp.release.value = 0.22;
         const gain = ctx.createGain();
-        gain.value = 1;
+        gain.gain.value = 1;
         source.connect(comp);
         comp.connect(gain);
         gain.connect(ctx.destination);
