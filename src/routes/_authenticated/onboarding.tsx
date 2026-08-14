@@ -23,9 +23,16 @@ function Onboarding() {
   const { data: profile, isLoading: profileLoading } = useProfile();
   const update = useUpdateProfile();
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [stageId, setStageId] = useState<string | null>(null);
   const [level, setLevel] = useState<Level | null>(null);
+
+  // بيانات الحساب
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [parentPhone, setParentPhone] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+
 
   // إعادة التوجيه حسب الدور/الحالة
   useEffect(() => {
