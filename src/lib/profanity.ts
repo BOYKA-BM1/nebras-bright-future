@@ -44,12 +44,12 @@ const NORMALIZED_BANNED = [...new Set(BANNED.map((w) => normalize(w)).filter((w)
 export function findProfanity(text: string): string | null {
   const s = normalize(text);
   if (!s) return null;
-  for (let i = 0; i < NORMALIZED_BANNED.length; i++) {
-    const w = NORMALIZED_BANNED[i]!;
-    if (s.includes(w)) return BANNED[NORMALIZED_BANNED.indexOf(w)] ?? w;
+  for (const w of NORMALIZED_BANNED) {
+    if (s.includes(w)) return w;
   }
   return null;
 }
+
 
 export function isClean(text: string) {
   return findProfanity(text) === null;
