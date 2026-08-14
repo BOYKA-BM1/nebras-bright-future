@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
+import { isClean, PROFANITY_MESSAGE } from "@/lib/profanity";
+
 
 // الجداول الجديدة لسه مش في الأنواع المولّدة — نستخدم any مؤقتًا
 const t = (name: string) => (supabase.from as any)(name);
@@ -219,14 +221,46 @@ export function useClassMessages(room: string | null) {
     },
   });
 
+  // بثّ فوري: نضيف/نحذف الرسالة في الكاش مباشرة (أسرع من إعادة الجلب)
   useEffect(() => {
     if (!room) return;
+    const key = ["class-messages", room];
     const channel = supabase
       .channel(`class-${room}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "class_messages", filter: `room=eq.${room}` },
-        () => qc.invalidateQueries({ queryKey: ["class-messages", room] }),
+        { event: "INSERT", schema: "public", table: "class_messages", filter: `room=eq.${room}` },
+        async (payload) => {
+          const row = payload.new as ClassMessage;
+          let name = "طالب";
+          const cached = (qc.getQueryData(key) as (ClassMessage & { name: string })[] | undefined) ?? [];
+          const known = cached.find((m) => m.user_id === row.user_id);
+          if (known) name = known.name;
+          else {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", row.user_id)
+              .maybeSingle();
+            name = prof?.full_name || "طالب";
+          }
+          qc.setQueryData(key, (old: (ClassMessage & { name: string })[] | undefined) => {
+            const list = old ?? [];
+            if (list.some((m) => m.id === row.id)) return list;
+            return [...list.filter((m) => !m.id.startsWith("tmp-") || m.body !== row.body), { ...row, name }];
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "class_messages" },
+        (payload) => {
+          const old = payload.old as { id?: string };
+          if (!old?.id) return;
+          qc.setQueryData(key, (list: (ClassMessage & { name: string })[] | undefined) =>
+            (list ?? []).filter((m) => m.id !== old.id),
+          );
+        },
       )
       .subscribe();
     return () => {
@@ -240,16 +274,38 @@ export function useClassMessages(room: string | null) {
 export function useSendClassMessage() {
   const qc = useQueryClient();
   const { user } = useAuth();
+  const { data: profile } = useProfile();
   return useMutation({
     mutationFn: async ({ room, body }: { room: string; body: string }) => {
-      const clean = body.trim().slice(0, 1000);
+      const clean = body.trim().replace(/\s{3,}/g, "  ").slice(0, 1000);
       if (!clean) throw new Error("اكتب رسالتك أولًا.");
+      if (!isClean(clean)) throw new Error(PROFANITY_MESSAGE);
       const { error } = await t("class_messages").insert({ room, user_id: user!.id, body: clean });
       if (error) throw error;
+      return clean;
     },
+    // إظهار الرسالة فورًا قبل ردّ الخادم (إرسال سريع)
+    onMutate: async ({ room, body }) => {
+      const clean = body.trim().slice(0, 1000);
+      if (!clean || !isClean(clean) || !user) return;
+      const key = ["class-messages", room];
+      qc.setQueryData(key, (old: (ClassMessage & { name: string })[] | undefined) => [
+        ...(old ?? []),
+        {
+          id: `tmp-${Date.now()}`,
+          room,
+          user_id: user.id,
+          body: clean,
+          created_at: new Date().toISOString(),
+          name: profile?.full_name || "أنا",
+        },
+      ]);
+    },
+    onError: (_e, v) => qc.invalidateQueries({ queryKey: ["class-messages", v.room] }),
     onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ["class-messages", v.room] }),
   });
 }
+
 
 export function useDeleteClassMessage() {
   const qc = useQueryClient();
