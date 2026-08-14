@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useProfile } from "@/hooks/use-profile";
+import { isClean, PROFANITY_MESSAGE } from "@/lib/profanity";
+
 
 // الجداول الجديدة لسه مش في الأنواع المولّدة — نستخدم any مؤقتًا
 const t = (name: string) => (supabase.from as any)(name);
