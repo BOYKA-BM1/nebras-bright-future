@@ -10,7 +10,9 @@ export type AppRole =
   | "customer_service"
   | "secretary"
   | "montage"
-  | "psychologist";
+  | "psychologist"
+  | "photographer";
+
 
 export function useRoles() {
   const { user } = useAuth();
