@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, HeartHandshake, MessagesSquare } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { navLinks } from "@/data/site";
@@ -11,12 +11,14 @@ import { resolveImage } from "@/lib/catalog";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary } = useRoles();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
 
   // المدرّس والطاقم لا يظهر لهم قسم الدورات ولا المحاضرات (خاص بالطلاب فقط)
-  const isStaffAccount = !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary);
+  const isStaffAccount = !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary || isPhotographer);
+  // الطالب يشوف الغرفة النفسية وغرفة صفّه في كل مكان
+  const showRooms = !!user && !isStaffAccount;
   const links = isStaffAccount
     ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
     : navLinks;
@@ -66,6 +68,28 @@ export function Navbar() {
         <div className="hidden items-center gap-2 sm:flex">
           {user ? (
             <>
+              {showRooms && (
+                <>
+                  <Link
+                    to="/psych"
+                    className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold text-foreground transition-colors hover:bg-accent"
+                    aria-label="الغرفة النفسية"
+                    title="الغرفة النفسية"
+                  >
+                    <HeartHandshake className="h-4 w-4 text-primary" />
+                    <span className="hidden md:inline">الغرفة النفسية</span>
+                  </Link>
+                  <Link
+                    to="/community"
+                    className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold text-foreground transition-colors hover:bg-accent"
+                    aria-label="غرفة صفّي"
+                    title="غرفة صفّي"
+                  >
+                    <MessagesSquare className="h-4 w-4 text-primary" />
+                    <span className="hidden md:inline">غرفة صفّي</span>
+                  </Link>
+                </>
+              )}
               <Link
                 to="/dashboard"
                 className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary transition-colors hover:bg-primary/20"
@@ -127,6 +151,24 @@ export function Navbar() {
               </li>
             ))}
           </ul>
+          {showRooms && (
+            <div className="mt-3 flex gap-2">
+              <Link
+                to="/psych"
+                onClick={() => setOpen(false)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold"
+              >
+                <HeartHandshake className="h-4 w-4 text-primary" /> الغرفة النفسية
+              </Link>
+              <Link
+                to="/community"
+                onClick={() => setOpen(false)}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold"
+              >
+                <MessagesSquare className="h-4 w-4 text-primary" /> غرفة صفّي
+              </Link>
+            </div>
+          )}
           <div className="mt-3 flex gap-2">
             {user ? (
               <>
