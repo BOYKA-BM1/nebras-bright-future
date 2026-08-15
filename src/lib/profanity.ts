@@ -69,8 +69,13 @@ export function findProfanity(text: string): string | null {
   for (const w of NORMALIZED_BANNED) {
     if (s.includes(w)) return w;
   }
+  for (const re of BANNED_PATTERNS) {
+    const m = re.exec(s);
+    if (m) return m[0];
+  }
   return null;
 }
+
 
 
 export function isClean(text: string) {
