@@ -1526,6 +1526,7 @@ export type Database = {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
       }
+      is_photographer: { Args: { _user_id: string }; Returns: boolean }
       is_support_staff: { Args: { _user_id: string }; Returns: boolean }
       leaderboard: {
         Args: { _limit?: number }
@@ -1583,6 +1584,7 @@ export type Database = {
         | "montage"
         | "psychologist"
         | "admin_secondary"
+        | "photographer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1719,6 +1721,7 @@ export const Constants = {
         "montage",
         "psychologist",
         "admin_secondary",
+        "photographer",
       ],
     },
   },
