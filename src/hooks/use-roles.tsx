@@ -45,10 +45,13 @@ export function useRoles() {
     isSecretary: roles.includes("secretary"),
     isMontage: roles.includes("montage"),
     isPsychologist: roles.includes("psychologist"),
+    isPhotographer: roles.includes("photographer"),
     isStaff:
       roles.includes("customer_service") ||
       roles.includes("secretary") ||
-      roles.includes("montage"),
+      roles.includes("montage") ||
+      roles.includes("photographer"),
     isLoading: query.isLoading,
   };
 }
+
