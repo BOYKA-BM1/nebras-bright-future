@@ -34,11 +34,12 @@ const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
   customer_service: { text: "خدمة عملاء", cls: "bg-emerald-500/15 text-emerald-400" },
   secretary: { text: "سكرتير", cls: "bg-purple-500/15 text-purple-400" },
   montage: { text: "مونتاج", cls: "bg-orange-500/15 text-orange-400" },
+  photographer: { text: "مصوّر", cls: "bg-cyan-500/15 text-cyan-400" },
 };
 
 
 function roleLabel(roles: string[]) {
-  const order: AppRoleName[] = ["admin", "admin_secondary", "psychologist", "teacher", "customer_service", "secretary", "montage"];
+  const order: AppRoleName[] = ["admin", "admin_secondary", "psychologist", "teacher", "customer_service", "secretary", "montage", "photographer"];
   for (const r of order) {
     if (roles.includes(r)) return ROLE_META[r];
   }
