@@ -18,7 +18,6 @@ export function RoleLock({ children }: { children: React.ReactNode }) {
     isMontage,
     isCustomerService,
     isSecretary,
-    isPhotographer,
     isLoading,
   } = useRoles();
   const location = useLocation();
@@ -42,9 +41,6 @@ export function RoleLock({ children }: { children: React.ReactNode }) {
       allowed = ["/staff"];
     } else if (isSecretary) {
       home = "/staff/students";
-      allowed = ["/staff"];
-    } else if (isPhotographer) {
-      home = "/staff/photographer";
       allowed = ["/staff"];
     }
   }

@@ -35,7 +35,6 @@ import { Route as AuthenticatedAiIndexRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedStaffSupportRouteImport } from './routes/_authenticated/staff.support'
 import { Route as AuthenticatedStaffStudentsRouteImport } from './routes/_authenticated/staff.students'
-import { Route as AuthenticatedStaffPhotographerRouteImport } from './routes/_authenticated/staff.photographer'
 import { Route as AuthenticatedStaffMontageRouteImport } from './routes/_authenticated/staff.montage'
 import { Route as AuthenticatedStaffComplaintsRouteImport } from './routes/_authenticated/staff.complaints'
 import { Route as AuthenticatedManageCourseIdRouteImport } from './routes/_authenticated/manage.$courseId'
@@ -185,12 +184,6 @@ const AuthenticatedStaffStudentsRoute =
     path: '/students',
     getParentRoute: () => AuthenticatedStaffRoute,
   } as any)
-const AuthenticatedStaffPhotographerRoute =
-  AuthenticatedStaffPhotographerRouteImport.update({
-    id: '/photographer',
-    path: '/photographer',
-    getParentRoute: () => AuthenticatedStaffRoute,
-  } as any)
 const AuthenticatedStaffMontageRoute =
   AuthenticatedStaffMontageRouteImport.update({
     id: '/montage',
@@ -324,7 +317,6 @@ export interface FileRoutesByFullPath {
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/staff/complaints': typeof AuthenticatedStaffComplaintsRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
-  '/staff/photographer': typeof AuthenticatedStaffPhotographerRoute
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -365,7 +357,6 @@ export interface FileRoutesByTo {
   '/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/staff/complaints': typeof AuthenticatedStaffComplaintsRoute
   '/staff/montage': typeof AuthenticatedStaffMontageRoute
-  '/staff/photographer': typeof AuthenticatedStaffPhotographerRoute
   '/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/staff/support': typeof AuthenticatedStaffSupportRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -411,7 +402,6 @@ export interface FileRoutesById {
   '/_authenticated/manage/$courseId': typeof AuthenticatedManageCourseIdRoute
   '/_authenticated/staff/complaints': typeof AuthenticatedStaffComplaintsRoute
   '/_authenticated/staff/montage': typeof AuthenticatedStaffMontageRoute
-  '/_authenticated/staff/photographer': typeof AuthenticatedStaffPhotographerRoute
   '/_authenticated/staff/students': typeof AuthenticatedStaffStudentsRoute
   '/_authenticated/staff/support': typeof AuthenticatedStaffSupportRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -457,7 +447,6 @@ export interface FileRouteTypes {
     | '/manage/$courseId'
     | '/staff/complaints'
     | '/staff/montage'
-    | '/staff/photographer'
     | '/staff/students'
     | '/staff/support'
     | '/admin/'
@@ -498,7 +487,6 @@ export interface FileRouteTypes {
     | '/manage/$courseId'
     | '/staff/complaints'
     | '/staff/montage'
-    | '/staff/photographer'
     | '/staff/students'
     | '/staff/support'
     | '/admin'
@@ -543,7 +531,6 @@ export interface FileRouteTypes {
     | '/_authenticated/manage/$courseId'
     | '/_authenticated/staff/complaints'
     | '/_authenticated/staff/montage'
-    | '/_authenticated/staff/photographer'
     | '/_authenticated/staff/students'
     | '/_authenticated/staff/support'
     | '/_authenticated/admin/'
@@ -748,13 +735,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStaffStudentsRouteImport
       parentRoute: typeof AuthenticatedStaffRoute
     }
-    '/_authenticated/staff/photographer': {
-      id: '/_authenticated/staff/photographer'
-      path: '/photographer'
-      fullPath: '/staff/photographer'
-      preLoaderRoute: typeof AuthenticatedStaffPhotographerRouteImport
-      parentRoute: typeof AuthenticatedStaffRoute
-    }
     '/_authenticated/staff/montage': {
       id: '/_authenticated/staff/montage'
       path: '/montage'
@@ -920,7 +900,6 @@ const AuthenticatedAiRouteWithChildren = AuthenticatedAiRoute._addFileChildren(
 interface AuthenticatedStaffRouteChildren {
   AuthenticatedStaffComplaintsRoute: typeof AuthenticatedStaffComplaintsRoute
   AuthenticatedStaffMontageRoute: typeof AuthenticatedStaffMontageRoute
-  AuthenticatedStaffPhotographerRoute: typeof AuthenticatedStaffPhotographerRoute
   AuthenticatedStaffStudentsRoute: typeof AuthenticatedStaffStudentsRoute
   AuthenticatedStaffSupportRoute: typeof AuthenticatedStaffSupportRoute
   AuthenticatedStaffIndexRoute: typeof AuthenticatedStaffIndexRoute
@@ -929,7 +908,6 @@ interface AuthenticatedStaffRouteChildren {
 const AuthenticatedStaffRouteChildren: AuthenticatedStaffRouteChildren = {
   AuthenticatedStaffComplaintsRoute: AuthenticatedStaffComplaintsRoute,
   AuthenticatedStaffMontageRoute: AuthenticatedStaffMontageRoute,
-  AuthenticatedStaffPhotographerRoute: AuthenticatedStaffPhotographerRoute,
   AuthenticatedStaffStudentsRoute: AuthenticatedStaffStudentsRoute,
   AuthenticatedStaffSupportRoute: AuthenticatedStaffSupportRoute,
   AuthenticatedStaffIndexRoute: AuthenticatedStaffIndexRoute,

@@ -127,7 +127,6 @@ export const ASSIGNABLE_ROLES = [
   "customer_service",
   "secretary",
   "montage",
-  "photographer",
 ] as const;
 
 export const setUserRole = createServerFn({ method: "POST" })

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LogOut, Home, ShieldAlert, Film, Users, MessageCircle, AlertOctagon, Camera } from "lucide-react";
+import { Loader2, LogOut, Home, ShieldAlert, Film, Users, MessageCircle, AlertOctagon } from "lucide-react";
 import { ComplaintButton } from "@/components/site/ComplaintButton";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -13,12 +13,11 @@ const ROLE_LABEL: Record<string, string> = {
   montage: "لوحة المونتاج",
   customer_service: "خدمة العملاء",
   secretary: "السكرتارية",
-  photographer: "لوحة المصوّر",
 };
 
 function StaffLayout() {
   const { confirmSignOut } = useAuth();
-  const { isAdmin, isMontage, isCustomerService, isSecretary, isPhotographer, isLoading } = useRoles();
+  const { isAdmin, isMontage, isCustomerService, isSecretary, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -30,7 +29,7 @@ function StaffLayout() {
     );
   }
 
-  const allowed = isAdmin || isMontage || isCustomerService || isSecretary || isPhotographer;
+  const allowed = isAdmin || isMontage || isCustomerService || isSecretary;
   if (!allowed) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
@@ -47,7 +46,6 @@ function StaffLayout() {
   }
 
   const nav: { to: string; label: string; icon: typeof Film }[] = [];
-  if (isPhotographer || isAdmin) nav.push({ to: "/staff/photographer", label: "التصوير", icon: Camera });
   if (isMontage || isAdmin) nav.push({ to: "/staff/montage", label: "المونتاج", icon: Film });
   if (isCustomerService || isSecretary || isAdmin) nav.push({ to: "/staff/students", label: "الطلاب", icon: Users });
   if (isCustomerService || isAdmin) nav.push({ to: "/staff/support", label: "الاستفسارات", icon: MessageCircle });
@@ -57,7 +55,6 @@ function StaffLayout() {
     (isMontage && ROLE_LABEL.montage) ||
     (isCustomerService && ROLE_LABEL.customer_service) ||
     (isSecretary && ROLE_LABEL.secretary) ||
-    (isPhotographer && ROLE_LABEL.photographer) ||
     "لوحة الطاقم";
 
   const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };

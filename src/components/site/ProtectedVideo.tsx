@@ -89,18 +89,9 @@ export function ProtectedVideo({
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setQualities(
-            hls.levels
-              .map((l, i) => ({
-                id: i,
-                height: l.height || Math.round((l.bitrate || 0) / 1000),
-                label: `${l.height || Math.round((l.bitrate || 0) / 1000)}p`,
-              }))
-              // من أقل جودة لأعلى جودة زي اليوتيوب
-              .sort((a, b) => a.height - b.height)
-              .map(({ id, label }) => ({ id, label })),
+            hls.levels.map((l, i) => ({ id: i, label: `${l.height || Math.round((l.bitrate || 0) / 1000)}p` })),
           );
         });
-
         hlsRef.current = hls as unknown as { destroy: () => void; currentLevel: number };
       } else if (canNative) {
         video.src = embed.src;
