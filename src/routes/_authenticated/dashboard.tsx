@@ -96,8 +96,9 @@ function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <div className="min-h-screen bg-hero">
+      <header className="sticky top-0 z-40 border-b border-border/50 glass-panel">
+
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
           <div className="flex flex-wrap items-center gap-2">
@@ -123,8 +124,12 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <h1 className="text-3xl font-extrabold">أهلًا، <span className="text-gradient-gold">{name}</span> 👋</h1>
-        <p className="mt-2 text-muted-foreground">دي لوحة التحكم بتاعتك — كمّل تعلّمك من هنا.</p>
+        <section className="glass-card relative overflow-hidden rounded-3xl p-6 sm:p-8">
+          <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
+          <h1 className="relative text-3xl font-extrabold">أهلًا، <span className="text-gradient-cyan">{name}</span> 👋</h1>
+          <p className="relative mt-2 text-muted-foreground">دي لوحة التحكم بتاعتك — كمّل تعلّمك من هنا.</p>
+        </section>
+
 
         {!completion.complete && (
           <Link to="/profile" className="mt-6 flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 transition-colors hover:bg-primary/15">
@@ -181,7 +186,7 @@ function Dashboard() {
             {myCourses.map((c) => {
               const img = resolveImage(c.image_url) ?? resolveImage(c.teacher?.image_url);
               return (
-                <article key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                <article key={c.id} className="glass-card glass-card-hover overflow-hidden rounded-3xl">
                   {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
                   <div className="p-4">
                     <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>
@@ -285,10 +290,11 @@ function SupportSection() {
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
+    <div className="glass-card glass-card-hover rounded-3xl p-5">
+      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary"><Icon className="h-5 w-5" /></span>
       <div className="mt-4 text-2xl font-extrabold">{value}</div>
       <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }
+
