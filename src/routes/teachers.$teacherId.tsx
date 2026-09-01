@@ -129,7 +129,7 @@ function TeacherDetail() {
               {teacherCourses.map((course) => {
                 const cimg = resolveImage(course.image_url) ?? img;
                 return (
-                  <article key={course.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1 hover:border-primary/50">
+                  <article key={course.id} className="flex flex-col overflow-hidden rounded-2xl glass-card transition-all hover:-translate-y-1 hover:border-primary/50">
                     {cimg ? (
                       <img src={cimg} alt={course.title} className="h-36 w-full object-cover" />
                     ) : (

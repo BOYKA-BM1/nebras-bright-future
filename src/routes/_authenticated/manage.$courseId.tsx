@@ -300,7 +300,7 @@ function ManageCourse() {
         </span>
 
         {/* البث المباشر */}
-        <section className="mt-8 rounded-2xl border border-border bg-card shadow-card">
+        <section className="mt-8 rounded-2xl glass-card">
           <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary/40 px-5 py-3">
             <div className="flex items-center gap-2 font-bold">
               <Radio className="h-4 w-4 text-primary" /> البث المباشر
@@ -360,7 +360,7 @@ function ManageCourse() {
         ) : (
           <div className="mt-8 space-y-5">
             {realSections.map((s) => (
-              <div key={s.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+              <div key={s.id} className="overflow-hidden rounded-2xl glass-card">
                 <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary/40 px-5 py-3">
                   <div className="flex items-center gap-2 font-bold">
                     <GripVertical className="h-4 w-4 text-muted-foreground" /> {s.title}

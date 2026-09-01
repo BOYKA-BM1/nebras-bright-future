@@ -156,7 +156,7 @@ function StagePage() {
                   {stageCourses.map((course) => {
                     const teacherImg = resolveImage(course.teacher?.image_url);
                     return (
-                      <article key={course.id} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1.5 hover:border-primary/50">
+                      <article key={course.id} className="group flex flex-col overflow-hidden rounded-2xl glass-card transition-all hover:-translate-y-1.5 hover:border-primary/50">
                         <div className="relative flex items-center gap-3 border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-5">
                           {teacherImg ? (
                             <img src={teacherImg} alt={course.teacher?.name ?? ""} loading="lazy" width={112} height={112} className="h-14 w-14 rounded-full border-2 border-primary/50 object-cover" />
