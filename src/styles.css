@@ -196,3 +196,40 @@
 .animate-pulse-glow {
   animation: pulse-glow 5s ease-in-out infinite;
 }
+
+@layer utilities {
+  .glass-card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .glass-card-hover {
+    transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+  }
+
+  .glass-card-hover:hover {
+    transform: translateY(-2px);
+    border-color: oklch(0.82 0.13 195 / 0.35);
+    box-shadow: var(--shadow-card), var(--glow-gold);
+  }
+
+  .glass-panel {
+    background: oklch(0.18 0.03 250 / 0.75);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+  }
+
+  .text-gradient-cyan {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
