@@ -59,7 +59,7 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-border bg-card shadow-card"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl glass-card"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border/60 p-5">

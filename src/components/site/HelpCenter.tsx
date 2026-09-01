@@ -27,7 +27,7 @@ export function HelpCenter() {
             return (
               <div
                 key={faq.q}
-                className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
+                className="overflow-hidden rounded-2xl glass-card"
               >
                 <button
                   onClick={() => setActive(open ? null : i)}

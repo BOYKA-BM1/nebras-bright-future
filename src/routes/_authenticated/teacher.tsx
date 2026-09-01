@@ -246,7 +246,7 @@ function TeacherDashboard() {
             {myCourses.map((c) => {
               const img = resolveImage(c.image_url) ?? resolveImage(c.teacherImage);
               return (
-                <div key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+                <div key={c.id} className="overflow-hidden rounded-2xl glass-card">
                   {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
                   <div className="p-4">
                     <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>

@@ -118,7 +118,7 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
               return (
                 <article
                   key={course.id}
-                  className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1.5 hover:border-primary/50"
+                  className="group flex flex-col overflow-hidden rounded-2xl glass-card transition-all hover:-translate-y-1.5 hover:border-primary/50"
                 >
                   <div className="relative flex items-center gap-3 border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-5">
                     {teacherImg ? (

@@ -228,7 +228,7 @@ function CourseDetail() {
 
           {/* بطاقة الشراء */}
           <aside className="lg:col-span-1">
-            <div className="sticky top-24 overflow-hidden rounded-2xl border border-border bg-card shadow-card">
+            <div className="sticky top-24 overflow-hidden rounded-2xl glass-card">
               {img ? (
                 <img src={img} alt={course.title} className="h-44 w-full object-cover" />
               ) : (
