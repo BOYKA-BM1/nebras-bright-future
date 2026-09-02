@@ -459,6 +459,44 @@ export type Database = {
           },
         ]
       }
+      lesson_activity_log: {
+        Row: {
+          action: string
+          actor: string | null
+          created_at: string
+          id: string
+          lesson_id: string
+          new_state: string | null
+          previous_state: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          lesson_id: string
+          new_state?: string | null
+          previous_state?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          new_state?: string | null
+          previous_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_activity_log_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_progress: {
         Row: {
           completed: boolean
@@ -518,6 +556,47 @@ export type Database = {
           },
           {
             foreignKeyName: "lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_video_versions: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_id: string
+          notes: string | null
+          status: string
+          uploader: string | null
+          version_number: number
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_id: string
+          notes?: string | null
+          status?: string
+          uploader?: string | null
+          version_number: number
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          notes?: string | null
+          status?: string
+          uploader?: string | null
+          version_number?: number
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_video_versions_lesson_id_fkey"
             columns: ["lesson_id"]
             isOneToOne: false
             referencedRelation: "lessons"
@@ -737,6 +816,30 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_children: {
+        Row: {
+          created_at: string
+          id: string
+          parent_user_id: string
+          status: string
+          student_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parent_user_id: string
+          status?: string
+          student_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parent_user_id?: string
+          status?: string
+          student_user_id?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           id: string
@@ -912,6 +1015,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           birthdate: string | null
+          child_link_code: string | null
           created_at: string
           device_id: string | null
           device_label: string | null
@@ -930,6 +1034,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           birthdate?: string | null
+          child_link_code?: string | null
           created_at?: string
           device_id?: string | null
           device_label?: string | null
@@ -948,6 +1053,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           birthdate?: string | null
+          child_link_code?: string | null
           created_at?: string
           device_id?: string | null
           device_label?: string | null
@@ -1557,6 +1663,7 @@ export type Database = {
         }[]
       }
       gen_enrollment_code: { Args: never; Returns: string }
+      get_or_create_child_link_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1571,6 +1678,10 @@ export type Database = {
         Args: { _course_id: string; _user_id: string }
         Returns: boolean
       }
+      is_parent_of: {
+        Args: { _parent_id: string; _student_id: string }
+        Returns: boolean
+      }
       is_photographer: { Args: { _user_id: string }; Returns: boolean }
       is_support_staff: { Args: { _user_id: string }; Returns: boolean }
       leaderboard: {
@@ -1581,6 +1692,22 @@ export type Database = {
           user_id: string
           xp: number
         }[]
+      }
+      link_child_by_code: {
+        Args: { _code: string }
+        Returns: {
+          created_at: string
+          id: string
+          parent_user_id: string
+          status: string
+          student_user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "parent_children"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       my_class_room: { Args: never; Returns: string }
       my_xp: { Args: never; Returns: number }
@@ -1597,6 +1724,37 @@ export type Database = {
           teachers: number
           visits: number
         }[]
+      }
+      record_video_watch_event: {
+        Args: {
+          _course_id: string
+          _duration: number
+          _event: string
+          _lesson_id: string
+          _position: number
+        }
+        Returns: {
+          completed: boolean
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          id: string
+          last_position_seconds: number
+          last_watched_at: string | null
+          lesson_id: string
+          play_count: number
+          total_watched_seconds: number
+          updated_at: string
+          user_id: string
+          watch_percent: number
+          watched_seconds: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "lesson_progress"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       reset_device: { Args: { _user_id: string }; Returns: undefined }
       review_payment_request: {
@@ -1630,6 +1788,7 @@ export type Database = {
         | "psychologist"
         | "admin_secondary"
         | "photographer"
+        | "parent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1767,6 +1926,7 @@ export const Constants = {
         "psychologist",
         "admin_secondary",
         "photographer",
+        "parent",
       ],
     },
   },
