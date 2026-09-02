@@ -12,10 +12,10 @@ import { preAuthGuard, logAudit } from "@/lib/security.functions";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول | نبراس التعليمية" },
+      { title: "تسجيل الدخول | Edu Mindly التعليمية" },
       {
         name: "description",
-        content: "سجّل دخولك إلى منصة نبراس بالبريد الإلكتروني أو حساب جوجل أو آبل وابدأ التعلم.",
+        content: "سجّل دخولك إلى منصة Edu Mindly بالبريد الإلكتروني أو حساب جوجل أو آبل وابدأ التعلم.",
       },
     ],
   }),

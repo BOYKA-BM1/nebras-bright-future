@@ -1,13 +1,26 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Loader2, CheckCircle2, Circle, Lock, ChevronRight,
-  PlayCircle, Download,
+  PlayCircle, Download, Bookmark as BookmarkIcon, StickyNote, Plus, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/site/Logo";
-import { useCourse, useCourseContent, useEnrollment, useProgress, useUpdateProgress } from "@/hooks/use-content";
+import {
+  useCompletionThreshold,
+  useCourse,
+  useCourseContent,
+  useEnrollment,
+  useProgress,
+  useUpdateProgress,
+  useRecordWatchEvent,
+} from "@/hooks/use-content";
+import { useClaimCertificate } from "@/hooks/use-certificates";
+import { useLessonNotes, useNoteActions } from "@/hooks/use-notes";
+import { useIsBookmarked, useToggleBookmark } from "@/hooks/use-bookmarks";
 import { useLiveSessions } from "@/hooks/use-live";
 import { toEmbedUrl, getLessonPdfs, type Lesson } from "@/lib/catalog";
 import { ProtectedVideo } from "@/components/site/ProtectedVideo";
@@ -28,6 +41,8 @@ function LearnPage() {
   const { data: progress = [] } = useProgress(courseId);
   const { data: liveSessions = [] } = useLiveSessions(courseId);
   const updateProgress = useUpdateProgress(courseId);
+  const recordWatchEvent = useRecordWatchEvent(courseId);
+  const { data: completionThreshold = 90 } = useCompletionThreshold();
   const { data: profile } = useProfile();
   const { user } = useAuth();
   const { obscured } = useContentProtection();
@@ -38,6 +53,14 @@ function LearnPage() {
   }, [profile?.full_name, profile?.phone, user?.email]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [downloadingUrl, setDownloadingUrl] = useState<string | null>(null);
+  // تتبّع مشاهدة الفيديو الحالي: أعلى نسبة مشاهدة، آخر وقت أُرسل فيه تحديث، وهل أُكمل تلقائيًا بالفعل
+  const watchRef = useRef({ lessonId: "", maxPercent: 0, lastSentAt: 0, autoCompleted: false });
+  const currentTimeRef = useRef(0);
+  const [seekTarget, setSeekTarget] = useState<number | null>(null);
+
+  useEffect(() => {
+    watchRef.current = { lessonId: activeId ?? "", maxPercent: 0, lastSentAt: 0, autoCompleted: false };
+  }, [activeId]);
 
   const downloadPdf = async (url: string, title: string) => {
     setDownloadingUrl(url);
@@ -150,16 +173,43 @@ function LearnPage() {
                 title={active?.title}
                 watermark={watermark}
                 obscured={obscured}
-                onTimeUpdate={(t) => {
-                  if (active && Math.round(t) % 15 === 0 && t > 0) updateProgress.mutate({ lessonId: active.id, position: t });
+                onPlay={() => active && recordWatchEvent.mutate({ lessonId: active.id, event: "play", position: 0, duration: 0 })}
+                onTimeUpdate={(t, duration) => {
+                  if (!active) return;
+                  currentTimeRef.current = t;
+                  const w = watchRef.current;
+                  const percent = duration > 0 ? Math.min(100, (t / duration) * 100) : 0;
+                  if (percent > w.maxPercent) w.maxPercent = percent;
+
+                  const now = Date.now();
+                  const dueForTick = Math.round(t) % 15 === 0 && t > 0 && now - w.lastSentAt > 5000;
+                  const justCrossedThreshold = !w.autoCompleted && percent >= completionThreshold;
+
+                  if (dueForTick || justCrossedThreshold) {
+                    w.lastSentAt = now;
+                    if (justCrossedThreshold) w.autoCompleted = true;
+                    // الحساب الفعلي (النسبة، الوقت المتراكم، الاكتمال) يتم على الخادم داخل الـRPC،
+                    // مش بالثقة في قيم من المتصفح — نبعت بس الموضع والمدة الحاليين.
+                    recordWatchEvent.mutate({
+                      lessonId: active.id,
+                      event: justCrossedThreshold ? "ended" : "heartbeat",
+                      position: t,
+                      duration,
+                    });
+                  }
                 }}
-                onEnded={() => active && updateProgress.mutate({ lessonId: active.id, completed: true })}
+                onEnded={() => {
+                  if (!active) return;
+                  watchRef.current.autoCompleted = true;
+                  recordWatchEvent.mutate({ lessonId: active.id, event: "ended", position: active.duration_minutes * 60, duration: active.duration_minutes * 60 });
+                }}
                 emptyLabel={
                   <>
                     <PlayCircle className="h-12 w-12" />
                     <span className="mr-2">لا يوجد فيديو لهذا الدرس بعد.</span>
                   </>
                 }
+                seekToSeconds={seekTarget}
               />
             )}
 
@@ -180,6 +230,7 @@ function LearnPage() {
                       {completedIds.has(active.id) ? "تم الإكمال" : "تحديد كمكتمل"}
                     </button>
                   )}
+                  <BookmarkButton targetType="lesson" targetId={active.id} />
                 </div>
                 {getLessonPdfs(active).length > 0 && (
                   <div className="mt-4 grid gap-2">
@@ -199,6 +250,7 @@ function LearnPage() {
                   </div>
                 )}
 
+                <LessonNotesPanel lessonId={active.id} courseId={courseId} getCurrentTime={() => currentTimeRef.current} onJump={(s) => setSeekTarget(s + Math.random() / 1000)} />
               </div>
             )}
           </div>
@@ -213,6 +265,7 @@ function LearnPage() {
               <span className="text-sm font-bold text-primary">{pct}%</span>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">{completedIds.size} من {lessons.length} درس</p>
+            {pct === 100 && <ClaimCertificateButton courseId={courseId} />}
 
             <div className="mt-5 space-y-4">
               {sections.map((s) => (
@@ -245,6 +298,109 @@ function LearnPage() {
           </div>
         </aside>
       </div>
+    </div>
+  );
+}
+
+/** يظهر لمّا الطالب يكمّل كل دروس الدورة — يطلب الشهادة عبر RPC يتحقق من الاكتمال فعليًا على الخادم */
+function ClaimCertificateButton({ courseId }: { courseId: string }) {
+  const claim = useClaimCertificate();
+  const [claimed, setClaimed] = useState(false);
+
+  if (claimed) {
+    return (
+      <Link to="/certificates" className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-gold">
+        🎓 شاهد شهادتك
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      onClick={() =>
+        claim.mutate(courseId, {
+          onSuccess: () => { setClaimed(true); toast.success("مبروك! 🎉 حصلت على شهادة إتمام الدورة"); },
+          onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر إصدار الشهادة."),
+        })
+      }
+      disabled={claim.isPending}
+      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-60"
+    >
+      {claim.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "🎓"} استلام شهادة الإتمام
+    </button>
+  );
+}
+
+/** زر إضافة/إزالة الدرس أو الدورة من المفضّلة */
+function BookmarkButton({ targetType, targetId }: { targetType: "lesson" | "course"; targetId: string }) {
+  const isBookmarked = useIsBookmarked(targetType, targetId);
+  const toggle = useToggleBookmark();
+  return (
+    <button
+      onClick={() => toggle.mutate({ targetType, targetId, isBookmarked })}
+      className={`flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-bold transition-colors ${
+        isBookmarked ? "border-primary/40 bg-primary/10 text-primary" : "border-border hover:bg-accent"
+      }`}
+    >
+      <BookmarkIcon className={`h-4 w-4 ${isBookmarked ? "fill-current" : ""}`} />
+      {isBookmarked ? "في المفضّلة" : "إضافة للمفضّلة"}
+    </button>
+  );
+}
+
+/** ملاحظاتي على الدرس — مربوطة بلحظة معيّنة من الفيديو، مع إمكانية القفز ليها */
+function LessonNotesPanel({
+  lessonId, courseId, getCurrentTime, onJump,
+}: {
+  lessonId: string;
+  courseId: string;
+  getCurrentTime: () => number;
+  onJump: (seconds: number) => void;
+}) {
+  const { data: notes = [] } = useLessonNotes(lessonId);
+  const { add, remove } = useNoteActions(lessonId);
+  const [content, setContent] = useState("");
+
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
+
+  const handleAdd = () => {
+    if (!content.trim()) return;
+    add.mutate(
+      { courseId, content: content.trim(), positionSeconds: Math.floor(getCurrentTime()) },
+      { onSuccess: () => setContent(""), onError: () => toast.error("تعذّر حفظ الملاحظة.") },
+    );
+  };
+
+  return (
+    <div className="mt-6 border-t border-border/60 pt-4">
+      <p className="flex items-center gap-2 text-sm font-bold"><StickyNote className="h-4 w-4 text-primary" /> ملاحظاتي على الدرس</p>
+      <div className="mt-2 flex gap-2">
+        <Input
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+          placeholder="اكتب ملاحظة عند اللحظة الحالية من الفيديو..."
+        />
+        <Button onClick={handleAdd} disabled={add.isPending} size="sm" className="shrink-0 gap-1.5">
+          {add.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} إضافة
+        </Button>
+      </div>
+
+      {notes.length > 0 && (
+        <div className="mt-3 space-y-2">
+          {notes.map((n) => (
+            <div key={n.id} className="flex items-start gap-2 rounded-xl border border-border/60 bg-background/50 p-3">
+              {n.position_seconds != null && (
+                <button onClick={() => onJump(n.position_seconds!)} className="shrink-0 rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary hover:bg-primary/20">
+                  {fmt(n.position_seconds)}
+                </button>
+              )}
+              <p className="flex-1 text-sm">{n.content}</p>
+              <button onClick={() => remove.mutate(n.id)} className="shrink-0 text-muted-foreground hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

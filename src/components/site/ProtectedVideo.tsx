@@ -22,16 +22,22 @@ export function ProtectedVideo({
   obscured,
   onTimeUpdate,
   onEnded,
+  onPlay,
   emptyLabel,
+  seekToSeconds,
 }: {
   embed: VideoEmbed;
   title?: string;
   watermark: string;
   autoPlay?: boolean;
   obscured?: boolean;
-  onTimeUpdate?: (t: number) => void;
+  onTimeUpdate?: (t: number, duration: number) => void;
   onEnded?: () => void;
+  /** يُستدعى عند كل بدء تشغيل (Play) — لحساب عدد مرّات المشاهدة */
+  onPlay?: () => void;
   emptyLabel?: React.ReactNode;
+  /** غيّر القيمة دي (حتى لو نفس الرقم، زوّد بيها micro-increment) عشان تنقل التشغيل لثانية معيّنة — يُستخدم للقفز لملاحظة محفوظة */
+  seekToSeconds?: number | null;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -57,6 +63,13 @@ export function ProtectedVideo({
   useEffect(() => {
     if (obscured && videoRef.current) videoRef.current.pause();
   }, [obscured]);
+
+  useEffect(() => {
+    if (seekToSeconds == null || !videoRef.current) return;
+    videoRef.current.currentTime = seekToSeconds;
+    videoRef.current.play().catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seekToSeconds]);
 
   /* ===== HLS: تحميل المستويات وإتاحة اختيار الجودة ===== */
   useEffect(() => {
@@ -89,9 +102,18 @@ export function ProtectedVideo({
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setQualities(
-            hls.levels.map((l, i) => ({ id: i, label: `${l.height || Math.round((l.bitrate || 0) / 1000)}p` })),
+            hls.levels
+              .map((l, i) => ({
+                id: i,
+                height: l.height || Math.round((l.bitrate || 0) / 1000),
+                label: `${l.height || Math.round((l.bitrate || 0) / 1000)}p`,
+              }))
+              // من أقل جودة لأعلى جودة زي اليوتيوب
+              .sort((a, b) => a.height - b.height)
+              .map(({ id, label }) => ({ id, label })),
           );
         });
+
         hlsRef.current = hls as unknown as { destroy: () => void; currentLevel: number };
       } else if (canNative) {
         video.src = embed.src;
@@ -200,8 +222,12 @@ export function ProtectedVideo({
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
           className="h-full w-full"
-          onTimeUpdate={(e) => onTimeUpdate?.((e.target as HTMLVideoElement).currentTime)}
+          onTimeUpdate={(e) => {
+            const el = e.target as HTMLVideoElement;
+            onTimeUpdate?.(el.currentTime, el.duration || 0);
+          }}
           onEnded={() => onEnded?.()}
+          onPlay={() => onPlay?.()}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-muted-foreground">

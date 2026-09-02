@@ -1,83 +1,162 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { getMontageQueue, type MontageQueueRow } from "@/lib/montage.functions";
 
-/* ============ المونتاج: الدروس قيد المراجعة ============ */
+/* ============ المونتاج: مسار الفيديو الكامل ============
+   pending (يحتاج مونتاج) -> claimed (تم الاستلام) -> in_review (قيد المراجعة)
+   -> approved (تم الاعتماد + نشر) ، مع مسار needs_changes يرجع لنفس المونتير
+*/
 
-export type MontageLesson = {
-  id: string;
-  title: string;
-  description: string | null;
-  video_url: string | null;
-  pdf_url: string | null;
-  duration_minutes: number;
-  review_status: string;
-  created_at: string;
-  course_id: string;
-  courseTitle: string;
-  teacherName: string | null;
-};
+export type MontageStatus = "pending" | "claimed" | "in_review" | "needs_changes" | "approved";
+export type MontageLesson = MontageQueueRow;
 
-export function useMontageQueue(status: "pending" | "approved" = "pending") {
+export function useMontageQueue(statuses: MontageStatus[] = ["pending"]) {
+  const call = useServerFn(getMontageQueue);
   return useQuery({
-    queryKey: ["montage-queue", status],
-    queryFn: async (): Promise<MontageLesson[]> => {
-      const { data: lessons, error } = await supabase
-        .from("lessons")
-        .select("id,title,description,video_url,pdf_url,duration_minutes,review_status,created_at,course_id")
-        .eq("review_status", status)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      const rows = lessons ?? [];
-      const courseIds = [...new Set(rows.map((l) => l.course_id))];
-      const { data: courses } = await supabase
-        .from("courses")
-        .select("id,title,teacher_id")
-        .in("id", courseIds.length ? courseIds : ["00000000-0000-0000-0000-000000000000"]);
-      const teacherIds = [...new Set((courses ?? []).map((c) => c.teacher_id).filter(Boolean))] as string[];
-      const { data: teachers } = await supabase
-        .from("teachers")
-        .select("id,name")
-        .in("id", teacherIds.length ? teacherIds : ["00000000-0000-0000-0000-000000000000"]);
-      const courseMap = new Map((courses ?? []).map((c) => [c.id, c]));
-      const teacherMap = new Map((teachers ?? []).map((t) => [t.id, t.name]));
-      return rows.map((l) => {
-        const c = courseMap.get(l.course_id);
-        return {
-          ...l,
-          courseTitle: c?.title ?? "دورة",
-          teacherName: c?.teacher_id ? teacherMap.get(c.teacher_id) ?? null : null,
-        };
-      });
-    },
+    queryKey: ["montage-queue", statuses],
+    queryFn: () => call({ data: { statuses } }),
     staleTime: 10_000,
   });
 }
 
 export function useMontageActions() {
+  const { user } = useAuth();
   const qc = useQueryClient();
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["montage-queue"] });
     qc.invalidateQueries({ queryKey: ["lessons"] });
   };
+
+  /** استلام فيديو للمونتاج — عملية ذرّية: لو مونتير تاني سبقه، النتيجة تفشل بدل ما يتشارك الفيديو بين اتنين */
+  const claim = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error("يجب تسجيل الدخول.");
+      const { data, error } = await supabase
+        .from("lessons")
+        .update({ review_status: "claimed", editor_id: user.id, claimed_at: new Date().toISOString() })
+        .eq("id", id)
+        .eq("review_status", "pending")
+        .is("editor_id", null)
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("تم استلام هذا الفيديو من مونتير آخر للتو 🔒");
+    },
+    onSuccess: invalidate,
+  });
+
+  /** يسجّل نسخة جديدة في سجل تاريخ الفيديو (V1, V2, ...) بدون استبدال النسخ السابقة */
+  const recordVersion = async (lessonId: string, video_url: string, status: "uploaded" | "submitted", notes?: string | null) => {
+    if (!user || !video_url) return;
+    const { data: last } = await supabase
+      .from("lesson_video_versions")
+      .select("version_number")
+      .eq("lesson_id", lessonId)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextVersion = (last?.version_number ?? 0) + 1;
+    await supabase.from("lesson_video_versions").insert({
+      lesson_id: lessonId,
+      version_number: nextVersion,
+      uploader: user.id,
+      video_url,
+      status,
+      notes: notes ?? null,
+    });
+  };
+
+  /** إرسال الفيديو المُعدَّل للمراجعة */
+  const submitForReview = useMutation({
+    mutationFn: async ({ id, video_url }: { id: string; video_url?: string | null }) => {
+      const { error } = await supabase
+        .from("lessons")
+        .update({
+          review_status: "in_review",
+          submitted_for_review_at: new Date().toISOString(),
+          review_notes: null,
+          ...(video_url !== undefined ? { video_url } : {}),
+        })
+        .eq("id", id);
+      if (error) throw error;
+      if (video_url) await recordVersion(id, video_url, "submitted");
+    },
+    onSuccess: invalidate,
+  });
+
+  /** طلب تعديلات — يرجع الفيديو لنفس المونتير مع ملاحظات المراجعة */
+  const requestChanges = useMutation({
+    mutationFn: async ({ id, notes }: { id: string; notes: string }) => {
+      const { error } = await supabase.from("lessons").update({ review_status: "needs_changes", review_notes: notes }).eq("id", id);
+      if (error) throw error;
+      await supabase
+        .from("lesson_video_versions")
+        .update({ status: "rejected", notes })
+        .eq("lesson_id", id)
+        .eq("status", "submitted");
+    },
+    onSuccess: invalidate,
+  });
+
+  /** استئناف التعديل بعد "يحتاج تعديلات" */
+  const resumeEditing = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("lessons").update({ review_status: "claimed" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: invalidate,
+  });
+
+  /** اعتماد ونشر الفيديو على المنصة */
   const publish = useMutation({
     mutationFn: async ({ id, video_url }: { id: string; video_url?: string | null }) => {
       const { error } = await supabase
         .from("lessons")
-        .update({ review_status: "approved", ...(video_url !== undefined ? { video_url } : {}) })
+        .update({ review_status: "approved", review_notes: null, ...(video_url !== undefined ? { video_url } : {}) })
         .eq("id", id);
       if (error) throw error;
+      await supabase.from("lesson_video_versions").update({ status: "approved" }).eq("lesson_id", id).eq("status", "submitted");
     },
     onSuccess: invalidate,
   });
+
   const updateVideo = useMutation({
     mutationFn: async ({ id, video_url }: { id: string; video_url: string | null }) => {
       const { error } = await supabase.from("lessons").update({ video_url }).eq("id", id);
       if (error) throw error;
+      if (video_url) await recordVersion(id, video_url, "uploaded");
     },
     onSuccess: invalidate,
   });
-  return { publish, updateVideo };
+
+  return { claim, submitForReview, requestChanges, resumeEditing, publish, updateVideo };
+}
+
+export type LessonVideoVersion = {
+  id: string;
+  version_number: number;
+  status: string;
+  notes: string | null;
+  created_at: string;
+};
+
+/** سجل نسخ الفيديو (V1, V2, ...) لدرس معيّن — بدون استبدال التاريخ السابق */
+export function useLessonVideoVersions(lessonId: string | null) {
+  return useQuery({
+    queryKey: ["lesson-video-versions", lessonId],
+    enabled: !!lessonId,
+    queryFn: async (): Promise<LessonVideoVersion[]> => {
+      const { data, error } = await supabase
+        .from("lesson_video_versions")
+        .select("id, version_number, status, notes, created_at")
+        .eq("lesson_id", lessonId!)
+        .order("version_number", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 }
 
 /** رفع الفيديو المعدّل إلى التخزين بنفس الجودة (بدون إعادة ضغط) وإرجاع رابط موقّع طويل المدى */

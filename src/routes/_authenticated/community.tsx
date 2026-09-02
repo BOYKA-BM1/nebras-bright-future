@@ -10,9 +10,9 @@ import { useMyRoom, useClassMessages, useSendClassMessage, useDeleteClassMessage
 export const Route = createFileRoute("/_authenticated/community")({
   head: () => ({
     meta: [
-      { title: "غرفة صفّي — نبراس" },
-      { name: "description", content: "دردشة جماعية بين طلاب نفس الصف الدراسي داخل منصة نبراس." },
-      { property: "og:title", content: "غرفة صفّي — نبراس" },
+      { title: "غرفة صفّي — Edu Mindly" },
+      { name: "description", content: "دردشة جماعية بين طلاب نفس الصف الدراسي داخل منصة Edu Mindly." },
+      { property: "og:title", content: "غرفة صفّي — Edu Mindly" },
       { property: "og:description", content: "اتكلم مع زمايلك في نفس الصف وذاكروا مع بعض." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -89,9 +89,12 @@ function CommunityRoom() {
                       </button>
                     )}
                     <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm leading-relaxed ${mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"}`}>
-                      {!mine && <p className="mb-1 text-xs font-bold opacity-70">{m.name}</p>}
+                      <p className={`mb-1 text-xs font-extrabold ${mine ? "text-primary-foreground/80" : "text-primary"}`}>
+                        {mine ? "أنا" : m.name}
+                      </p>
                       <p className="whitespace-pre-wrap">{m.body}</p>
                     </div>
+
                   </div>
                 );
               })

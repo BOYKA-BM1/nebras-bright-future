@@ -10,14 +10,14 @@ import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 export const Route = createFileRoute("/support")({
   head: () => ({
     meta: [
-      { title: "الاستفسارات والدعم | تواصل مع فريق نبراس" },
+      { title: "الاستفسارات والدعم | تواصل مع فريق Edu Mindly" },
       {
         name: "description",
         content:
-          "أرسل استفسارك لفريق منصة نبراس التعليمية وتابع الرد عليه. دعم سريع لكل الطلاب حول الدورات والاشتراكات والمحاضرات.",
+          "أرسل استفسارك لفريق منصة Edu Mindly التعليمية وتابع الرد عليه. دعم سريع لكل الطلاب حول الدورات والاشتراكات والمحاضرات.",
       },
-      { property: "og:title", content: "الاستفسارات والدعم | نبراس" },
-      { property: "og:description", content: "تواصل مع فريق نبراس وأرسل استفساراتك وتابع الردود." },
+      { property: "og:title", content: "الاستفسارات والدعم | Edu Mindly" },
+      { property: "og:description", content: "تواصل مع فريق Edu Mindly وأرسل استفساراتك وتابع الردود." },
       { property: "og:type", content: "website" },
     ],
   }),

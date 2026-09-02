@@ -11,18 +11,18 @@ type Level = (typeof LEVELS)[number];
 
 const SEO: Record<Level, { title: string; desc: string; intro: string }> = {
   primary: {
-    title: "دورات المرحلة الابتدائية | نبراس التعليمية",
-    desc: "دورات وكورسات المرحلة الابتدائية على نبراس لكل الصفوف من الأول حتى السادس الابتدائي مع أفضل المدرّسين وحصص مباشرة ومحاضرات مسجّلة.",
+    title: "دورات المرحلة الابتدائية | Edu Mindly التعليمية",
+    desc: "دورات وكورسات المرحلة الابتدائية على Edu Mindly لكل الصفوف من الأول حتى السادس الابتدائي مع أفضل المدرّسين وحصص مباشرة ومحاضرات مسجّلة.",
     intro: "تأسيس قوي لطلاب المرحلة الابتدائية بكل صفوفها، بأسلوب مبسّط وممتع ومدرّسين متخصّصين.",
   },
   prep: {
-    title: "دورات المرحلة الإعدادية | نبراس التعليمية",
-    desc: "دورات وكورسات المرحلة الإعدادية على نبراس لكل صفوف الأول والثاني والثالث الإعدادي بكل المواد مع أفضل المدرّسين في مصر.",
+    title: "دورات المرحلة الإعدادية | Edu Mindly التعليمية",
+    desc: "دورات وكورسات المرحلة الإعدادية على Edu Mindly لكل صفوف الأول والثاني والثالث الإعدادي بكل المواد مع أفضل المدرّسين في مصر.",
     intro: "شرح متكامل لكل مواد المرحلة الإعدادية مع متابعة مستمرة وامتحانات دورية تجهّزك للثانوية.",
   },
   secondary: {
-    title: "دورات المرحلة الثانوية | نبراس التعليمية",
-    desc: "دورات المرحلة الثانوية على نبراس لكل الصفوف والشُّعب: علمي علوم، علمي رياضة، وأدبي، مع حصص مباشرة ومراجعات نهائية ومدرّسين خبراء.",
+    title: "دورات المرحلة الثانوية | Edu Mindly التعليمية",
+    desc: "دورات المرحلة الثانوية على Edu Mindly لكل الصفوف والشُّعب: علمي علوم، علمي رياضة، وأدبي، مع حصص مباشرة ومراجعات نهائية ومدرّسين خبراء.",
     intro: "كل مواد المرحلة الثانوية بجميع الشُّعب — علمي علوم، علمي رياضة، وأدبي — مع بث مباشر ومراجعات نهائية.",
   },
 };
@@ -156,7 +156,7 @@ function StagePage() {
                   {stageCourses.map((course) => {
                     const teacherImg = resolveImage(course.teacher?.image_url);
                     return (
-                      <article key={course.id} className="group flex flex-col overflow-hidden rounded-2xl glass-card transition-all hover:-translate-y-1.5 hover:border-primary/50">
+                      <article key={course.id} className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1.5 hover:border-primary/50">
                         <div className="relative flex items-center gap-3 border-b border-border/60 bg-gradient-to-l from-primary/10 to-transparent p-5">
                           {teacherImg ? (
                             <img src={teacherImg} alt={course.teacher?.name ?? ""} loading="lazy" width={112} height={112} className="h-14 w-14 rounded-full border-2 border-primary/50 object-cover" />

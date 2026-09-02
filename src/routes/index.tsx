@@ -10,16 +10,16 @@ import { Footer } from "@/components/site/Footer";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "نبراس | أقوى منصة تعليمية في مصر لكل المراحل" },
+      { title: "Edu Mindly | أقوى منصة تعليمية في مصر لكل المراحل" },
       {
         name: "description",
         content:
-          "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
+          "Edu Mindly منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
       },
-      { property: "og:title", content: "نبراس | أقوى منصة تعليمية في مصر لكل المراحل" },
+      { property: "og:title", content: "Edu Mindly | أقوى منصة تعليمية في مصر لكل المراحل" },
       {
         property: "og:description",
-        content: "نبراس منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
+        content: "Edu Mindly منصة تعليمية متطورة تجمع أفضل المدرسين في مصر، دروس وفيديوهات تفاعلية وبث مباشر لكل المراحل الدراسية: ابتدائي وإعدادي وثانوي.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://nebras-bright-future.lovable.app/" },
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "EducationalOrganization",
-          name: "منصة نبراس التعليمية",
+          name: "منصة Edu Mindly التعليمية",
           url: "https://nebras-bright-future.lovable.app/",
           description:
             "منصة تعليمية مصرية تقدّم دروسًا وبثًا مباشرًا لكل المراحل: ابتدائي وإعدادي وثانوي.",

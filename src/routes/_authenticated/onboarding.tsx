@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { GraduationCap, Library, BookA, ChevronLeft, Loader2, Check } from "lucide-react";
+import { GraduationCap, Library, BookA, ChevronLeft, Loader2, Check, Landmark, Compass } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -8,12 +8,17 @@ import { useStages } from "@/hooks/use-catalog";
 import { useProfile, useUpdateProfile } from "@/hooks/use-profile";
 import { gradesByLevel, type Level } from "@/data/grades";
 import { Logo } from "@/components/site/Logo";
+import {
+  useEducationSystems, useBaccalaureateTracks, useActiveAcademicYear, useCreateEducationProfile,
+} from "@/hooks/use-baccalaureate";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   component: Onboarding,
 });
 
 const iconMap = { GraduationCap, Library, BookA } as const;
+
+type Step = 1 | 2 | "system" | 3 | "track";
 
 function Onboarding() {
   const navigate = useNavigate();
@@ -22,17 +27,23 @@ function Onboarding() {
   const { data: stages = [], isLoading: stagesLoading } = useStages();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const update = useUpdateProfile();
+  const { data: educationSystems = [] } = useEducationSystems();
+  const { data: tracks = [] } = useBaccalaureateTracks();
+  const { data: activeYear } = useActiveAcademicYear();
+  const createEducationProfile = useCreateEducationProfile();
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<Step>(1);
   const [stageId, setStageId] = useState<string | null>(null);
   const [level, setLevel] = useState<Level | null>(null);
+  const [systemCode, setSystemCode] = useState<"general_secondary" | "egyptian_baccalaureate" | null>(null);
+  const [grade, setGrade] = useState<string | null>(null);
 
   // بيانات الحساب
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  const [parentName, setParentName] = useState("");
   const [parentPhone, setParentPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
-
 
   // تعبئة الاسم المسجّل مسبقًا
   useEffect(() => {
@@ -55,13 +66,15 @@ function Onboarding() {
   const pickStage = (id: string, lvl: Level) => {
     setStageId(id);
     setLevel(lvl);
-    setStep(3);
+    // البكالوريا اختيار متاح بس للمرحلة الثانوية؛ الابتدائي/الإعدادي يفضلوا زي ما هما بالظبط
+    setStep(lvl === "secondary" ? "system" : 3);
   };
 
   const digits = (v: string) => v.replace(/\D/g, "").slice(0, 11);
   const infoValid =
     fullName.trim().split(/\s+/).length >= 2 &&
     phone.length === 11 &&
+    parentName.trim().length >= 3 &&
     parentPhone.length === 11 &&
     whatsapp.length === 11;
 
@@ -73,27 +86,74 @@ function Onboarding() {
     setStep(2);
   };
 
-  const finish = (grade: string) => {
+  const pickSystem = (code: "general_secondary" | "egyptian_baccalaureate") => {
+    setSystemCode(code);
+    setStep(3);
+  };
+
+  const pickGrade = (g: string) => {
+    setGrade(g);
+    // البكالوريا + الصف الأول = مرحلة عامة، مفيش اختيار مسار
+    const needsTrack = systemCode === "egyptian_baccalaureate" && g !== "الصف الأول الثانوي";
+    if (needsTrack) {
+      setStep("track");
+    } else {
+      finish(g, null);
+    }
+  };
+
+  const finish = (finalGrade: string, trackId: string | null) => {
     if (!stageId || !level) return;
     update.mutate(
       {
         stage_id: stageId,
         level,
-        grade,
+        grade: finalGrade,
         onboarded: true,
         full_name: fullName.trim(),
         phone: `+20${phone}`,
+        parent_name: parentName.trim(),
         parent_phone: `+20${parentPhone}`,
         whatsapp: `+20${whatsapp}`,
       },
       {
-        onSuccess: () => { toast.success("تم تجهيز حسابك 🎉"); navigate({ to: "/dashboard" }); },
+        onSuccess: () => {
+          // نسجّل البروفايل التعليمي كمان (نظام عام أو بكالوريا) — بشكل إضافي بدون ما يغيّر منطق الحساب الأساسي
+          const sys = educationSystems.find((s) => s.code === (systemCode ?? "general_secondary"));
+          if (sys) {
+            createEducationProfile.mutate({
+              educationSystemId: sys.id,
+              grade: finalGrade,
+              trackId,
+              academicYearId: activeYear?.id ?? null,
+            });
+          }
+          toast.success("تم تجهيز حسابك 🎉");
+          navigate({ to: "/dashboard" });
+        },
         onError: () => toast.error("حصل خطأ، حاول تاني."),
       },
     );
   };
 
   const grades = level ? gradesByLevel[level] : [];
+  const availableTracks = tracks.filter((t) => !grade || t.applicable_grades.includes(grade));
+
+  const steps: { key: Step; label: string }[] =
+    level === "secondary"
+      ? [
+          { key: 1, label: "بياناتك" },
+          { key: 2, label: "المرحلة" },
+          { key: "system", label: "نظامك التعليمي" },
+          { key: 3, label: "الصف الدراسي" },
+          ...(systemCode === "egyptian_baccalaureate" && grade !== "الصف الأول الثانوي" ? [{ key: "track" as Step, label: "المسار" }] : []),
+        ]
+      : [
+          { key: 1, label: "بياناتك" },
+          { key: 2, label: "المرحلة" },
+          { key: 3, label: "السنة الدراسية" },
+        ];
+  const stepIndex = steps.findIndex((s) => s.key === step);
 
   return (
     <div className="min-h-screen bg-hero">
@@ -105,12 +165,13 @@ function Onboarding() {
       </header>
 
       <main className="mx-auto max-w-4xl px-4 py-12 sm:px-6">
-        <div className="mx-auto mb-8 flex max-w-md items-center gap-3">
-          <StepDot active={step >= 1} done={step > 1} n={1} label="بياناتك" />
-          <span className="h-px flex-1 bg-border" />
-          <StepDot active={step >= 2} done={step > 2} n={2} label="المرحلة" />
-          <span className="h-px flex-1 bg-border" />
-          <StepDot active={step >= 3} done={false} n={3} label="السنة الدراسية" />
+        <div className="mx-auto mb-8 flex max-w-xl flex-wrap items-center gap-3">
+          {steps.map((s, i) => (
+            <div key={String(s.key)} className="flex items-center gap-3">
+              <StepDot active={i <= stepIndex} done={i < stepIndex} n={i + 1} label={s.label} />
+              {i < steps.length - 1 && <span className="h-px w-6 bg-border sm:w-10" />}
+            </div>
+          ))}
         </div>
 
         {step === 1 ? (
@@ -129,6 +190,16 @@ function Onboarding() {
               </label>
 
               <PhoneField label="رقم الهاتف" value={phone} onChange={(v) => setPhone(digits(v))} />
+
+              <label className="grid gap-2 text-right">
+                <span className="text-sm font-bold">اسم ولي الأمر</span>
+                <input
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  placeholder="مثال: محمد علي"
+                  className="rounded-xl border border-border bg-background px-4 py-3 text-right outline-none focus:border-primary"
+                />
+              </label>
               <PhoneField label="رقم ولي الأمر" value={parentPhone} onChange={(v) => setParentPhone(digits(v))} />
               <PhoneField label="رقم الواتساب" value={whatsapp} onChange={(v) => setWhatsapp(digits(v))} />
 
@@ -164,9 +235,33 @@ function Onboarding() {
               })}
             </div>
           </section>
-        ) : (
+        ) : step === "system" ? (
           <section>
             <button onClick={() => setStep(2)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع للمراحل</button>
+            <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اختر <span className="text-gradient-gold">نظامك التعليمي</span></h1>
+            <p className="mt-2 text-center text-muted-foreground">اختر النظام اللي بتدرس بيه في المرحلة الثانوية.</p>
+            <div className="mx-auto mt-8 grid max-w-xl gap-4 sm:grid-cols-2">
+              <button
+                onClick={() => pickSystem("general_secondary")}
+                className="group flex flex-col items-start rounded-3xl border border-border bg-card p-6 text-right shadow-card transition-all hover:-translate-y-1 hover:border-primary/60"
+              >
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-gold text-primary-foreground shadow-gold"><Landmark className="h-7 w-7" /></span>
+                <h3 className="mt-4 text-xl font-extrabold">الثانوية العامة</h3>
+                <p className="mt-1 text-sm text-muted-foreground">النظام الحالي بشُعبه المعروفة.</p>
+              </button>
+              <button
+                onClick={() => pickSystem("egyptian_baccalaureate")}
+                className="group flex flex-col items-start rounded-3xl border border-border bg-card p-6 text-right shadow-card transition-all hover:-translate-y-1 hover:border-primary/60"
+              >
+                <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-gold text-primary-foreground shadow-gold"><Compass className="h-7 w-7" /></span>
+                <h3 className="mt-4 text-xl font-extrabold">البكالوريا المصرية</h3>
+                <p className="mt-1 text-sm text-muted-foreground">مسارات تخصّصية من الصف الثاني الثانوي.</p>
+              </button>
+            </div>
+          </section>
+        ) : step === 3 ? (
+          <section>
+            <button onClick={() => setStep(level === "secondary" ? "system" : 2)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع</button>
             <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اختر <span className="text-gradient-gold">سنتك الدراسية</span></h1>
             <p className="mt-2 text-center text-muted-foreground">{stages.find((s) => s.id === stageId)?.name}</p>
             <div className="mx-auto mt-8 grid max-w-xl gap-3">
@@ -174,10 +269,29 @@ function Onboarding() {
                 <button
                   key={g}
                   disabled={update.isPending}
-                  onClick={() => finish(g)}
+                  onClick={() => pickGrade(g)}
                   className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-right font-bold shadow-card transition-all hover:border-primary/60 hover:bg-accent disabled:opacity-60"
                 >
                   {g}
+                  {update.isPending ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Check className="h-5 w-5 text-primary opacity-0 transition-opacity group-hover:opacity-100" />}
+                </button>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section>
+            <button onClick={() => setStep(3)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع للصف</button>
+            <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اختر <span className="text-gradient-gold">المسار</span></h1>
+            <p className="mt-2 text-center text-muted-foreground">{grade}</p>
+            <div className="mx-auto mt-8 grid max-w-2xl gap-3 sm:grid-cols-2">
+              {availableTracks.map((t) => (
+                <button
+                  key={t.id}
+                  disabled={update.isPending}
+                  onClick={() => grade && finish(grade, t.id)}
+                  className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-right font-bold shadow-card transition-all hover:border-primary/60 hover:bg-accent disabled:opacity-60"
+                >
+                  {t.name_ar}
                   {update.isPending ? <Loader2 className="h-5 w-5 animate-spin text-primary" /> : <Check className="h-5 w-5 text-primary opacity-0 transition-opacity group-hover:opacity-100" />}
                 </button>
               ))}
@@ -214,10 +328,10 @@ function PhoneField({ label, value, onChange }: { label: string; value: string; 
 function StepDot({ active, done, n, label }: { active: boolean; done: boolean; n: number; label: string }) {
   return (
     <div className="flex items-center gap-2">
-      <span className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold ${active ? "bg-gradient-gold text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${active ? "bg-gradient-gold text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
         {done ? <Check className="h-4 w-4" /> : n}
       </span>
-      <span className={`text-sm font-bold ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
+      <span className={`whitespace-nowrap text-sm font-bold ${active ? "text-foreground" : "text-muted-foreground"}`}>{label}</span>
     </div>
   );
 }

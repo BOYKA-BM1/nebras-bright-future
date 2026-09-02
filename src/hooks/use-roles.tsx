@@ -10,7 +10,10 @@ export type AppRole =
   | "customer_service"
   | "secretary"
   | "montage"
-  | "psychologist";
+  | "psychologist"
+  | "photographer"
+  | "parent";
+
 
 export function useRoles() {
   const { user } = useAuth();
@@ -43,10 +46,14 @@ export function useRoles() {
     isSecretary: roles.includes("secretary"),
     isMontage: roles.includes("montage"),
     isPsychologist: roles.includes("psychologist"),
+    isPhotographer: roles.includes("photographer"),
+    isParent: roles.includes("parent"),
     isStaff:
       roles.includes("customer_service") ||
       roles.includes("secretary") ||
-      roles.includes("montage"),
+      roles.includes("montage") ||
+      roles.includes("photographer"),
     isLoading: query.isLoading,
   };
 }
+

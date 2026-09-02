@@ -17,7 +17,7 @@ export function Footer() {
           <div>
             <Logo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              نبراس — منصة تعليمية مصرية متطورة تجمع أفضل المدرسين وأحدث التقنيات
+              Edu Mindly — منصة تعليمية مصرية متطورة تجمع أفضل المدرسين وأحدث التقنيات
               لتقديم تجربة تعليمية استثنائية لكل طالب.
             </p>
           </div>
@@ -38,7 +38,7 @@ export function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-sm text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} منصة نبراس التعليمية. جميع الحقوق محفوظة.</p>
+          <p>© {new Date().getFullYear()} منصة Edu Mindly التعليمية. جميع الحقوق محفوظة.</p>
           <nav className="flex flex-wrap items-center gap-4">
             {navLinks.slice(0, 4).map((l) => (
               <a key={l.href} href={l.href} className="hover:text-foreground">

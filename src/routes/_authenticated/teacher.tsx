@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp, UserRound } from "lucide-react";
+import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp, UserRound, CalendarDays } from "lucide-react";
 import { ComplaintButton } from "@/components/site/ComplaintButton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -12,6 +12,8 @@ import { useCourses, useTeachers } from "@/hooks/use-catalog";
 import { useCoupons } from "@/hooks/use-admin";
 import { getMyTeacherDashboard } from "@/lib/teacher.functions";
 import { Logo } from "@/components/site/Logo";
+import { NotificationBell } from "@/components/site/NotificationBell";
+import { SearchBar } from "@/components/site/SearchBar";
 import { resolveImage } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/teacher")({
@@ -97,6 +99,10 @@ function TeacherDashboard() {
             <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">لوحة المدرّس</span>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
+            <Link to="/calendar" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
+              <CalendarDays className="h-4 w-4" /> <span className="hidden sm:inline">المواعيد</span>
+            </Link>
             {stats?.isTeacher && (
               <Dialog>
                 <DialogTrigger asChild>
@@ -143,6 +149,7 @@ function TeacherDashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-6"><SearchBar /></div>
         {/* ملخص أداء المدرّس */}
         {stats?.isTeacher && (
           <section className="mb-10">
@@ -246,7 +253,7 @@ function TeacherDashboard() {
             {myCourses.map((c) => {
               const img = resolveImage(c.image_url) ?? resolveImage(c.teacherImage);
               return (
-                <div key={c.id} className="overflow-hidden rounded-2xl glass-card">
+                <div key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                   {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
                   <div className="p-4">
                     <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>
@@ -255,9 +262,14 @@ function TeacherDashboard() {
                       <span className="flex items-center gap-1"><PlayCircle className="h-3.5 w-3.5 text-primary" />{c.lessons} درس</span>
                       <span className={`rounded-full px-2 py-0.5 ${c.is_published ? "bg-primary/10 text-primary" : "bg-secondary"}`}>{c.is_published ? "منشورة" : "مسودّة"}</span>
                     </div>
-                    <Link to="/manage/$courseId" params={{ courseId: c.id }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
-                      <Settings2 className="h-4 w-4" /> إدارة المحتوى
-                    </Link>
+                    <div className="mt-4 flex gap-2">
+                      <Link to="/manage/$courseId" params={{ courseId: c.id }} className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
+                        <Settings2 className="h-4 w-4" /> إدارة المحتوى
+                      </Link>
+                      <Link to="/manage/$courseId/analytics" params={{ courseId: c.id }} className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20" title="تحليلات المشاهدة">
+                        <TrendingUp className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               );
