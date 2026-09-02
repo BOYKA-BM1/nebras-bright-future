@@ -462,35 +462,50 @@ export type Database = {
       lesson_progress: {
         Row: {
           completed: boolean
+          completed_at: string | null
           course_id: string
           created_at: string
           id: string
           last_position_seconds: number
+          last_watched_at: string | null
           lesson_id: string
+          play_count: number
+          total_watched_seconds: number
           updated_at: string
           user_id: string
+          watch_percent: number
           watched_seconds: number
         }
         Insert: {
           completed?: boolean
+          completed_at?: string | null
           course_id: string
           created_at?: string
           id?: string
           last_position_seconds?: number
+          last_watched_at?: string | null
           lesson_id: string
+          play_count?: number
+          total_watched_seconds?: number
           updated_at?: string
           user_id: string
+          watch_percent?: number
           watched_seconds?: number
         }
         Update: {
           completed?: boolean
+          completed_at?: string | null
           course_id?: string
           created_at?: string
           id?: string
           last_position_seconds?: number
+          last_watched_at?: string | null
           lesson_id?: string
+          play_count?: number
+          total_watched_seconds?: number
           updated_at?: string
           user_id?: string
+          watch_percent?: number
           watched_seconds?: number
         }
         Relationships: [
@@ -512,18 +527,22 @@ export type Database = {
       }
       lessons: {
         Row: {
+          claimed_at: string | null
           course_id: string
           created_at: string
           description: string | null
           duration_minutes: number
+          editor_id: string | null
           id: string
           is_free: boolean
           is_published: boolean
           pdf_files: Json
           pdf_url: string | null
+          review_notes: string | null
           review_status: string
           section_id: string | null
           sort_order: number
+          submitted_for_review_at: string | null
           title: string
           transcript: string | null
           updated_at: string
@@ -531,18 +550,22 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          claimed_at?: string | null
           course_id: string
           created_at?: string
           description?: string | null
           duration_minutes?: number
+          editor_id?: string | null
           id?: string
           is_free?: boolean
           is_published?: boolean
           pdf_files?: Json
           pdf_url?: string | null
+          review_notes?: string | null
           review_status?: string
           section_id?: string | null
           sort_order?: number
+          submitted_for_review_at?: string | null
           title: string
           transcript?: string | null
           updated_at?: string
@@ -550,18 +573,22 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          claimed_at?: string | null
           course_id?: string
           created_at?: string
           description?: string | null
           duration_minutes?: number
+          editor_id?: string | null
           id?: string
           is_free?: boolean
           is_published?: boolean
           pdf_files?: Json
           pdf_url?: string | null
+          review_notes?: string | null
           review_status?: string
           section_id?: string | null
           sort_order?: number
+          submitted_for_review_at?: string | null
           title?: string
           transcript?: string | null
           updated_at?: string
@@ -862,6 +889,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
