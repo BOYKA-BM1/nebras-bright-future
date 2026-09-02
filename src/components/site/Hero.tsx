@@ -42,7 +42,7 @@ export function Hero() {
           <h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-6xl">
             مرحبًا بك في
             <br />
-            <span className="text-gradient-gold">منصة نبراس التعليمية</span>
+            <span className="text-gradient-gold">منصة Edu Mindly التعليمية</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground lg:mx-0">
@@ -84,7 +84,7 @@ export function Hero() {
           <div className="absolute inset-0 -z-10 rounded-[2rem] bg-primary/20 blur-3xl" />
           <img
             src={heroBanner}
-            alt="منصة نبراس التعليمية"
+            alt="منصة Edu Mindly التعليمية"
             width={1024}
             height={1024}
             className="animate-float-slow mx-auto w-full max-w-md rounded-[2rem] border border-border/60 shadow-card"

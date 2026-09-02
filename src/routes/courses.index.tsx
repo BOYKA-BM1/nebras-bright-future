@@ -8,16 +8,16 @@ import { useRoles } from "@/hooks/use-roles";
 export const Route = createFileRoute("/courses/")({
   head: () => ({
     meta: [
-      { title: "الدورات والكورسات التعليمية | احجز دورتك على نبراس" },
+      { title: "الدورات والكورسات التعليمية | احجز دورتك على Edu Mindly" },
       {
         name: "description",
         content:
-          "تصفّح كل دورات منصة نبراس التعليمية لكل المراحل: ابتدائي وإعدادي وثانوي بكل الشُّعب. حصص مباشرة ومحاضرات مسجّلة واحجز دورتك دلوقتي.",
+          "تصفّح كل دورات منصة Edu Mindly التعليمية لكل المراحل: ابتدائي وإعدادي وثانوي بكل الشُّعب. حصص مباشرة ومحاضرات مسجّلة واحجز دورتك دلوقتي.",
       },
-      { property: "og:title", content: "الدورات التعليمية | نبراس" },
+      { property: "og:title", content: "الدورات التعليمية | Edu Mindly" },
       {
         property: "og:description",
-        content: "كل دورات نبراس لكل المراحل الدراسية مع حصص مباشرة ومحاضرات مسجّلة.",
+        content: "كل دورات Edu Mindly لكل المراحل الدراسية مع حصص مباشرة ومحاضرات مسجّلة.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://nebras-bright-future.lovable.app/courses" },

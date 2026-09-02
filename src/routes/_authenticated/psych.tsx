@@ -19,9 +19,9 @@ import {
 export const Route = createFileRoute("/_authenticated/psych")({
   head: () => ({
     meta: [
-      { title: "الغرفة النفسية — نبراس" },
-      { name: "description", content: "غرفة دعم نفسي سرّية للطلاب مع دكتور متخصص داخل منصة نبراس." },
-      { property: "og:title", content: "الغرفة النفسية — نبراس" },
+      { title: "الغرفة النفسية — Edu Mindly" },
+      { name: "description", content: "غرفة دعم نفسي سرّية للطلاب مع دكتور متخصص داخل منصة Edu Mindly." },
+      { property: "og:title", content: "الغرفة النفسية — Edu Mindly" },
       { property: "og:description", content: "تكلّم بسرّية تامة مع دكتور نفسي، أو اطلب مكالمة." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -30,7 +30,7 @@ export function About() {
         <div className="mx-auto max-w-2xl text-center">
           <span className="text-sm font-bold uppercase tracking-widest text-primary">عن المنصة</span>
           <h2 className="mt-3 text-3xl font-extrabold sm:text-4xl">
-            عن منصة <span className="text-gradient-gold">نبراس</span> التعليمية
+            عن منصة <span className="text-gradient-gold">Edu Mindly</span> التعليمية
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             نحن منصة تعليمية رائدة تهدف إلى تقديم أفضل تجربة تعليمية للطلاب في جميع المراحل الدراسية.

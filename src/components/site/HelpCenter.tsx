@@ -17,7 +17,7 @@ export function HelpCenter() {
             الأسئلة <span className="text-gradient-gold">الشائعة</span>
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            دليل شامل لمساعدتك في استخدام منصة نبراس بسهولة وفعّالية.
+            دليل شامل لمساعدتك في استخدام منصة Edu Mindly بسهولة وفعّالية.
           </p>
         </div>
 
@@ -27,7 +27,7 @@ export function HelpCenter() {
             return (
               <div
                 key={faq.q}
-                className="overflow-hidden rounded-2xl glass-card"
+                className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
               >
                 <button
                   onClick={() => setActive(open ? null : i)}

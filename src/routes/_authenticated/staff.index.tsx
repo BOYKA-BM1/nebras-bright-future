@@ -7,10 +7,11 @@ export const Route = createFileRoute("/_authenticated/staff/")({
 });
 
 function StaffIndex() {
-  const { isMontage, isCustomerService, isSecretary, isAdmin, isLoading } = useRoles();
+  const { isMontage, isCustomerService, isSecretary, isPhotographer, isAdmin, isLoading } = useRoles();
   if (isLoading) {
     return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
+  if (isPhotographer) return <Navigate to="/staff/photographer" />;
   if (isMontage) return <Navigate to="/staff/montage" />;
   if (isCustomerService) return <Navigate to="/staff/support" />;
   if (isSecretary) return <Navigate to="/staff/students" />;

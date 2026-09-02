@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Users, GraduationCap, CheckCircle2, Loader2, Wallet, UserCheck, Eye, Percent, ArrowLeft } from "lucide-react";
+import { BookOpen, Users, GraduationCap, CheckCircle2, Loader2, Wallet, UserCheck, Eye, Percent, ArrowLeft, Megaphone, BookMarked } from "lucide-react";
 import { useCourses, useTeachers, useStages } from "@/hooks/use-catalog";
 import { usePlatformStats } from "@/hooks/use-stats";
 import { useFinance } from "@/hooks/use-finance";
@@ -32,7 +32,14 @@ function AdminOverview() {
       <h1 className="text-2xl font-extrabold sm:text-3xl">
         نظرة <span className="text-gradient-gold">عامة</span>
       </h1>
-      <p className="mt-2 text-muted-foreground">إدارة محتوى منصة نبراس من مكان واحد.</p>
+      <p className="mt-2 text-muted-foreground">إدارة محتوى منصة Edu Mindly من مكان واحد.</p>
+
+      <Link to="/admin/broadcast" className="mt-4 inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-bold text-primary hover:bg-primary/20">
+        <Megaphone className="h-4 w-4" /> إرسال إشعار إداري عام
+      </Link>
+      <Link to="/admin/education" className="mt-4 mr-2 inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-4 py-2 text-sm font-bold text-primary hover:bg-primary/20">
+        <BookMarked className="h-4 w-4" /> إدارة النظام التعليمي والبكالوريا
+      </Link>
 
       {isLoading ? (
         <div className="mt-10 flex justify-center">

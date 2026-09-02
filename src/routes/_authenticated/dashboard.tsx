@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send, XCircle, HeartHandshake, MessagesSquare,
+  Loader2, LogOut, BookOpen, Wallet, PlayCircle, ShieldCheck, GraduationCap, ArrowLeft, Heart, UserCog, AlertCircle, MessageCircle, Send, XCircle, HeartHandshake, MessagesSquare, ClipboardList, Award, CalendarDays, StickyNote, Bookmark, Menu, Sparkles, LineChart, Bot, Route as RouteIcon, BrainCircuit, Atom, TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses } from "@/hooks/use-catalog";
@@ -11,6 +12,8 @@ import { useMyEnrollments, useFavorites, useUnenroll } from "@/hooks/use-content
 import { useMyTickets, useCreateTicket } from "@/hooks/use-staff";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { Logo } from "@/components/site/Logo";
+import { NotificationBell } from "@/components/site/NotificationBell";
+import { SearchBar } from "@/components/site/SearchBar";
 import { GamificationPanel } from "@/components/site/GamificationPanel";
 import { resolveImage } from "@/lib/catalog";
 
@@ -21,7 +24,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function Dashboard() {
   const { user, confirmSignOut } = useAuth();
   const navigate = useNavigate();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPsychologist, isLoading: rolesLoading } = useRoles();
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPsychologist, isParent, isLoading: rolesLoading } = useRoles();
   const { data: courses = [] } = useCourses();
   const { data: enrollments = [], isLoading } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
@@ -43,22 +46,24 @@ function Dashboard() {
       ? "/admin"
       : isTeacher
         ? "/teacher"
-        : isPsychologist
-          ? "/psych"
-          : isMontage
-            ? "/staff/montage"
-            : isCustomerService
-              ? "/staff/support"
-              : isSecretary
-                ? "/staff/students"
-                : null;
+        : isParent
+          ? "/parent"
+          : isPsychologist
+            ? "/psych"
+            : isMontage
+              ? "/staff/montage"
+              : isCustomerService
+                ? "/staff/support"
+                : isSecretary
+                  ? "/staff/students"
+                  : null;
 
   useEffect(() => {
     if (roleHome) navigate({ to: roleHome });
   }, [roleHome, navigate]);
 
 
-  const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary;
+  const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary || isParent;
 
   // الطالب اللي لسه ما اختارش مرحلته يروح للأونبوردنج
   useEffect(() => {
@@ -96,26 +101,63 @@ function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-hero">
-      <header className="sticky top-0 z-40 border-b border-border/50 glass-panel">
-
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Logo />
           <div className="flex flex-wrap items-center gap-2">
+            <NotificationBell />
             {isAdmin && (
               <Link to="/admin" className="flex items-center gap-1.5 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]">
-                <ShieldCheck className="h-4 w-4" /> الإدارة
+                <ShieldCheck className="h-4 w-4" /> <span className="hidden sm:inline">الإدارة</span>
               </Link>
             )}
             {(isTeacher || isAdmin) && (
               <Link to="/teacher" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
-                <GraduationCap className="h-4 w-4" /> المدرّس
+                <GraduationCap className="h-4 w-4" /> <span className="hidden sm:inline">المدرّس</span>
               </Link>
             )}
-            <Link to="/profile" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
-              <UserCog className="h-4 w-4" /> <span className="hidden sm:inline">ملفي</span>
-            </Link>
-            <Link to="/courses" className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">الدورات</Link>
+
+            {/* الروابط الثانوية: صف كامل على الشاشات الأوسع، وقائمة "المزيد" على الموبايل عشان الهيدر ميتزحمش */}
+            <div className="hidden items-center gap-2 sm:flex">
+              <Link to="/profile" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <UserCog className="h-4 w-4" /> ملفي
+              </Link>
+              <Link to="/courses" className="rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">الدورات</Link>
+              <Link to="/assignments" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <ClipboardList className="h-4 w-4" /> واجباتي
+              </Link>
+              <Link to="/certificates" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <Award className="h-4 w-4" /> شهاداتي
+              </Link>
+              <Link to="/calendar" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <CalendarDays className="h-4 w-4" /> المواعيد
+              </Link>
+              <Link to="/notes" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <StickyNote className="h-4 w-4" /> ملاحظاتي
+              </Link>
+              <Link to="/bookmarks" className="flex items-center gap-1.5 rounded-xl border border-border px-4 py-2 text-sm font-bold hover:bg-accent">
+                <Bookmark className="h-4 w-4" /> المفضّلة
+              </Link>
+            </div>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent sm:hidden">
+                  <Menu className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="sm:hidden">
+                <DropdownMenuItem asChild><Link to="/profile" className="flex items-center gap-2"><UserCog className="h-4 w-4" /> ملفي</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/courses" className="flex items-center gap-2"><BookOpen className="h-4 w-4" /> الدورات</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/assignments" className="flex items-center gap-2"><ClipboardList className="h-4 w-4" /> واجباتي</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/certificates" className="flex items-center gap-2"><Award className="h-4 w-4" /> شهاداتي</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/calendar" className="flex items-center gap-2"><CalendarDays className="h-4 w-4" /> المواعيد</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/notes" className="flex items-center gap-2"><StickyNote className="h-4 w-4" /> ملاحظاتي</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link to="/bookmarks" className="flex items-center gap-2"><Bookmark className="h-4 w-4" /> المفضّلة</Link></DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <button onClick={handleSignOut} className="flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-sm font-bold hover:bg-accent">
               <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
             </button>
@@ -124,12 +166,10 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <section className="glass-card relative overflow-hidden rounded-3xl p-6 sm:p-8">
-          <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-primary/20 blur-3xl" />
-          <h1 className="relative text-3xl font-extrabold">أهلًا، <span className="text-gradient-cyan">{name}</span> 👋</h1>
-          <p className="relative mt-2 text-muted-foreground">دي لوحة التحكم بتاعتك — كمّل تعلّمك من هنا.</p>
-        </section>
+        <HeroBanner name={name} />
 
+
+        <div className="mt-6"><SearchBar /></div>
 
         {!completion.complete && (
           <Link to="/profile" className="mt-6 flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 transition-colors hover:bg-primary/15">
@@ -186,7 +226,7 @@ function Dashboard() {
             {myCourses.map((c) => {
               const img = resolveImage(c.image_url) ?? resolveImage(c.teacher?.image_url);
               return (
-                <article key={c.id} className="glass-card glass-card-hover overflow-hidden rounded-3xl">
+                <article key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                   {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
                   <div className="p-4">
                     <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>
@@ -290,11 +330,85 @@ function SupportSection() {
 
 function StatCard({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
-    <div className="glass-card glass-card-hover rounded-3xl p-5">
-      <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/15 text-primary"><Icon className="h-5 w-5" /></span>
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-card">
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Icon className="h-5 w-5" /></span>
       <div className="mt-4 text-2xl font-extrabold">{value}</div>
       <div className="text-sm text-muted-foreground">{label}</div>
     </div>
   );
 }
 
+/** بانر الترحيب الرئيسي — يطابق تصميم المرجع: عنوان + زرارين + رسم توضيحي متوهّج + بطاقات مميّزات */
+function HeroBanner({ name }: { name: string }) {
+  const features = [
+    { icon: Sparkles, title: "محتوى ذكي", subtitle: "مخصص لك" },
+    { icon: LineChart, title: "تقييم مستمر", subtitle: "ونقاط تفصيلية" },
+    { icon: Bot, title: "مساعد AI", subtitle: "يساعدك في أي وقت" },
+    { icon: RouteIcon, title: "مسارات تعلم", subtitle: "مصممة لأهدافك" },
+  ];
+
+  return (
+    <div className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 sm:p-10">
+      <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+        {/* النص والأزرار */}
+        <div>
+          <p className="text-sm font-bold text-muted-foreground">مرحبًا بك في</p>
+          <h1 className="mt-1 text-4xl font-extrabold tracking-tight sm:text-5xl">
+            <span className="text-foreground">edu</span>
+            <span className="text-gradient-gold">mindly</span>
+          </h1>
+          <p className="mt-4 max-w-md text-muted-foreground">
+            منصة تعليمية ذكية تساعدك على التعلم بتركيز أعلى وذكاء أكبر، يا {name}.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link to="/courses" className="flex items-center gap-2 rounded-xl bg-gradient-gold px-5 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.03]">
+              متابعة التعلم <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <Link to="/calendar" className="flex items-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-bold hover:bg-accent">
+              <PlayCircle className="h-4 w-4" /> اكتشف المزيد
+            </Link>
+          </div>
+        </div>
+
+        {/* الرسم التوضيحي المتوهّج */}
+        <div className="relative mx-auto flex h-56 w-56 items-center justify-center sm:h-64 sm:w-64">
+          <div className="absolute inset-0 rounded-full bg-gradient-gold opacity-20 blur-3xl" />
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="absolute rounded-full border border-primary/20"
+              style={{ inset: `${i * 18}px` }}
+            />
+          ))}
+          <span className="glow-gold flex h-24 w-24 items-center justify-center rounded-full bg-gradient-gold text-primary-foreground">
+            <BrainCircuit className="h-12 w-12" />
+          </span>
+          <span className="absolute -top-1 right-6 flex h-9 w-9 animate-float-slow items-center justify-center rounded-xl bg-secondary text-primary shadow-card">
+            <GraduationCap className="h-4.5 w-4.5" />
+          </span>
+          <span className="absolute bottom-2 -left-2 flex h-9 w-9 animate-float-slow items-center justify-center rounded-xl bg-secondary text-primary shadow-card" style={{ animationDelay: "1.5s" }}>
+            <Atom className="h-4.5 w-4.5" />
+          </span>
+          <span className="absolute left-8 top-6 flex h-9 w-9 animate-float-slow items-center justify-center rounded-xl bg-secondary text-primary shadow-card" style={{ animationDelay: "3s" }}>
+            <TrendingUp className="h-4.5 w-4.5" />
+          </span>
+        </div>
+      </div>
+
+      {/* بطاقات المميّزات */}
+      <div className="mt-8 grid grid-cols-2 gap-3 border-t border-border/60 pt-6 lg:grid-cols-4">
+        {features.map((f) => (
+          <div key={f.title} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-background/50 p-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <f.icon className="h-4.5 w-4.5" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{f.title}</p>
+              <p className="truncate text-xs text-muted-foreground">{f.subtitle}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

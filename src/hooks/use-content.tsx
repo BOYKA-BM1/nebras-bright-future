@@ -210,6 +210,60 @@ export function useProgress(courseId: string | undefined) {
   });
 }
 
+/** نسبة اكتمال الفيديو التي تُعتبر بعدها "مكتمل" — من إعدادات المنصة (Completion Threshold) */
+export function useCompletionThreshold() {
+  return useQuery({
+    queryKey: ["settings", "video_completion_threshold_percent"],
+    queryFn: async (): Promise<number> => {
+      const { data, error } = await supabase
+        .from("platform_settings")
+        .select("value")
+        .eq("key", "video_completion_threshold_percent")
+        .maybeSingle();
+      if (error) throw error;
+      return data ? Number(data.value) : 90;
+    },
+    staleTime: 5 * 60_000,
+  });
+}
+
+export type VideoWatchEvent = "play" | "pause" | "heartbeat" | "seek" | "ended" | "resume" | "visibility_change";
+
+/**
+ * تتبّع مشاهدة الفيديو الفعلي — عبر RPC ذرّي على الخادم (record_video_watch_event).
+ * كل الحساب (النسبة، وقت المشاهدة الفعلي، الاكتمال) يتم على قاعدة البيانات
+ * وليس بالثقة في قيم يحسبها المتصفح، وهو ما يمنع فقدان تحديثات عند وجود
+ * أكثر من تبويب/جهاز يشتغل على نفس الدرس في نفس الوقت.
+ */
+export function useRecordWatchEvent(courseId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      lessonId,
+      event,
+      position,
+      duration,
+    }: {
+      lessonId: string;
+      event: VideoWatchEvent;
+      position: number;
+      duration: number;
+    }) => {
+      if (!courseId) throw new Error("missing course");
+      const { data, error } = await supabase.rpc("record_video_watch_event", {
+        _lesson_id: lessonId,
+        _course_id: courseId,
+        _event: event,
+        _position: position,
+        _duration: duration,
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["progress", courseId] }),
+  });
+}
+
 export function useUpdateProgress(courseId: string | undefined) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -218,12 +272,35 @@ export function useUpdateProgress(courseId: string | undefined) {
       lessonId,
       completed,
       position,
+      watchPercent,
+      addWatchedSeconds,
+      incrementPlayCount,
     }: {
       lessonId: string;
       completed?: boolean;
       position?: number;
+      /** أعلى نسبة مشاهدة وصل إليها الطالب من الفيديو (0-100) */
+      watchPercent?: number;
+      /** ثواني تُضاف لإجمالي وقت المشاهدة الفعلي (وليس فقط آخر نقطة وصول) */
+      addWatchedSeconds?: number;
+      /** يُستدعى عند بدء تشغيل الفيديو لزيادة عدد مرّات المشاهدة */
+      incrementPlayCount?: boolean;
     }) => {
       if (!user || !courseId) throw new Error("missing");
+
+      let nextWatched: number | undefined;
+      let nextPlayCount: number | undefined;
+      if (addWatchedSeconds || incrementPlayCount) {
+        const { data: existing } = await supabase
+          .from("lesson_progress")
+          .select("total_watched_seconds, play_count")
+          .eq("user_id", user.id)
+          .eq("lesson_id", lessonId)
+          .maybeSingle();
+        nextWatched = (existing?.total_watched_seconds ?? 0) + (addWatchedSeconds ?? 0);
+        nextPlayCount = (existing?.play_count ?? 0) + (incrementPlayCount ? 1 : 0);
+      }
+
       const { error } = await supabase.from("lesson_progress").upsert(
         {
           user_id: user.id,
@@ -231,6 +308,9 @@ export function useUpdateProgress(courseId: string | undefined) {
           lesson_id: lessonId,
           ...(completed !== undefined ? { completed } : {}),
           ...(position !== undefined ? { last_position_seconds: Math.round(position) } : {}),
+          ...(watchPercent !== undefined ? { watch_percent: Math.min(100, Math.max(0, watchPercent)) } : {}),
+          ...(nextWatched !== undefined ? { total_watched_seconds: Math.round(nextWatched) } : {}),
+          ...(nextPlayCount !== undefined ? { play_count: nextPlayCount } : {}),
         },
         { onConflict: "user_id,lesson_id" },
       );

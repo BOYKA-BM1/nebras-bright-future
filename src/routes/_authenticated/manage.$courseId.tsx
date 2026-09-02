@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, Plus, Pencil, Trash2, ChevronRight, Video, FileText, Layers, GripVertical,
-  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2, Wand2, Sparkles,
+  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2, Wand2, Sparkles, BarChart3, ClipboardList,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -273,9 +273,25 @@ function ManageCourse() {
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
           <Logo />
-          <Link to={isAdmin ? "/admin/courses" : "/teacher"} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-            <ChevronRight className="h-4 w-4" /> رجوع
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/manage/$courseId/assignments"
+              params={{ courseId }}
+              className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
+            >
+              <ClipboardList className="h-4 w-4" /> الواجبات
+            </Link>
+            <Link
+              to="/manage/$courseId/analytics"
+              params={{ courseId }}
+              className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
+            >
+              <BarChart3 className="h-4 w-4" /> تحليلات المشاهدة
+            </Link>
+            <Link to={isAdmin ? "/admin/courses" : "/teacher"} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
+              <ChevronRight className="h-4 w-4" /> رجوع
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -300,7 +316,7 @@ function ManageCourse() {
         </span>
 
         {/* البث المباشر */}
-        <section className="mt-8 rounded-2xl glass-card">
+        <section className="mt-8 rounded-2xl border border-border bg-card shadow-card">
           <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary/40 px-5 py-3">
             <div className="flex items-center gap-2 font-bold">
               <Radio className="h-4 w-4 text-primary" /> البث المباشر
@@ -360,7 +376,7 @@ function ManageCourse() {
         ) : (
           <div className="mt-8 space-y-5">
             {realSections.map((s) => (
-              <div key={s.id} className="overflow-hidden rounded-2xl glass-card">
+              <div key={s.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                 <div className="flex items-center justify-between gap-3 border-b border-border/60 bg-secondary/40 px-5 py-3">
                   <div className="flex items-center gap-2 font-bold">
                     <GripVertical className="h-4 w-4 text-muted-foreground" /> {s.title}

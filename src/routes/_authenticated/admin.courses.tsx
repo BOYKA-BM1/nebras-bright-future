@@ -32,6 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useCourses, useTeachers, useStages, useCourseAdmin, useUploadImage } from "@/hooks/use-catalog";
+import { useEducationSystems, useBaccalaureateTracks, useAcademicYearsAdmin, useSubjectsAdmin } from "@/hooks/use-baccalaureate";
 import { tracks, courseTypes, trackLabel, resolveImage, type CourseWithRelations } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/admin/courses")({
@@ -53,12 +54,17 @@ type FormState = {
   badge: string;
   is_published: boolean;
   sort_order: string;
+  education_system_id: string;
+  baccalaureate_track_id: string;
+  subject_id: string;
+  academic_year_id: string;
 };
 
 const empty: FormState = {
   title: "", description: "", price: "0", old_price: "", image_url: "",
   stage_id: "", teacher_id: "", grade: "", track: "all", subject: "",
   type: "recorded", badge: "", is_published: true, sort_order: "0",
+  education_system_id: "", baccalaureate_track_id: "", subject_id: "", academic_year_id: "",
 };
 
 
@@ -68,6 +74,9 @@ function AdminCourses() {
   const { data: courses = [], isLoading } = useCourses();
   const { data: teachers = [] } = useTeachers();
   const { data: stages = [] } = useStages();
+  const { data: educationSystems = [] } = useEducationSystems();
+  const { data: baccTracks = [] } = useBaccalaureateTracks();
+  const { data: academicYears = [] } = useAcademicYearsAdmin();
   const { create, update, remove } = useCourseAdmin();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<CourseWithRelations | null>(null);
@@ -77,6 +86,11 @@ function AdminCourses() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof FormState, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
+
+  const isBaccalaureateSelected = educationSystems.find((s) => s.id === form.education_system_id)?.code === "egyptian_baccalaureate";
+  const { data: baccSubjects = [] } = useSubjectsAdmin(
+    form.education_system_id ? { educationSystemId: form.education_system_id } : undefined,
+  );
 
   const openCreate = () => { setEditing(null); setForm(empty); setOpen(true); };
   const openEdit = (c: CourseWithRelations) => {
@@ -96,6 +110,10 @@ function AdminCourses() {
       badge: c.badge ?? "",
       is_published: c.is_published,
       sort_order: String(c.sort_order),
+      education_system_id: c.education_system_id ?? "",
+      baccalaureate_track_id: c.baccalaureate_track_id ?? "",
+      subject_id: c.subject_id ?? "",
+      academic_year_id: c.academic_year_id ?? "",
     });
     setOpen(true);
   };
@@ -131,6 +149,10 @@ function AdminCourses() {
       badge: form.badge.trim() || null,
       is_published: form.is_published,
       sort_order: Number(form.sort_order) || 0,
+      education_system_id: form.education_system_id || null,
+      baccalaureate_track_id: form.baccalaureate_track_id || null,
+      subject_id: form.subject_id || null,
+      academic_year_id: form.academic_year_id || null,
     };
 
     const onErr = () => toast.error("حصل خطأ، حاول تاني.");
@@ -249,6 +271,53 @@ function AdminCourses() {
             <div className="grid grid-cols-2 gap-4">
               <Field label="السعر (ج.م)"><Input type="number" value={form.price} onChange={(e) => set("price", e.target.value)} /></Field>
               <Field label="السعر قبل الخصم (اختياري)"><Input type="number" value={form.old_price} onChange={(e) => set("old_price", e.target.value)} /></Field>
+            </div>
+
+            {/* البكالوريا المصرية — اختياري بالكامل؛ لو مفيش نظام محدد، الكورس يفضل عام زي ما كان دايمًا */}
+            <div className="rounded-xl border border-dashed border-border p-4">
+              <p className="mb-3 text-sm font-bold text-muted-foreground">تخصيص البكالوريا (اختياري)</p>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="النظام التعليمي">
+                  <Select value={form.education_system_id || NONE} onValueChange={(v) => set("education_system_id", v === NONE ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder="عام لكل الطلاب" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>عام لكل الطلاب</SelectItem>
+                      {educationSystems.map((s) => <SelectItem key={s.id} value={s.id}>{s.name_ar}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="السنة الدراسية">
+                  <Select value={form.academic_year_id || NONE} onValueChange={(v) => set("academic_year_id", v === NONE ? "" : v)}>
+                    <SelectTrigger><SelectValue placeholder="بدون تحديد" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>بدون تحديد</SelectItem>
+                      {academicYears.map((y) => <SelectItem key={y.id} value={y.id} dir="ltr">{y.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </div>
+              {isBaccalaureateSelected && (
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <Field label="المسار (بدون تحديد = كل المسارات)">
+                    <Select value={form.baccalaureate_track_id || NONE} onValueChange={(v) => set("baccalaureate_track_id", v === NONE ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="كل المسارات" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>كل المسارات</SelectItem>
+                        {baccTracks.map((t) => <SelectItem key={t.id} value={t.id}>{t.name_ar}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="المادة">
+                    <Select value={form.subject_id || NONE} onValueChange={(v) => set("subject_id", v === NONE ? "" : v)}>
+                      <SelectTrigger><SelectValue placeholder="اختر المادة" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>بدون</SelectItem>
+                        {baccSubjects.map((sub) => <SelectItem key={sub.id} value={sub.id}>{sub.name_ar}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="شارة (Badge)"><Input value={form.badge} onChange={(e) => set("badge", e.target.value)} placeholder="الأكثر طلبًا" /></Field>

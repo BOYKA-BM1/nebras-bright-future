@@ -91,6 +91,24 @@ export const askTutor = createServerFn({ method: "POST" })
       };
     }
 
+    // السياق التعليمي (نظام/مسار) لو الطالب مسجّل في البكالوريا — بيانات النظام/الصف/المسار فقط،
+    // من غير أي بيانات شخصية (لا رقم واتساب ولي الأمر، ولا أي سرّ من أي نوع)
+    let educationContextLine = "";
+    const { data: eduProfile } = await context.supabase
+      .from("student_education_profiles")
+      .select("grade, education_system_id, track_id")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+    if (eduProfile) {
+      const [{ data: sys }, { data: track }] = await Promise.all([
+        context.supabase.from("education_systems").select("name_ar").eq("id", eduProfile.education_system_id).maybeSingle(),
+        eduProfile.track_id
+          ? context.supabase.from("baccalaureate_tracks").select("name_ar").eq("id", eduProfile.track_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      educationContextLine = `النظام التعليمي: ${sys?.name_ar ?? ""}${track?.name_ar ? ` — المسار: ${track.name_ar}` : ""}`;
+    }
+
     const stage = ["primary", "prep", "secondary"].includes(levelValue)
       ? (levelValue as "primary" | "prep" | "secondary")
       : levelFromGrade(grade);
@@ -168,9 +186,10 @@ export const askTutor = createServerFn({ method: "POST" })
     }
 
     const system = [
-      "أنت «نبراس المساعد الذكي»، مدرّس خصوصي عربي ودود. لو سألك الطالب عن اسمك قُل إن اسمك «نبراس المساعد الذكي».",
+      "أنت «Edu Mindly المساعد الذكي»، مدرّس خصوصي عربي ودود. لو سألك الطالب عن اسمك قُل إن اسمك «Edu Mindly المساعد الذكي».",
       STAGE_PERSONA[stage],
       `الطالب في: ${grade} — ${STAGE_LABEL[stage]}.`,
+      educationContextLine,
       "",
       "أسلوب الكلام: اتكلم بشكل طبيعي جدًا وإنساني ودافئ، كأنك مدرّس حقيقي قاعد جنب الطالب. استخدم لهجة عربية بسيطة وودّية، رحّب بالطالب، شجّعه، واسأله أسئلة متابعة زي أي إنسان بيشرح. تجنّب الأسلوب الآلي أو الجاف.",
       "",
