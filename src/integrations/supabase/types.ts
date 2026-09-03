@@ -272,6 +272,41 @@ export type Database = {
           },
         ]
       }
+      certificates: {
+        Row: {
+          certificate_number: string
+          course_id: string
+          id: string
+          issued_at: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          certificate_number: string
+          course_id: string
+          id?: string
+          issued_at?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          certificate_number?: string
+          course_id?: string
+          id?: string
+          issued_at?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certificates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_messages: {
         Row: {
           body: string
@@ -1363,6 +1398,7 @@ export type Database = {
           is_published: boolean
           lesson_id: string | null
           pass_score: number
+          scheduled_at: string | null
           section_id: string | null
           sort_order: number
           title: string
@@ -1376,6 +1412,7 @@ export type Database = {
           is_published?: boolean
           lesson_id?: string | null
           pass_score?: number
+          scheduled_at?: string | null
           section_id?: string | null
           sort_order?: number
           title: string
@@ -1389,6 +1426,7 @@ export type Database = {
           is_published?: boolean
           lesson_id?: string | null
           pass_score?: number
+          scheduled_at?: string | null
           section_id?: string | null
           sort_order?: number
           title?: string
@@ -1765,6 +1803,23 @@ export type Database = {
         Args: { _bucket: string; _max: number; _window_seconds: number }
         Returns: boolean
       }
+      claim_certificate: {
+        Args: { _course_id: string }
+        Returns: {
+          certificate_number: string
+          course_id: string
+          id: string
+          issued_at: string
+          status: string
+          student_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "certificates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       course_stats: {
         Args: never
         Returns: {
@@ -1777,6 +1832,7 @@ export type Database = {
         }[]
       }
       gen_enrollment_code: { Args: never; Returns: string }
+      generate_certificate_number: { Args: never; Returns: string }
       get_or_create_child_link_code: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -1888,6 +1944,16 @@ export type Database = {
         Returns: {
           students: number
           teacher_id: string
+        }[]
+      }
+      verify_certificate: {
+        Args: { _number: string }
+        Returns: {
+          certificate_number: string
+          course_title: string
+          issued_at: string
+          status: string
+          student_name: string
         }[]
       }
     }
