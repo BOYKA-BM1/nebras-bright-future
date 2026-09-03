@@ -551,6 +551,42 @@ export type Database = {
           },
         ]
       }
+      files: {
+        Row: {
+          context: string
+          created_at: string
+          id: string
+          mime_type: string | null
+          original_filename: string
+          owner_id: string
+          related_id: string | null
+          size_bytes: number | null
+          storage_path: string
+        }
+        Insert: {
+          context?: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          original_filename: string
+          owner_id: string
+          related_id?: string | null
+          size_bytes?: number | null
+          storage_path: string
+        }
+        Update: {
+          context?: string
+          created_at?: string
+          id?: string
+          mime_type?: string | null
+          original_filename?: string
+          owner_id?: string
+          related_id?: string | null
+          size_bytes?: number | null
+          storage_path?: string
+        }
+        Relationships: []
+      }
       knowledge_docs: {
         Row: {
           content: string
@@ -924,6 +960,36 @@ export type Database = {
           screen?: string | null
           timezone?: string | null
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          assignment_enabled: boolean
+          course_enabled: boolean
+          exam_enabled: boolean
+          montage_enabled: boolean
+          parent_digest_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assignment_enabled?: boolean
+          course_enabled?: boolean
+          exam_enabled?: boolean
+          montage_enabled?: boolean
+          parent_digest_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assignment_enabled?: boolean
+          course_enabled?: boolean
+          exam_enabled?: boolean
+          montage_enabled?: boolean
+          parent_digest_enabled?: boolean
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1930,6 +1996,15 @@ export type Database = {
       review_payment_request: {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
+      }
+      send_admin_broadcast: {
+        Args: {
+          _body: string
+          _link?: string
+          _target_role: string
+          _title: string
+        }
+        Returns: number
       }
       stage_counts: {
         Args: never
