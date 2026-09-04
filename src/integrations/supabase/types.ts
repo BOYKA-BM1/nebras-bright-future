@@ -477,9 +477,12 @@ export type Database = {
       }
       courses: {
         Row: {
+          academic_year_id: string | null
+          baccalaureate_track_id: string | null
           badge: string | null
           created_at: string
           description: string | null
+          education_system_id: string | null
           grade: string | null
           hours: number
           id: string
@@ -492,6 +495,7 @@ export type Database = {
           sort_order: number
           stage_id: string | null
           subject: string | null
+          subject_id: string | null
           teacher_id: string | null
           title: string
           track: string
@@ -500,9 +504,12 @@ export type Database = {
           videos_count: number
         }
         Insert: {
+          academic_year_id?: string | null
+          baccalaureate_track_id?: string | null
           badge?: string | null
           created_at?: string
           description?: string | null
+          education_system_id?: string | null
           grade?: string | null
           hours?: number
           id?: string
@@ -515,6 +522,7 @@ export type Database = {
           sort_order?: number
           stage_id?: string | null
           subject?: string | null
+          subject_id?: string | null
           teacher_id?: string | null
           title: string
           track?: string
@@ -523,9 +531,12 @@ export type Database = {
           videos_count?: number
         }
         Update: {
+          academic_year_id?: string | null
+          baccalaureate_track_id?: string | null
           badge?: string | null
           created_at?: string
           description?: string | null
+          education_system_id?: string | null
           grade?: string | null
           hours?: number
           id?: string
@@ -538,6 +549,7 @@ export type Database = {
           sort_order?: number
           stage_id?: string | null
           subject?: string | null
+          subject_id?: string | null
           teacher_id?: string | null
           title?: string
           track?: string
@@ -547,10 +559,38 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "courses_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courses_baccalaureate_track_id_fkey"
+            columns: ["baccalaureate_track_id"]
+            isOneToOne: false
+            referencedRelation: "baccalaureate_tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courses_education_system_id_fkey"
+            columns: ["education_system_id"]
+            isOneToOne: false
+            referencedRelation: "education_systems"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "courses_stage_id_fkey"
             columns: ["stage_id"]
             isOneToOne: false
             referencedRelation: "stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "courses_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
             referencedColumns: ["id"]
           },
           {
@@ -1395,6 +1435,7 @@ export type Database = {
           id: string
           level: string | null
           onboarded: boolean
+          parent_name: string | null
           parent_phone: string | null
           phone: string | null
           stage_id: string | null
@@ -1414,6 +1455,7 @@ export type Database = {
           id: string
           level?: string | null
           onboarded?: boolean
+          parent_name?: string | null
           parent_phone?: string | null
           phone?: string | null
           stage_id?: string | null
@@ -1433,6 +1475,7 @@ export type Database = {
           id?: string
           level?: string | null
           onboarded?: boolean
+          parent_name?: string | null
           parent_phone?: string | null
           phone?: string | null
           stage_id?: string | null
@@ -1839,6 +1882,58 @@ export type Database = {
         }
         Relationships: []
       }
+      student_education_profiles: {
+        Row: {
+          academic_year_id: string | null
+          created_at: string
+          education_system_id: string
+          grade: string
+          track_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          created_at?: string
+          education_system_id: string
+          grade: string
+          track_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          created_at?: string
+          education_system_id?: string
+          grade?: string
+          track_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_education_profiles_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_education_profiles_education_system_id_fkey"
+            columns: ["education_system_id"]
+            isOneToOne: false
+            referencedRelation: "education_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_education_profiles_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "baccalaureate_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subjects: {
         Row: {
           academic_year_id: string | null
@@ -1996,6 +2091,54 @@ export type Database = {
         }
         Relationships: []
       }
+      track_change_requests: {
+        Row: {
+          created_at: string
+          current_track_id: string | null
+          id: string
+          requested_track_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_track_id?: string | null
+          id?: string
+          requested_track_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_track_id?: string | null
+          id?: string
+          requested_track_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_change_requests_current_track_id_fkey"
+            columns: ["current_track_id"]
+            isOneToOne: false
+            referencedRelation: "baccalaureate_tracks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "track_change_requests_requested_track_id_fkey"
+            columns: ["requested_track_id"]
+            isOneToOne: false
+            referencedRelation: "baccalaureate_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2132,6 +2275,10 @@ export type Database = {
       }
       increment_visits: { Args: never; Returns: number }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_eligible_for_course: {
+        Args: { _course_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_email_banned: { Args: { _email: string }; Returns: boolean }
       is_enrolled: {
         Args: { _course_id: string; _user_id: string }
@@ -2215,10 +2362,48 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      request_track_change: {
+        Args: { _requested_track_id: string }
+        Returns: {
+          created_at: string
+          current_track_id: string | null
+          id: string
+          requested_track_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "track_change_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reset_device: { Args: { _user_id: string }; Returns: undefined }
       review_payment_request: {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
+      }
+      review_track_change: {
+        Args: { _approve: boolean; _request_id: string }
+        Returns: {
+          created_at: string
+          current_track_id: string | null
+          id: string
+          requested_track_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "track_change_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       send_admin_broadcast: {
         Args: {
