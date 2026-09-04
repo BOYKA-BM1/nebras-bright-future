@@ -110,10 +110,10 @@ export function useSendAdminBroadcast() {
   return useMutation({
     mutationFn: async (input: { targetRole: string | null; title: string; body: string; link?: string | null }) => {
       const { data, error } = await supabase.rpc("send_admin_broadcast", {
-        _target_role: input.targetRole,
+        _target_role: input.targetRole as string,
         _title: input.title,
         _body: input.body,
-        _link: input.link ?? null,
+        _link: input.link ?? undefined,
       });
       if (error) throw error;
       return data;
