@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_years: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          name: string
+          start_date: string | null
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          start_date?: string | null
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_date?: string | null
+        }
+        Relationships: []
+      }
       ai_conversations: {
         Row: {
           created_at: string
@@ -210,6 +237,39 @@ export type Database = {
           metadata?: Json
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      baccalaureate_tracks: {
+        Row: {
+          active: boolean
+          applicable_grades: string[]
+          code: string
+          created_at: string
+          id: string
+          name_ar: string
+          name_en: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          applicable_grades?: string[]
+          code: string
+          created_at?: string
+          id?: string
+          name_ar: string
+          name_en: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          applicable_grades?: string[]
+          code?: string
+          created_at?: string
+          id?: string
+          name_ar?: string
+          name_en?: string
+          sort_order?: number
         }
         Relationships: []
       }
@@ -501,6 +561,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      education_systems: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          name_ar: string
+          name_en: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          name_ar: string
+          name_en: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          name_ar?: string
+          name_en?: string
+        }
+        Relationships: []
       }
       enrollments: {
         Row: {
@@ -1751,6 +1838,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      subjects: {
+        Row: {
+          academic_year_id: string | null
+          active: boolean
+          created_at: string
+          education_system_id: string
+          grade: string
+          id: string
+          is_required: boolean
+          name_ar: string
+          name_en: string | null
+          subject_type: string
+          track_id: string | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          active?: boolean
+          created_at?: string
+          education_system_id: string
+          grade: string
+          id?: string
+          is_required?: boolean
+          name_ar: string
+          name_en?: string | null
+          subject_type?: string
+          track_id?: string | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          active?: boolean
+          created_at?: string
+          education_system_id?: string
+          grade?: string
+          id?: string
+          is_required?: boolean
+          name_ar?: string
+          name_en?: string | null
+          subject_type?: string
+          track_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subjects_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subjects_education_system_id_fkey"
+            columns: ["education_system_id"]
+            isOneToOne: false
+            referencedRelation: "education_systems"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subjects_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "baccalaureate_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_tickets: {
         Row: {
