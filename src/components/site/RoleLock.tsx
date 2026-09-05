@@ -19,6 +19,7 @@ export function RoleLock({ children }: { children: React.ReactNode }) {
     isCustomerService,
     isSecretary,
     isPhotographer,
+    isParent,
     isLoading,
   } = useRoles();
   const location = useLocation();
