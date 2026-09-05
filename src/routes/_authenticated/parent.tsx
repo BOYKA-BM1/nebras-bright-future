@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Logo } from "@/components/site/Logo";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAuth } from "@/hooks/use-auth";
-import { useMyChildren, useLinkChild, useChildProgress, type LinkedChild } from "@/hooks/use-parent";
+import { useMyChildren, useLinkChild, useChildProgress, useChildNotifications, type LinkedChild } from "@/hooks/use-parent";
 import { useChildEducationProfile, useEducationSystems, useBaccalaureateTracks } from "@/hooks/use-baccalaureate";
 
 export const Route = createFileRoute("/_authenticated/parent")({
