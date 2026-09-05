@@ -116,6 +116,38 @@ export function useChildProgress(studentId: string | null) {
   });
 }
 
+export type ChildNotification = {
+  id: string;
+  title: string;
+  body: string | null;
+  type: string;
+  createdAt: string;
+};
+
+/** إشعارات الطالب — ولي الأمر يشوفها للأبناء المرتبطين بيه فقط عبر RLS */
+export function useChildNotifications(studentId: string | null) {
+  return useQuery({
+    queryKey: ["parent-child-notifications", studentId],
+    enabled: !!studentId,
+    queryFn: async (): Promise<ChildNotification[]> => {
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id, title, body, type, created_at")
+        .eq("user_id", studentId!)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data ?? []).map((n) => ({
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        type: n.type,
+        createdAt: n.created_at,
+      }));
+    },
+  });
+}
+
 export type LinkedParent = { linkId: string; parentUserId: string; fullName: string };
 
 /** أولياء الأمور المرتبطين بحسابي — الطالب بيشوفهم عشان يقدر يلغي الربط لو حابب */
