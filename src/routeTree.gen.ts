@@ -24,6 +24,7 @@ import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedPsychRouteImport } from './routes/_authenticated/psych'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedParentLinkRouteImport } from './routes/_authenticated/parent-link'
 import { Route as AuthenticatedParentRouteImport } from './routes/_authenticated/parent'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -138,6 +139,11 @@ const AuthenticatedPsychRoute = AuthenticatedPsychRouteImport.update({
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedParentLinkRoute = AuthenticatedParentLinkRouteImport.update({
+  id: '/parent-link',
+  path: '/parent-link',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedParentRoute = AuthenticatedParentRouteImport.update({
@@ -392,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/parent': typeof AuthenticatedParentRoute
+  '/parent-link': typeof AuthenticatedParentLinkRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/psych': typeof AuthenticatedPsychRoute
   '/staff': typeof AuthenticatedStaffRouteWithChildren
@@ -447,6 +454,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/parent': typeof AuthenticatedParentRoute
+  '/parent-link': typeof AuthenticatedParentLinkRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/psych': typeof AuthenticatedPsychRoute
   '/teacher': typeof AuthenticatedTeacherRoute
@@ -505,6 +513,7 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/parent': typeof AuthenticatedParentRoute
+  '/_authenticated/parent-link': typeof AuthenticatedParentLinkRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/psych': typeof AuthenticatedPsychRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRouteWithChildren
@@ -564,6 +573,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/parent'
+    | '/parent-link'
     | '/profile'
     | '/psych'
     | '/staff'
@@ -619,6 +629,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/parent'
+    | '/parent-link'
     | '/profile'
     | '/psych'
     | '/teacher'
@@ -676,6 +687,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/onboarding'
     | '/_authenticated/parent'
+    | '/_authenticated/parent-link'
     | '/_authenticated/profile'
     | '/_authenticated/psych'
     | '/_authenticated/staff'
@@ -834,6 +846,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/parent-link': {
+      id: '/_authenticated/parent-link'
+      path: '/parent-link'
+      fullPath: '/parent-link'
+      preLoaderRoute: typeof AuthenticatedParentLinkRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/parent': {
@@ -1231,6 +1250,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedParentRoute: typeof AuthenticatedParentRoute
+  AuthenticatedParentLinkRoute: typeof AuthenticatedParentLinkRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedPsychRoute: typeof AuthenticatedPsychRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRouteWithChildren
@@ -1255,6 +1275,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedParentRoute: AuthenticatedParentRoute,
+  AuthenticatedParentLinkRoute: AuthenticatedParentLinkRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedPsychRoute: AuthenticatedPsychRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRouteWithChildren,

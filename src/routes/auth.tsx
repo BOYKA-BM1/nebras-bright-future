@@ -38,6 +38,7 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [accountType, setAccountType] = useState<"student" | "parent">("student");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
