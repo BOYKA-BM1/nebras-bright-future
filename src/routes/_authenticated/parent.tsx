@@ -161,6 +161,8 @@ function ChildProgressPanel({ child }: { child: LinkedChild }) {
         )}
       </div>
 
+      <ChildNotificationsList studentId={child.studentId} />
+
       <h3 className="mt-6 flex items-center gap-2 text-base font-extrabold">
         <ClipboardList className="h-4 w-4 text-primary" /> آخر نتائج الاختبارات
       </h3>
