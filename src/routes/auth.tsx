@@ -293,7 +293,37 @@ function AuthPage() {
               : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
           </p>
 
-          <div className="mt-7">
+          {mode === "signup" && (
+            <div className="mt-6">
+              <p className="mb-2 text-center text-xs font-bold text-muted-foreground">نوع الحساب</p>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-background/50 p-1.5">
+                {([
+                  { key: "student", label: "طالب" },
+                  { key: "parent", label: "ولي أمر" },
+                ] as const).map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => setAccountType(o.key)}
+                    className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
+                      accountType === o.key
+                        ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                        : "text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                {accountType === "parent"
+                  ? "بعد إنشاء الحساب هتكتب كود المتابعة اللي عند ابنك لربط الحسابين."
+                  : "هتكمل خطوات تسجيل الطالب عادي بعد إنشاء الحساب."}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-6">
             <button
               type="button"
               onClick={handleGoogle}
