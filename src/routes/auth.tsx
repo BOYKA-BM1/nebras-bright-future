@@ -165,17 +165,19 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin + "/dashboard",
-            data: { full_name: fullName },
+            emailRedirectTo:
+              window.location.origin + (accountType === "parent" ? "/parent-link" : "/dashboard"),
+            data: { full_name: fullName, account_type: accountType },
           },
         });
         if (error) throw error;
         toast.success("تم إنشاء حسابك بنجاح! 🎉");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("أهلًا بعودتك! 👋");
+        navigate({ to: accountType === "parent" ? "/parent-link" : "/dashboard" });
+        return;
       }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("أهلًا بعودتك! 👋");
       navigate({ to: "/dashboard" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "حدث خطأ";
