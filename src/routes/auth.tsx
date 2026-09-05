@@ -38,6 +38,7 @@ function AuthPage() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"login" | "signup">("login");
+  const [accountType, setAccountType] = useState<"student" | "parent">("student");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -164,17 +165,19 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin + "/dashboard",
-            data: { full_name: fullName },
+            emailRedirectTo:
+              window.location.origin + (accountType === "parent" ? "/parent-link" : "/dashboard"),
+            data: { full_name: fullName, account_type: accountType },
           },
         });
         if (error) throw error;
         toast.success("تم إنشاء حسابك بنجاح! 🎉");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        toast.success("أهلًا بعودتك! 👋");
+        navigate({ to: accountType === "parent" ? "/parent-link" : "/dashboard" });
+        return;
       }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("أهلًا بعودتك! 👋");
       navigate({ to: "/dashboard" });
     } catch (err) {
       const message = err instanceof Error ? err.message : "حدث خطأ";
@@ -290,7 +293,37 @@ function AuthPage() {
               : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
           </p>
 
-          <div className="mt-7">
+          {mode === "signup" && (
+            <div className="mt-6">
+              <p className="mb-2 text-center text-xs font-bold text-muted-foreground">نوع الحساب</p>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-background/50 p-1.5">
+                {([
+                  { key: "student", label: "طالب" },
+                  { key: "parent", label: "ولي أمر" },
+                ] as const).map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => setAccountType(o.key)}
+                    className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
+                      accountType === o.key
+                        ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                        : "text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                {accountType === "parent"
+                  ? "بعد إنشاء الحساب هتكتب كود المتابعة اللي عند ابنك لربط الحسابين."
+                  : "هتكمل خطوات تسجيل الطالب عادي بعد إنشاء الحساب."}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-6">
             <button
               type="button"
               onClick={handleGoogle}

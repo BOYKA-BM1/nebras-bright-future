@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Loader2, Users, LogOut, LinkIcon, BookOpen, CheckCircle2, ClipboardList, UserPlus, CalendarDays } from "lucide-react";
+import { Loader2, Users, LogOut, LinkIcon, BookOpen, CheckCircle2, ClipboardList, UserPlus, CalendarDays, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { Logo } from "@/components/site/Logo";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAuth } from "@/hooks/use-auth";
-import { useMyChildren, useLinkChild, useChildProgress, type LinkedChild } from "@/hooks/use-parent";
+import { useMyChildren, useLinkChild, useChildProgress, useChildNotifications, type LinkedChild } from "@/hooks/use-parent";
 import { useChildEducationProfile, useEducationSystems, useBaccalaureateTracks } from "@/hooks/use-baccalaureate";
 
 export const Route = createFileRoute("/_authenticated/parent")({
@@ -161,6 +161,8 @@ function ChildProgressPanel({ child }: { child: LinkedChild }) {
         )}
       </div>
 
+      <ChildNotificationsList studentId={child.studentId} />
+
       <h3 className="mt-6 flex items-center gap-2 text-base font-extrabold">
         <ClipboardList className="h-4 w-4 text-primary" /> آخر نتائج الاختبارات
       </h3>
@@ -177,5 +179,34 @@ function ChildProgressPanel({ child }: { child: LinkedChild }) {
         )}
       </div>
     </section>
+  );
+}
+
+function ChildNotificationsList({ studentId }: { studentId: string }) {
+  const { data: items = [], isLoading } = useChildNotifications(studentId);
+
+  return (
+    <>
+      <h3 className="mt-6 flex items-center gap-2 text-base font-extrabold">
+        <Bell className="h-4 w-4 text-primary" /> إشعارات الطالب
+      </h3>
+      <div className="mt-3 space-y-2">
+        {isLoading ? (
+          <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+        ) : items.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">لا توجد إشعارات بعد.</p>
+        ) : (
+          items.map((n) => (
+            <div key={n.id} className="rounded-xl border border-border/60 bg-card px-4 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-bold">{n.title}</span>
+                <span className="text-[11px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString("ar-EG")}</span>
+              </div>
+              {n.body && <p className="mt-1 text-xs text-muted-foreground">{n.body}</p>}
+            </div>
+          ))
+        )}
+      </div>
+    </>
   );
 }

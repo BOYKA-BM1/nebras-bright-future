@@ -1,0 +1,14 @@
+GRANT EXECUTE ON FUNCTION public.has_role(uuid, app_role) TO anon;
+GRANT EXECUTE ON FUNCTION public.owns_course(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.is_parent_of(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.is_enrolled(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.is_any_admin(uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.is_support_staff(uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.is_photographer(uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.is_eligible_for_course(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.assignment_targets_student(uuid, uuid) TO anon;
+GRANT EXECUTE ON FUNCTION public.my_class_room() TO anon;
+GRANT EXECUTE ON FUNCTION public.platform_stats() TO anon;
+GRANT EXECUTE ON FUNCTION public.course_stats() TO anon;
+GRANT EXECUTE ON FUNCTION public.stage_counts() TO anon;
+GRANT EXECUTE ON FUNCTION public.teacher_stats() TO anon;
