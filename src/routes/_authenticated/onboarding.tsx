@@ -51,13 +51,18 @@ function Onboarding() {
   }, [profile?.full_name]);
 
   // إعادة التوجيه حسب الدور/الحالة
+  const accountType = user?.user_metadata?.account_type as string | undefined;
   useEffect(() => {
     if (!rolesLoading && (isAdmin || isTeacher)) {
       navigate({ to: isAdmin ? "/admin" : "/teacher" });
+    } else if (!rolesLoading && !isAdmin && !isTeacher && !accountType) {
+      navigate({ to: "/account-type" });
+    } else if (accountType === "parent") {
+      navigate({ to: "/parent-link" });
     } else if (!profileLoading && profile?.onboarded) {
       navigate({ to: "/dashboard" });
     }
-  }, [rolesLoading, isAdmin, isTeacher, profileLoading, profile, navigate]);
+  }, [rolesLoading, isAdmin, isTeacher, accountType, profileLoading, profile, navigate]);
 
   if (rolesLoading || stagesLoading || profileLoading || isAdmin || isTeacher || profile?.onboarded) {
     return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
