@@ -65,12 +65,22 @@ function Dashboard() {
 
   const isStaffRole = isTeacher || isMontage || isCustomerService || isSecretary || isParent;
 
-  // الطالب اللي لسه ما اختارش مرحلته يروح للأونبوردنج
+  // الحساب الجديد يختار نوعه (طالب / ولي أمر) الأول، وبعدين الأونبوردنج
+  const accountType = user?.user_metadata?.account_type as string | undefined;
   useEffect(() => {
-    if (!rolesLoading && !isAdmin && !isStaffRole && !profileLoading && profile && !profile.onboarded) {
+    if (rolesLoading || isAdmin || isStaffRole || isPsychologist) return;
+    if (!accountType) {
+      navigate({ to: "/account-type" });
+      return;
+    }
+    if (accountType === "parent") {
+      navigate({ to: "/parent-link" });
+      return;
+    }
+    if (!profileLoading && profile && !profile.onboarded) {
       navigate({ to: "/onboarding" });
     }
-  }, [rolesLoading, isAdmin, isStaffRole, profileLoading, profile, navigate]);
+  }, [rolesLoading, isAdmin, isStaffRole, isPsychologist, accountType, profileLoading, profile, navigate]);
 
   const completion = profileCompletion(profile);
 
