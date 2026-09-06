@@ -2037,6 +2037,54 @@ export type Database = {
         }
         Relationships: []
       }
+      teacher_applications: {
+        Row: {
+          bio: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          full_name: string
+          id?: string
+          phone: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       teachers: {
         Row: {
           bio: string | null
@@ -2385,6 +2433,30 @@ export type Database = {
       review_payment_request: {
         Args: { _approve: boolean; _id: string; _note?: string }
         Returns: undefined
+      }
+      review_teacher_application: {
+        Args: { _approve: boolean; _id: string; _notes?: string }
+        Returns: {
+          bio: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "teacher_applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       review_track_change: {
         Args: { _approve: boolean; _request_id: string }
