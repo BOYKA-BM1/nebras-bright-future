@@ -22,7 +22,7 @@ type Step = 1 | 2 | "system" | 3 | "track";
 
 function Onboarding() {
   const navigate = useNavigate();
-  const { confirmSignOut } = useAuth();
+  const { user, confirmSignOut } = useAuth();
   const { isAdmin, isTeacher, isLoading: rolesLoading } = useRoles();
   const { data: stages = [], isLoading: stagesLoading } = useStages();
   const { data: profile, isLoading: profileLoading } = useProfile();
