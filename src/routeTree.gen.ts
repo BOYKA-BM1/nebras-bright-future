@@ -39,6 +39,7 @@ import { Route as AuthenticatedBookmarksRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAssignmentsRouteImport } from './routes/_authenticated/assignments'
 import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAccountTypeRouteImport } from './routes/_authenticated/account-type'
 import { Route as AuthenticatedStaffIndexRouteImport } from './routes/_authenticated/staff.index'
 import { Route as AuthenticatedAiIndexRouteImport } from './routes/_authenticated/ai.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
@@ -220,6 +221,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAccountTypeRoute =
+  AuthenticatedAccountTypeRouteImport.update({
+    id: '/account-type',
+    path: '/account-type',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedStaffIndexRoute = AuthenticatedStaffIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -384,6 +391,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
+  '/account-type': typeof AuthenticatedAccountTypeRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/ai': typeof AuthenticatedAiRouteWithChildren
   '/assignments': typeof AuthenticatedAssignmentsRoute
@@ -442,6 +450,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
+  '/account-type': typeof AuthenticatedAccountTypeRoute
   '/assignments': typeof AuthenticatedAssignmentsRoute
   '/bookmarks': typeof AuthenticatedBookmarksRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -499,6 +508,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/support': typeof SupportRoute
+  '/_authenticated/account-type': typeof AuthenticatedAccountTypeRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/ai': typeof AuthenticatedAiRouteWithChildren
   '/_authenticated/assignments': typeof AuthenticatedAssignmentsRoute
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
+    | '/account-type'
     | '/admin'
     | '/ai'
     | '/assignments'
@@ -617,6 +628,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
+    | '/account-type'
     | '/assignments'
     | '/bookmarks'
     | '/calendar'
@@ -673,6 +685,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/support'
+    | '/_authenticated/account-type'
     | '/_authenticated/admin'
     | '/_authenticated/ai'
     | '/_authenticated/assignments'
@@ -951,6 +964,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/account-type': {
+      id: '/_authenticated/account-type'
+      path: '/account-type'
+      fullPath: '/account-type'
+      preLoaderRoute: typeof AuthenticatedAccountTypeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/staff/': {
@@ -1236,6 +1256,7 @@ const AuthenticatedManageCourseIdRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAccountTypeRoute: typeof AuthenticatedAccountTypeRoute
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAiRoute: typeof AuthenticatedAiRouteWithChildren
   AuthenticatedAssignmentsRoute: typeof AuthenticatedAssignmentsRoute
@@ -1261,6 +1282,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAccountTypeRoute: AuthenticatedAccountTypeRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAiRoute: AuthenticatedAiRouteWithChildren,
   AuthenticatedAssignmentsRoute: AuthenticatedAssignmentsRoute,
