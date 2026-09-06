@@ -80,7 +80,7 @@ export function useReviewTeacherApplication() {
       const { error } = await supabase.rpc("review_teacher_application", {
         _id: id,
         _approve: approve,
-        _notes: notes ?? null,
+        _notes: notes ?? undefined,
       });
       if (error) throw error;
     },
