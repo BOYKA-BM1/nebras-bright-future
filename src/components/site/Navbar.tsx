@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Menu, X, LogOut, LayoutDashboard, HeartHandshake, MessagesSquare } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, HeartHandshake, MessagesSquare, Home, BookOpen, PlayCircle, Bot, MessageCircle, LifeBuoy } from "lucide-react";
+import { SearchBar } from "./SearchBar";
+
+const ICONS: Record<string, typeof Home> = { "/#home": Home, "/courses": BookOpen, "/lectures": PlayCircle, "/ai": Bot, "/support": MessageCircle, "/#help": LifeBuoy };
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -49,22 +52,37 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
+    <>
+    <aside className="app-sidebar fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-sidebar-border bg-sidebar p-4 lg:flex" dir="rtl">
+      <div className="mb-8 px-2"><Logo showTagline /></div>
+      <nav className="flex flex-1 flex-col gap-1">
+        {links.map((link) => {
+          const Icon = ICONS[link.href] ?? Home;
+          return (
+            <button key={link.href} onClick={() => handleNav(link.href, link.gated)}
+              className="flex items-center gap-3 rounded-2xl px-4 py-3 text-right text-sm font-bold text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground">
+              <Icon className="h-5 w-5 text-primary" /> {link.label}
+            </button>
+          );
+        })}
+        {showRooms && (
+          <>
+            <Link to="/psych" className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/75 hover:bg-sidebar-accent"><HeartHandshake className="h-5 w-5 text-primary" /> الغرفة النفسية</Link>
+            <Link to="/community" className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/75 hover:bg-sidebar-accent"><MessagesSquare className="h-5 w-5 text-primary" /> غرفة صفّي</Link>
+          </>
+        )}
+      </nav>
+      {user && (
+        <Link to="/dashboard" className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold">
+          <LayoutDashboard className="h-4 w-4" /> لوحتي
+        </Link>
+      )}
+    </aside>
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl lg:left-64">
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <Logo />
+        <Logo className="lg:hidden" />
 
-        <ul className="hidden items-center gap-1 lg:flex">
-          {links.map((link) => (
-            <li key={link.href}>
-              <button
-                onClick={() => handleNav(link.href, link.gated)}
-                className="rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                {link.label}
-              </button>
-            </li>
-          ))}
-        </ul>
+        <div className="hidden flex-1 justify-center md:flex"><div className="w-full max-w-md"><SearchBar /></div></div>
 
         <div className="flex items-center gap-2">
         <ThemeToggle />
@@ -210,5 +228,6 @@ export function Navbar() {
         </div>
       )}
     </header>
+    </>
   );
 }
