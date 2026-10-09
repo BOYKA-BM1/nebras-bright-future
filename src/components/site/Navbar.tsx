@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Menu, X, LogOut, LayoutDashboard, HeartHandshake, MessagesSquare } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
+import { ThemeToggle } from "./ThemeToggle";
 import { navLinks } from "@/data/site";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -65,6 +66,8 @@ export function Navbar() {
           ))}
         </ul>
 
+        <div className="flex items-center gap-2">
+        <ThemeToggle />
         <div className="hidden items-center gap-2 sm:flex">
           {user ? (
             <>
@@ -135,6 +138,7 @@ export function Navbar() {
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
+        </div>
       </nav>
 
       {open && (

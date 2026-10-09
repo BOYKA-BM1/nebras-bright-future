@@ -1,6 +1,6 @@
 import { Star, Users, BookOpen, PlayCircle, Eye } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import heroBanner from "@/assets/hero-banner.jpg";
+import brain from "@/assets/canva-brain.png.asset.json";
 import { usePlatformStats, useTrackVisit } from "@/hooks/use-stats";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -83,11 +83,11 @@ export function Hero() {
         <div className="relative">
           <div className="absolute inset-0 -z-10 rounded-[2rem] bg-primary/20 blur-3xl" />
           <img
-            src={heroBanner}
+            src={brain.url}
             alt="منصة Edu Mindly التعليمية"
             width={1024}
             height={1024}
-            className="animate-float-slow mx-auto w-full max-w-md rounded-[2rem] border border-border/60 shadow-card"
+            className="animate-float-slow mx-auto w-full max-w-md "
           />
         </div>
       </div>
