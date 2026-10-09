@@ -66,10 +66,24 @@ function StaffLayout() {
 
   return (
     <div className="min-h-screen bg-background">
+      <aside className="app-sidebar fixed inset-y-0 left-0 z-40 hidden w-64 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 lg:flex">
+        <div className="mb-6 px-2"><Logo showTagline /></div>
+        <div className="flex flex-col gap-1">
+          {nav.map((item) => {
+            const active = location.pathname.startsWith(item.to);
+            return (
+              <Link key={item.to} to={item.to}
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${active ? "bg-gradient-gold text-primary-foreground shadow-gold" : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"}`}>
+                <item.icon className="h-5 w-5" /> {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      </aside>
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
-            <Logo />
+            <Logo className="lg:hidden" />
             <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
               {label}
             </span>
@@ -88,7 +102,7 @@ function StaffLayout() {
             </button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6">
+        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6 lg:hidden">
           {nav.map((item) => {
             const active = location.pathname.startsWith(item.to);
             return (
