@@ -3,6 +3,7 @@ import { Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, Shiel
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
+import { ThemeToggle } from "@/components/site/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
@@ -75,6 +76,7 @@ function AdminLayout() {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold transition-colors hover:bg-accent">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">الموقع</span>
