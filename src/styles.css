@@ -215,3 +215,7 @@
 .animate-pulse-glow {
   animation: pulse-glow 5s ease-in-out infinite;
 }
+
+@media (min-width: 1024px) {
+  body:has(.app-sidebar) { padding-left: 16rem; }
+}
