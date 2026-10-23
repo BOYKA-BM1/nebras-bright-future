@@ -15,6 +15,7 @@ import { Logo } from "@/components/site/Logo";
 import { NotificationBell } from "@/components/site/NotificationBell";
 import { SearchBar } from "@/components/site/SearchBar";
 import { resolveImage } from "@/lib/catalog";
+import { LoadingState } from "@/components/shared/ui-states";
 
 export const Route = createFileRoute("/_authenticated/teacher")({
   component: TeacherDashboard,
@@ -74,7 +75,11 @@ function TeacherDashboard() {
   };
 
   if (isLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <LoadingState label="جاري تحميل لوحة المدرّس…" />
+      </div>
+    );
   }
 
   if (!isTeacher && !isAdmin) {

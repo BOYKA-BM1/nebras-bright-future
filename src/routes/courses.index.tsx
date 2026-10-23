@@ -42,14 +42,14 @@ function CoursesPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <header className="bg-hero pt-32 pb-6 text-center sm:pt-36">
+      <header className="bg-hero px-4 pb-6 pt-28 text-center sm:px-6 sm:pb-8 sm:pt-32 lg:pt-28">
         <span className="text-sm font-bold uppercase tracking-widest text-primary">
           الدورات
         </span>
-        <h1 className="mx-auto mt-3 max-w-3xl px-4 text-3xl font-extrabold sm:text-5xl">
+        <h1 className="mx-auto mt-3 max-w-3xl text-2xl font-extrabold sm:text-4xl lg:text-5xl">
           احجز <span className="text-gradient-gold">دورتك</span> دلوقتي
         </h1>
-        <p className="mx-auto mt-4 max-w-2xl px-4 text-lg text-muted-foreground">
+        <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground sm:mt-4 sm:text-lg">
           اختر مرحلتك وشعبتك، واحجز الدورة بحصصها المباشرة والمسجّلة.
         </p>
       </header>
