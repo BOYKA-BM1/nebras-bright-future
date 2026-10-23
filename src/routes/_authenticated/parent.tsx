@@ -7,6 +7,7 @@ import { NotificationBell } from "@/components/site/NotificationBell";
 import { useAuth } from "@/hooks/use-auth";
 import { useMyChildren, useLinkChild, useChildProgress, useChildNotifications, type LinkedChild } from "@/hooks/use-parent";
 import { useChildEducationProfile, useEducationSystems, useBaccalaureateTracks } from "@/hooks/use-baccalaureate";
+import { LoadingState, ErrorState, EmptyState } from "@/components/shared/ui-states";
 
 export const Route = createFileRoute("/_authenticated/parent")({
   component: ParentDashboard,
@@ -15,57 +16,81 @@ export const Route = createFileRoute("/_authenticated/parent")({
 function ParentDashboard() {
   const { confirmSignOut } = useAuth();
   const navigate = useNavigate();
-  const { data: children = [], isLoading } = useMyChildren();
+  const { data: children = [], isLoading, isError, refetch } = useMyChildren();
   const [activeChild, setActiveChild] = useState<LinkedChild | null>(null);
 
   const handleSignOut = () => confirmSignOut(() => navigate({ to: "/" }));
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <Logo />
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <NotificationBell />
-            <Link to="/calendar" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-              <CalendarDays className="h-4 w-4" /> <span className="hidden sm:inline">المواعيد</span>
+            <Link
+              to="/calendar"
+              className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <CalendarDays className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">المواعيد</span>
             </Link>
-            <button onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">خروج</span>
             </button>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Users className="h-5 w-5" /></span>
-          <div>
-            <h1 className="text-2xl font-extrabold sm:text-3xl">لوحة ولي الأمر</h1>
-            <p className="text-sm text-muted-foreground">تابع تقدّم أبنائك في الدروس والاختبارات.</p>
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Users className="h-5 w-5" aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">لوحة ولي الأمر</h1>
+            <p className="text-sm text-muted-foreground">تابع تقدّم أبنائك المرتبطين بحسابك فقط.</p>
           </div>
         </div>
 
         <LinkChildCard />
 
-        {isLoading ? (
-          <div className="mt-10 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        {isError ? (
+          <ErrorState
+            className="mt-8"
+            title="تعذّر تحميل الأبناء"
+            description="حصل خطأ أثناء جلب الحسابات المرتبطة."
+            onRetry={() => void refetch()}
+          />
+        ) : isLoading ? (
+          <LoadingState className="mt-8" label="جاري تحميل أبنائك…" />
         ) : children.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-muted-foreground">
-            لسه معندكش أبناء مرتبطين. استخدم الكود اللي هيديهولك ابنك من صفحة البروفايل بتاعته.
-          </div>
+          <EmptyState
+            className="mt-8"
+            title="لا يوجد أبناء مرتبطون"
+            description="استخدم كود الربط اللي يشاركه ابنك من صفحة ملفّه الشخصي."
+            icon={<Users className="h-6 w-6" aria-hidden />}
+          />
         ) : (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
             {children.map((c) => (
               <button
                 key={c.linkId}
+                type="button"
                 onClick={() => setActiveChild(c)}
-                className={`rounded-2xl border p-5 text-right shadow-card transition-colors ${
-                  activeChild?.linkId === c.linkId ? "border-primary bg-primary/5" : "border-border bg-card hover:bg-accent"
+                className={`rounded-2xl border p-4 text-start shadow-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-5 ${
+                  activeChild?.linkId === c.linkId
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card hover:bg-accent"
                 }`}
               >
                 <p className="font-extrabold">{c.fullName}</p>
-                {c.grade && <p className="mt-1 text-xs text-muted-foreground">{c.grade}</p>}
+                {c.grade ? <p className="mt-1 text-xs text-muted-foreground">{c.grade}</p> : null}
               </button>
             ))}
           </div>

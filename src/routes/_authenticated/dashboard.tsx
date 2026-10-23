@@ -16,6 +16,12 @@ import { NotificationBell } from "@/components/site/NotificationBell";
 import { SearchBar } from "@/components/site/SearchBar";
 import { GamificationPanel } from "@/components/site/GamificationPanel";
 import { resolveImage } from "@/lib/catalog";
+import {
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  StatCard as SharedStatCard,
+} from "@/components/shared/ui-states";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -25,11 +31,21 @@ function Dashboard() {
   const { user, confirmSignOut } = useAuth();
   const navigate = useNavigate();
   const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPsychologist, isParent, isLoading: rolesLoading } = useRoles();
-  const { data: courses = [] } = useCourses();
-  const { data: enrollments = [], isLoading } = useMyEnrollments();
+  const { data: courses = [], isError: coursesError, refetch: refetchCourses } = useCourses();
+  const {
+    data: enrollments = [],
+    isLoading,
+    isError: enrollmentsError,
+    refetch: refetchEnrollments,
+  } = useMyEnrollments();
   const { favoriteIds } = useFavorites();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const unenroll = useUnenroll();
+  const dataError = coursesError || enrollmentsError;
+  const refetchAll = () => {
+    void refetchCourses();
+    void refetchEnrollments();
+  };
 
   const handleUnenroll = (courseId: string, title: string) => {
     if (!window.confirm(`متأكد إنك عايز تلغي اشتراكك في "${title}"؟`)) return;
@@ -175,91 +191,156 @@ function Dashboard() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
         <HeroBanner name={name} />
 
-
-        <div className="mt-6"><SearchBar /></div>
+        <div className="mt-5 sm:mt-6">
+          <SearchBar />
+        </div>
 
         {!completion.complete && (
-          <Link to="/profile" className="mt-6 flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 transition-colors hover:bg-primary/15">
-            <AlertCircle className="h-5 w-5 shrink-0 text-primary" />
-            <div className="flex-1">
+          <Link
+            to="/profile"
+            className="mt-5 flex items-center gap-3 rounded-2xl border border-primary/40 bg-primary/10 p-4 transition-colors hover:bg-primary/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:mt-6"
+          >
+            <AlertCircle className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+            <div className="min-w-0 flex-1">
               <p className="font-bold">أكمل ملفك الشخصي ({completion.percent}%)</p>
-              <p className="text-sm text-muted-foreground">لازم تكمّل بياناتك علشان تقدر تحجز وتشترك في الدورات.</p>
+              <p className="text-sm text-muted-foreground">
+                لازم تكمّل بياناتك علشان تقدر تحجز وتشترك في الدورات.
+              </p>
             </div>
-            <ArrowLeft className="h-4 w-4 text-primary" />
+            <ArrowLeft className="h-4 w-4 shrink-0 text-primary" aria-hidden />
           </Link>
         )}
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
-          <StatCard icon={BookOpen} label="دوراتي" value={String(myCourses.length)} />
-          <StatCard icon={Wallet} label="إجمالي القيمة" value={`${totalSpent} ج.م`} />
-          <StatCard icon={Heart} label="المفضّلة" value={String(favoriteIds.size)} />
+        {/* Statistics from real enrollments / favorites only */}
+        <div className="mt-6 grid grid-cols-1 gap-3 min-[400px]:grid-cols-3 sm:mt-8 sm:gap-4">
+          <SharedStatCard icon={BookOpen} label="دوراتي" value={String(myCourses.length)} />
+          <SharedStatCard icon={Wallet} label="إجمالي القيمة" value={`${totalSpent} ج.م`} />
+          <SharedStatCard icon={Heart} label="المفضّلة" value={String(favoriteIds.size)} />
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <Link to="/psych" className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4 transition-colors hover:bg-primary/15">
-            <HeartHandshake className="h-6 w-6 shrink-0 text-primary" />
-            <div className="flex-1">
+        {/* Quick student rooms */}
+        <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-2 sm:gap-4">
+          <Link
+            to="/psych"
+            className="flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 p-4 transition-colors hover:bg-primary/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <HeartHandshake className="h-6 w-6 shrink-0 text-primary" aria-hidden />
+            <div className="min-w-0 flex-1">
               <p className="font-bold">الغرفة النفسية</p>
               <p className="text-xs text-muted-foreground">كلام سرّي مع دكتور نفسي أو اطلب مكالمة.</p>
             </div>
-            <ArrowLeft className="h-4 w-4 text-primary" />
+            <ArrowLeft className="h-4 w-4 shrink-0 text-primary" aria-hidden />
           </Link>
-          <Link to="/community" className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-accent">
-            <MessagesSquare className="h-6 w-6 shrink-0 text-primary" />
-            <div className="flex-1">
+          <Link
+            to="/community"
+            className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <MessagesSquare className="h-6 w-6 shrink-0 text-primary" aria-hidden />
+            <div className="min-w-0 flex-1">
               <p className="font-bold">غرفة صفّي</p>
               <p className="text-xs text-muted-foreground">دردشة جماعية مع زمايلك في نفس الصف.</p>
             </div>
-            <ArrowLeft className="h-4 w-4 text-primary" />
+            <ArrowLeft className="h-4 w-4 shrink-0 text-primary" aria-hidden />
           </Link>
         </div>
 
-        <h2 className="mt-12 text-xl font-extrabold">إنجازاتي ونقاطي</h2>
-        <div className="mt-4">
-          <GamificationPanel courses={myCourses.length} />
-        </div>
-
-        <h2 className="mt-12 text-xl font-extrabold">دوراتي</h2>
-
-        {isLoading ? (
-          <div className="mt-8 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : myCourses.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
-            <p className="text-muted-foreground">لسه ما اشتركتش في أي دورة.</p>
-            <Link to="/" hash="courses" className="mt-4 inline-block rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold">تصفّح الدورات</Link>
+        <section className="mt-10 sm:mt-12" aria-labelledby="dash-gamification">
+          <h2 id="dash-gamification" className="text-xl font-extrabold tracking-tight">
+            إنجازاتي ونقاطي
+          </h2>
+          <div className="mt-4">
+            <GamificationPanel courses={myCourses.length} />
           </div>
-        ) : (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {myCourses.map((c) => {
-              const img = resolveImage(c.image_url) ?? resolveImage(c.teacher?.image_url);
-              return (
-                <article key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
-                  {img ? <img src={img} alt={c.title} className="h-32 w-full object-cover" /> : <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent"><BookOpen className="h-8 w-8 text-primary/50" /></div>}
-                  <div className="p-4">
-                    <h3 className="font-bold leading-snug line-clamp-2">{c.title}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{c.teacher?.name}</p>
-                    <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                      <PlayCircle className="h-3.5 w-3.5 text-primary" /> {c.lessons_count} درس
+        </section>
+
+        <section className="mt-10 sm:mt-12" aria-labelledby="dash-my-courses">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="dash-my-courses" className="text-xl font-extrabold tracking-tight">
+              كمّل التعلّم
+            </h2>
+            <Link
+              to="/courses"
+              className="text-sm font-bold text-primary transition-colors hover:text-primary/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              تصفّح كل الدورات
+            </Link>
+          </div>
+
+          {dataError ? (
+            <ErrorState
+              className="mt-6"
+              title="تعذّر تحميل دوراتك"
+              description="حصل خطأ أثناء جلب الاشتراكات أو قائمة الدورات."
+              onRetry={refetchAll}
+            />
+          ) : isLoading ? (
+            <LoadingState className="mt-6" label="جاري تحميل دوراتك…" />
+          ) : myCourses.length === 0 ? (
+            <EmptyState
+              className="mt-6"
+              title="لسه ما اشتركتش في أي دورة"
+              description="تصفّح الكتالوج واشترك في دورة عشان تبدأ التعلّم."
+              action={
+                <Link
+                  to="/courses"
+                  className="inline-flex rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                >
+                  تصفّح الدورات
+                </Link>
+              }
+            />
+          ) : (
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {myCourses.map((c) => {
+                const img = resolveImage(c.image_url) ?? resolveImage(c.teacher?.image_url);
+                return (
+                  <article
+                    key={c.id}
+                    className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    {img ? (
+                      <img src={img} alt="" className="h-32 w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="flex h-32 items-center justify-center bg-gradient-to-br from-primary/15 to-transparent">
+                        <BookOpen className="h-8 w-8 text-primary/50" aria-hidden />
+                      </div>
+                    )}
+                    <div className="flex flex-1 flex-col p-4">
+                      <h3 className="line-clamp-2 font-bold leading-snug">{c.title}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{c.teacher?.name}</p>
+                      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                        <PlayCircle className="h-3.5 w-3.5 text-primary" aria-hidden />
+                        {c.lessons_count} درس
+                      </div>
+                      <div className="mt-auto pt-4">
+                        <Link
+                          to="/learn/$courseId"
+                          params={{ courseId: c.id }}
+                          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                        >
+                          <ArrowLeft className="h-4 w-4" aria-hidden />
+                          كمّل التعلّم
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleUnenroll(c.id, c.title)}
+                          disabled={unenroll.isPending}
+                          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-70"
+                        >
+                          <XCircle className="h-4 w-4" aria-hidden />
+                          إلغاء الاشتراك
+                        </button>
+                      </div>
                     </div>
-                    <Link to="/learn/$courseId" params={{ courseId: c.id }} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold">
-                      <ArrowLeft className="h-4 w-4" /> كمّل التعلّم
-                    </Link>
-                    <button
-                      onClick={() => handleUnenroll(c.id, c.title)}
-                      disabled={unenroll.isPending}
-                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-destructive/40 px-4 py-2 text-sm font-bold text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-70"
-                    >
-                      <XCircle className="h-4 w-4" /> إلغاء الاشتراك
-                    </button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         <SupportSection />
       </main>

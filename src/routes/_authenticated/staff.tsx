@@ -66,54 +66,85 @@ function StaffLayout() {
 
   return (
     <div className="min-h-screen bg-background">
-      <aside className="app-sidebar fixed inset-y-0 left-0 z-40 hidden w-64 flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar p-4 lg:flex">
-        <div className="mb-6 px-2"><Logo showTagline /></div>
-        <div className="flex flex-col gap-1">
-          {nav.map((item) => {
-            const active = location.pathname.startsWith(item.to);
-            return (
-              <Link key={item.to} to={item.to}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${active ? "bg-gradient-gold text-primary-foreground shadow-gold" : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"}`}>
-                <item.icon className="h-5 w-5" /> {item.label}
-              </Link>
-            );
-          })}
+      {/* Desktop sidebar — logical inline-start for RTL */}
+      <aside
+        className="app-sidebar fixed inset-y-0 z-40 hidden w-64 flex-col overflow-y-auto border-sidebar-border bg-sidebar p-4 lg:flex"
+        aria-label="قائمة الطاقم"
+      >
+        <div className="mb-6 px-2">
+          <Logo showTagline />
         </div>
-      </aside>
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
-            <Logo className="lg:hidden" />
-            <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
-              {label}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <NotificationBell />
-            {isAdmin && (
-              <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-                <Home className="h-4 w-4" /> <span className="hidden sm:inline">الموقع</span>
-              </Link>
-            )}
-            {(isMontage || isCustomerService) && !isSecretary && <ComplaintButton />}
-            <button onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent">
-              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
-            </button>
-          </div>
-        </div>
-        <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6 lg:hidden">
+        <nav className="flex flex-col gap-1">
           {nav.map((item) => {
             const active = location.pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
-                  active ? "bg-gradient-gold text-primary-foreground shadow-gold" : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring ${
+                  active
+                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                    : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 }`}
+                aria-current={active ? "page" : undefined}
               >
-                <item.icon className="h-4 w-4" />
+                <item.icon className="h-5 w-5 shrink-0" aria-hidden />
+                <span className="truncate">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+
+      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <Logo className="lg:hidden" />
+            <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
+              {label}
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <ThemeToggle />
+            <NotificationBell />
+            {isAdmin && (
+              <Link
+                to="/"
+                className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              >
+                <Home className="h-4 w-4" aria-hidden />
+                <span className="hidden sm:inline">الموقع</span>
+              </Link>
+            )}
+            {(isMontage || isCustomerService) && !isSecretary && <ComplaintButton />}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            >
+              <LogOut className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">خروج</span>
+            </button>
+          </div>
+        </div>
+        <nav
+          className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6 lg:hidden"
+          aria-label="تنقل الطاقم (موبايل)"
+        >
+          {nav.map((item) => {
+            const active = location.pathname.startsWith(item.to);
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-4 ${
+                  active
+                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                <item.icon className="h-4 w-4" aria-hidden />
                 {item.label}
               </Link>
             );
@@ -121,7 +152,7 @@ function StaffLayout() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <Outlet />
       </main>
     </div>

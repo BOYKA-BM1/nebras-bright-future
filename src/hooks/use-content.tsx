@@ -143,23 +143,45 @@ export function useEnrollment(courseId: string | undefined) {
   return { enrollment, isEnrolled: !!enrollment && enrollment.status === "active", isLoading };
 }
 
+/**
+ * Self-enrollment for FREE courses only (price === 0).
+ * Paid courses must go through payment_requests → admin review_payment_request.
+ * Never trust client-supplied paid status.
+ */
 export function useEnroll() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ courseId, price, couponId }: { courseId: string; price: number; couponId?: string | null }) => {
+    mutationFn: async ({
+      courseId,
+      price,
+      couponId: _couponId,
+    }: {
+      courseId: string;
+      price: number;
+      couponId?: string | null;
+    }) => {
       if (!user) throw new Error("not_authenticated");
-      // سجّل عملية الدفع (لو فيه سعر) — مؤكّدة مباشرة في الوضع الحالي
+
+      // Paid courses: refuse client-side activation (use PaymentDialog / payment_requests)
       if (price > 0) {
-        await supabase.from("payments").insert({
-          user_id: user.id,
-          course_id: courseId,
-          amount: price,
-          status: "paid",
-          provider: "manual",
-          coupon_id: couponId ?? null,
-        });
+        throw new Error(
+          "paid_course_requires_payment_request",
+        );
       }
+
+      // Free course: verify server-side price is still zero (do not trust client price alone)
+      const { data: courseRow, error: courseErr } = await supabase
+        .from("courses")
+        .select("id, price")
+        .eq("id", courseId)
+        .maybeSingle();
+      if (courseErr) throw courseErr;
+      if (!courseRow) throw new Error("course_not_found");
+      if ((courseRow.price ?? 0) > 0) {
+        throw new Error("paid_course_requires_payment_request");
+      }
+
       const { error } = await supabase
         .from("enrollments")
         .insert({ user_id: user.id, course_id: courseId, status: "active" });

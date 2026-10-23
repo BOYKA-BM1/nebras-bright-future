@@ -27,6 +27,7 @@ import { ProtectedVideo } from "@/components/site/ProtectedVideo";
 import { useContentProtection } from "@/hooks/use-content-protection";
 import { useProfile } from "@/hooks/use-profile";
 import { useAuth } from "@/hooks/use-auth";
+import { LoadingState, ErrorState } from "@/components/shared/ui-states";
 
 export const Route = createFileRoute("/_authenticated/learn/$courseId")({
   component: LearnPage,
@@ -99,13 +100,22 @@ function LearnPage() {
   }, [lessons, activeId]);
 
   if (isLoading || contentLoading || enrollLoading) {
-    return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <LoadingState label="جاري تحميل مساحة التعلّم…" />
+      </div>
+    );
   }
   if (!course) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background">
-        <p className="text-muted-foreground">الدورة مش موجودة.</p>
-        <Link to="/" className="text-primary underline">الرجوع</Link>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background px-4">
+        <ErrorState
+          title="الدورة مش موجودة"
+          description="تعذّر العثور على هذه الدورة. قد يكون الرابط غير صحيح."
+        />
+        <Link to="/dashboard" className="text-sm font-bold text-primary underline">
+          الرجوع للوحة
+        </Link>
       </div>
     );
   }
@@ -113,10 +123,16 @@ function LearnPage() {
   if (!isEnrolled && !lessons.some((l) => l.is_free)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
-        <Lock className="h-12 w-12 text-muted-foreground" />
+        <Lock className="h-12 w-12 text-muted-foreground" aria-hidden />
         <h1 className="text-2xl font-extrabold">محتاج تشترك الأول</h1>
-        <p className="max-w-md text-muted-foreground">لازم تشترك في «{course.title}» عشان تشوف الدروس.</p>
-        <Link to="/courses/$courseId" params={{ courseId }} className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold">
+        <p className="max-w-md text-muted-foreground">
+          لازم تشترك في «{course.title}» عشان تشوف الدروس.
+        </p>
+        <Link
+          to="/courses/$courseId"
+          params={{ courseId }}
+          className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
           صفحة الدورة
         </Link>
       </div>
@@ -158,14 +174,14 @@ function LearnPage() {
         </div>
       )}
 
-      <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-3">
-        {/* المشغّل */}
-        <div className="lg:col-span-2">
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="mx-auto grid max-w-7xl gap-4 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:grid-cols-3">
+        {/* المشغّل — أولاً على الموبايل */}
+        <div className="min-w-0 lg:col-span-2">
+          <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
             {locked ? (
-              <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-black text-center text-muted-foreground">
-                <Lock className="h-10 w-10" />
-                <p>الدرس ده متاح للمشتركين فقط.</p>
+              <div className="flex aspect-video w-full flex-col items-center justify-center gap-3 bg-black px-4 text-center text-muted-foreground">
+                <Lock className="h-10 w-10" aria-hidden />
+                <p className="text-sm sm:text-base">الدرس ده متاح للمشتركين فقط.</p>
               </div>
             ) : (
               <ProtectedVideo

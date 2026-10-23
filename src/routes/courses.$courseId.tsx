@@ -14,6 +14,7 @@ import { useMyPaymentRequests } from "@/hooks/use-payments";
 import { PaymentDialog } from "@/components/site/PaymentDialog";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
+import { LoadingState, ErrorState } from "@/components/shared/ui-states";
 
 export const Route = createFileRoute("/courses/$courseId")({
   component: CourseDetail,
@@ -58,8 +59,26 @@ function CourseDetail() {
 
   const totalMinutes = useMemo(() => lessons.reduce((s, l) => s + (l.duration_minutes || 0), 0), [lessons]);
 
-  if (isLoading) return <Centered><Loader2 className="h-8 w-8 animate-spin text-primary" /></Centered>;
-  if (!course) return <Centered><p className="text-muted-foreground">الدورة مش موجودة.</p><Link to="/" className="text-primary underline">الرجوع</Link></Centered>;
+  if (isLoading) {
+    return (
+      <Centered>
+        <LoadingState label="جاري تحميل الدورة…" />
+      </Centered>
+    );
+  }
+  if (!course) {
+    return (
+      <Centered>
+        <ErrorState
+          title="الدورة مش موجودة"
+          description="قد تكون الدورة محذوفة أو الرابط غير صحيح."
+        />
+        <Link to="/courses" className="mt-2 text-sm font-bold text-primary underline">
+          الرجوع لكتالوج الدورات
+        </Link>
+      </Centered>
+    );
+  }
 
   const img = resolveImage(course.image_url) ?? resolveImage(course.teacher?.image_url);
   const isFav = favoriteIds.has(course.id);
@@ -124,14 +143,23 @@ function CourseDetail() {
         { courseId: course.id, price: finalPrice, couponId: coupon?.id ?? null },
         {
           onSuccess: () => {
-            toast.success("تم تفعيل اشتراكك! 🎉");
+            toast.success("تم تفعيل اشتراكك!");
             router.navigate({ to: "/learn/$courseId", params: { courseId: course.id } });
           },
-          onError: () => toast.error("تعذّر الاشتراك، حاول تاني."),
+          onError: (err) => {
+            const msg = err instanceof Error ? err.message : "";
+            if (msg === "paid_course_requires_payment_request") {
+              toast.info("هذه الدورة مدفوعة. أرسل طلب دفع للمراجعة.");
+              setShowPayment(true);
+              return;
+            }
+            toast.error("تعذّر الاشتراك، حاول تاني.");
+          },
         },
       );
       return;
     }
+    // Paid: open manual payment request dialog (admin approves → enrollment)
     setShowPayment(true);
   };
 
