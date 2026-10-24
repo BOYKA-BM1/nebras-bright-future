@@ -32,11 +32,12 @@ function Onboarding() {
   const { data: activeYear } = useActiveAcademicYear();
   const createEducationProfile = useCreateEducationProfile();
 
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(2); // المرحلة أولًا بعد تسجيل الدخول
   const [stageId, setStageId] = useState<string | null>(null);
   const [level, setLevel] = useState<Level | null>(null);
   const [systemCode, setSystemCode] = useState<"general_secondary" | "egyptian_baccalaureate" | null>(null);
   const [grade, setGrade] = useState<string | null>(null);
+  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   // بيانات الحساب
   const [fullName, setFullName] = useState("");
@@ -88,7 +89,13 @@ function Onboarding() {
       toast.error("اكتب اسمك بالكامل وكل رقم لازم يكون 11 رقم بالظبط.");
       return;
     }
-    setStep(2);
+    if (!grade) {
+      toast.error("ارجع واختر مرحلتك وصفّك الدراسي أولًا.");
+      setStep(2);
+      return;
+    }
+    // بعد اختيار المرحلة: حفظ البيانات وإنهاء الأونبوردنج
+    finish(grade, selectedTrackId);
   };
 
   const pickSystem = (code: "general_secondary" | "egyptian_baccalaureate") => {
@@ -103,7 +110,7 @@ function Onboarding() {
     if (needsTrack) {
       setStep("track");
     } else {
-      finish(g, null);
+      setStep(1); // بعد المرحلة والصف: استكمال البيانات
     }
   };
 
@@ -147,16 +154,16 @@ function Onboarding() {
   const steps: { key: Step; label: string }[] =
     level === "secondary"
       ? [
-          { key: 1, label: "بياناتك" },
           { key: 2, label: "المرحلة" },
           { key: "system", label: "نظامك التعليمي" },
           { key: 3, label: "الصف الدراسي" },
           ...(systemCode === "egyptian_baccalaureate" && grade !== "الصف الأول الثانوي" ? [{ key: "track" as Step, label: "المسار" }] : []),
+          { key: 1, label: "بياناتك" },
         ]
       : [
-          { key: 1, label: "بياناتك" },
           { key: 2, label: "المرحلة" },
           { key: 3, label: "السنة الدراسية" },
+          { key: 1, label: "بياناتك" },
         ];
   const stepIndex = steps.findIndex((s) => s.key === step);
 
@@ -181,6 +188,22 @@ function Onboarding() {
 
         {step === 1 ? (
           <section className="mx-auto max-w-xl">
+            <button
+              type="button"
+              onClick={() =>
+                setStep(
+                  level === "secondary" &&
+                    systemCode === "egyptian_baccalaureate" &&
+                    grade &&
+                    grade !== "الصف الأول الثانوي"
+                    ? "track"
+                    : 3,
+                )
+              }
+              className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground"
+            >
+              → رجوع
+            </button>
             <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اكتب <span className="text-gradient-gold">بياناتك</span></h1>
             <p className="mt-2 text-center text-muted-foreground">محتاجين البيانات دي لتأكيد حسابك والتواصل معاك.</p>
             <div className="mt-8 grid gap-4 rounded-3xl border border-border bg-card p-6 shadow-card">
@@ -213,13 +236,12 @@ function Onboarding() {
                 disabled={!infoValid}
                 className="mt-2 flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-6 py-3 font-bold text-primary-foreground shadow-gold disabled:opacity-50"
               >
-                التالي: اختيار المرحلة <ChevronLeft className="h-4 w-4" />
+                إنهاء وتجهيز الحساب <ChevronLeft className="h-4 w-4" />
               </button>
             </div>
           </section>
         ) : step === 2 ? (
           <section>
-            <button onClick={() => setStep(1)} className="mb-4 text-sm font-bold text-muted-foreground hover:text-foreground">→ رجوع للبيانات</button>
             <h1 className="text-center text-2xl font-extrabold sm:text-3xl">اختر <span className="text-gradient-gold">مرحلتك الدراسية</span></h1>
             <p className="mt-2 text-center text-muted-foreground">هنعرضلك المحتوى الخاص بمرحلتك بس.</p>
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -293,7 +315,7 @@ function Onboarding() {
                 <button
                   key={t.id}
                   disabled={update.isPending}
-                  onClick={() => grade && finish(grade, t.id)}
+                  onClick={() => { setSelectedTrackId(t.id); setStep(1); }}
                   className="flex items-center justify-between rounded-2xl border border-border bg-card px-5 py-4 text-right font-bold shadow-card transition-all hover:border-primary/60 hover:bg-accent disabled:opacity-60"
                 >
                   {t.name_ar}

@@ -5,7 +5,6 @@ import { Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react"
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { lovable } from "@/integrations/lovable/index";
 import { Logo } from "@/components/site/Logo";
 import { preAuthGuard, logAudit } from "@/lib/security.functions";
 
@@ -100,6 +99,7 @@ function AuthPage() {
   const handleGoogle = async () => {
     setGoogleBusy(true);
     try {
+      const { lovable } = await import("@/integrations/lovable/index");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },
@@ -112,16 +112,14 @@ function AuthPage() {
       }
 
       if (result.redirected) {
-        // المتصفح هيتحوّل لصفحة جوجل ثم يرجع للمنصة
         return;
       }
 
-      // تم تسجيل الدخول والجلسة جاهزة
       toast.success("أهلًا بعودتك! 👋");
       navigate({ to: "/dashboard" });
     } catch {
       setGoogleBusy(false);
-      toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
+      toast.error("تسجيل جوجل غير متاح حاليًا. استخدم البريد وكلمة المرور.");
     }
   };
 
@@ -138,31 +136,35 @@ function AuthPage() {
     }
     setSubmitting(true);
     try {
-      // امنع البريد المحظور من التسجيل/الدخول
-      const { data: banned } = await supabase.rpc("is_email_banned", { _email: email });
-      if (banned) {
-        toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
-        setSubmitting(false);
-        return;
-      }
+      const cleanEmail = email.trim().toLowerCase();
 
-      // حد المعدل لمنع السبام على الدخول/الاشتراك
       try {
-        const guard = await preAuth({
-          data: { action: mode === "signup" ? "signup" : "login", email },
-        });
-        if (!guard.allowed) {
-          toast.error(guard.message);
+        const { data: banned } = await supabase.rpc("is_email_banned", { _email: cleanEmail });
+        if (banned) {
+          toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
           setSubmitting(false);
           return;
         }
       } catch {
-        /* fail-open: لو تعذّر الفحص نكمّل عادي */
+        /* fail-open */
+      }
+
+      try {
+        const guard = await preAuth({
+          data: { action: mode === "signup" ? "signup" : "login", email: cleanEmail },
+        });
+        if (guard && guard.allowed === false) {
+          toast.error(guard.message || "محاولات كثيرة، حاول لاحقًا.");
+          setSubmitting(false);
+          return;
+        }
+      } catch {
+        /* fail-open */
       }
 
       if (mode === "signup") {
         const { error } = await supabase.auth.signUp({
-          email,
+          email: cleanEmail,
           password,
           options: {
             emailRedirectTo:
@@ -175,16 +177,25 @@ function AuthPage() {
         navigate({ to: accountType === "parent" ? "/parent-link" : "/dashboard" });
         return;
       }
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
       if (error) throw error;
       toast.success("أهلًا بعودتك! 👋");
       navigate({ to: "/dashboard" });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "حدث خطأ";
-      if (/banned|blocked|محظور/i.test(message)) {
+      const message = err instanceof Error ? err.message : String(err ?? "حدث خطأ");
+      if (/failed to fetch|networkerror|load failed|fetch|ERR_NAME/i.test(message)) {
+        toast.error(
+          "تعذّر الاتصال بـ Supabase. راجع VITE_SUPABASE_URL في ملف .env (رابط المشروع الحقيقي) ثم أعد npm run dev.",
+        );
+      } else if (/banned|blocked|محظور/i.test(message)) {
         toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
-      } else if (/invalid login/i.test(message)) {
+      } else if (/invalid login|invalid credentials/i.test(message)) {
         toast.error("البريد أو كلمة المرور غير صحيحة.");
+      } else if (/email not confirmed/i.test(message)) {
+        toast.error("البريد غير مفعّل. من Supabase → Users فعّل Confirm.");
       } else if (/already registered|user already/i.test(message)) {
         toast.error("هذا البريد مسجّل بالفعل، سجّل دخولك.");
       } else {

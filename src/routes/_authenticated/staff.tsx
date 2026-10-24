@@ -1,11 +1,12 @@
+import { useEffect, useState } from "react";
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { Loader2, LogOut, Home, ShieldAlert, Film, Users, MessageCircle, AlertOctagon, Camera } from "lucide-react";
-import { ComplaintButton } from "@/components/site/ComplaintButton";
+import {
+  Loader2, LogOut, ShieldAlert, Home, Film, MessageCircle, Users, AlertOctagon, Camera, Menu, X,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { Logo } from "@/components/site/Logo";
 import { ThemeToggle } from "@/components/site/ThemeToggle";
-import { NotificationBell } from "@/components/site/NotificationBell";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   component: StaffLayout,
@@ -19,10 +20,24 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 function StaffLayout() {
+  const [open, setOpen] = useState(false);
   const { confirmSignOut } = useAuth();
   const { isAdmin, isMontage, isCustomerService, isSecretary, isPhotographer, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   if (isLoading) {
     return (
@@ -62,17 +77,60 @@ function StaffLayout() {
     (isPhotographer && ROLE_LABEL.photographer) ||
     "لوحة الطاقم";
 
-  const handleSignOut = () => { confirmSignOut(() => navigate({ to: "/" })); };
+  const handleSignOut = () => {
+    confirmSignOut(() => navigate({ to: "/" }));
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Desktop sidebar — logical inline-start for RTL */}
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen((v) => !v)}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card shadow-sm hover:bg-accent"
+              aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
+              aria-expanded={open}
+            >
+              {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+            <Logo />
+            <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
+              {label}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <ThemeToggle />
+            <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">الموقع</span>
+            </Link>
+            <button type="button" onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent">
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">خروج</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {open && (
+        <button type="button" className="fixed inset-0 z-[60] bg-black/45" aria-label="إغلاق" onClick={() => setOpen(false)} />
+      )}
+
       <aside
-        className="app-sidebar fixed inset-y-0 z-40 hidden w-64 flex-col overflow-y-auto border-sidebar-border bg-sidebar p-4 lg:flex"
+        style={{ transform: open ? "translateX(0)" : "translateX(var(--drawer-hide, -110%))" }}
+        className={`fixed inset-y-0 z-[70] flex w-[min(20rem,88vw)] flex-col overflow-y-auto border-sidebar-border bg-sidebar p-4 shadow-lg transition-transform duration-300 start-0 ${
+          open ? "translate-x-0" : "pointer-events-none opacity-0"
+        }`}
         aria-label="قائمة الطاقم"
+        aria-hidden={!open}
       >
-        <div className="mb-6 px-2">
+        <div className="mb-6 flex items-center justify-between px-1">
           <Logo showTagline />
+          <button type="button" onClick={() => setOpen(false)} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:bg-accent" aria-label="إغلاق">
+            <X className="h-5 w-5" />
+          </button>
         </div>
         <nav className="flex flex-col gap-1">
           {nav.map((item) => {
@@ -81,12 +139,12 @@ function StaffLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring ${
+                onClick={() => setOpen(false)}
+                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${
                   active
                     ? "bg-gradient-gold text-primary-foreground shadow-gold"
                     : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 }`}
-                aria-current={active ? "page" : undefined}
               >
                 <item.icon className="h-5 w-5 shrink-0" aria-hidden />
                 <span className="truncate">{item.label}</span>
@@ -95,62 +153,6 @@ function StaffLayout() {
           })}
         </nav>
       </aside>
-
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <Logo className="lg:hidden" />
-            <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
-              {label}
-            </span>
-          </div>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <ThemeToggle />
-            <NotificationBell />
-            {isAdmin && (
-              <Link
-                to="/"
-                className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              >
-                <Home className="h-4 w-4" aria-hidden />
-                <span className="hidden sm:inline">الموقع</span>
-              </Link>
-            )}
-            {(isMontage || isCustomerService) && !isSecretary && <ComplaintButton />}
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-            >
-              <LogOut className="h-4 w-4" aria-hidden />
-              <span className="hidden sm:inline">خروج</span>
-            </button>
-          </div>
-        </div>
-        <nav
-          className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6 lg:hidden"
-          aria-label="تنقل الطاقم (موبايل)"
-        >
-          {nav.map((item) => {
-            const active = location.pathname.startsWith(item.to);
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:px-4 ${
-                  active
-                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-                aria-current={active ? "page" : undefined}
-              >
-                <item.icon className="h-4 w-4" aria-hidden />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-      </header>
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
         <Outlet />
