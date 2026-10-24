@@ -50,7 +50,7 @@ const STUDENT_LINKS = [
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer } =
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer, isParent } =
     useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
@@ -58,6 +58,8 @@ export function Navbar() {
   const isStaffAccount =
     !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary || isPhotographer);
   const showRooms = !!user && !isStaffAccount;
+  // Seções do aluno: só para conta de estudante (não é equipe, admin nem responsável)
+  const isStudent = !!user && !isStaffAccount && !isAdmin && !isParent;
   const links = isStaffAccount
     ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
     : navLinks;
