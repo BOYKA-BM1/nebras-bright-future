@@ -223,6 +223,24 @@ export function Navbar() {
               </Link>
             </>
           )}
+          {isStudent && (
+            <>
+              <p className="mt-3 px-4 pb-1 pt-2 text-xs font-bold text-muted-foreground">
+                حسابي الدراسي
+              </p>
+              {STUDENT_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
+                >
+                  <item.icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="mt-3 space-y-2 border-t border-sidebar-border pt-3">
