@@ -12,8 +12,14 @@ import {
   Bot,
   MessageCircle,
   LifeBuoy,
+  ClipboardList,
+  Award,
+  CalendarDays,
+  StickyNote,
+  Bookmark,
 } from "lucide-react";
 import { SearchBar } from "./SearchBar";
+import { NotificationBell } from "./NotificationBell";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -32,10 +38,19 @@ const ICONS: Record<string, typeof Home> = {
   "/#help": LifeBuoy,
 };
 
+/** Seções exclusivas do aluno — todas pela barra lateral principal, sem menu duplicado */
+const STUDENT_LINKS = [
+  { label: "واجباتي", href: "/assignments", icon: ClipboardList },
+  { label: "شهاداتي", href: "/certificates", icon: Award },
+  { label: "المواعيد", href: "/calendar", icon: CalendarDays },
+  { label: "ملاحظاتي", href: "/notes", icon: StickyNote },
+  { label: "المفضّلة", href: "/bookmarks", icon: Bookmark },
+] as const;
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer } =
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer, isParent } =
     useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
@@ -43,6 +58,8 @@ export function Navbar() {
   const isStaffAccount =
     !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary || isPhotographer);
   const showRooms = !!user && !isStaffAccount;
+  // Seções do aluno: só para conta de estudante (não é equipe, admin nem responsável)
+  const isStudent = !!user && !isStaffAccount && !isAdmin && !isParent;
   const links = isStaffAccount
     ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
     : navLinks;
@@ -204,6 +221,24 @@ export function Navbar() {
                 <MessagesSquare className="h-5 w-5 shrink-0 text-primary" aria-hidden />
                 غرفة صفّي
               </Link>
+            </>
+          )}
+          {isStudent && (
+            <>
+              <p className="mt-3 px-4 pb-1 pt-2 text-xs font-bold text-muted-foreground">
+                حسابي الدراسي
+              </p>
+              {STUDENT_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
+                >
+                  <item.icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
             </>
           )}
         </nav>
