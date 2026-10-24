@@ -12,8 +12,14 @@ import {
   Bot,
   MessageCircle,
   LifeBuoy,
+  ClipboardList,
+  Award,
+  CalendarDays,
+  StickyNote,
+  Bookmark,
 } from "lucide-react";
 import { SearchBar } from "./SearchBar";
+import { NotificationBell } from "./NotificationBell";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -31,6 +37,15 @@ const ICONS: Record<string, typeof Home> = {
   "/support": MessageCircle,
   "/#help": LifeBuoy,
 };
+
+/** Seções exclusivas do aluno — todas pela barra lateral principal, sem menu duplicado */
+const STUDENT_LINKS = [
+  { label: "واجباتي", href: "/assignments", icon: ClipboardList },
+  { label: "شهاداتي", href: "/certificates", icon: Award },
+  { label: "المواعيد", href: "/calendar", icon: CalendarDays },
+  { label: "ملاحظاتي", href: "/notes", icon: StickyNote },
+  { label: "المفضّلة", href: "/bookmarks", icon: Bookmark },
+] as const;
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
