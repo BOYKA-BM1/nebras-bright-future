@@ -50,7 +50,7 @@ const STUDENT_LINKS = [
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer, isParent } =
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer, isParent, isPsychologist } =
     useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
@@ -58,8 +58,44 @@ export function Navbar() {
   const isStaffAccount =
     !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary || isPhotographer);
   const showRooms = !!user && !isStaffAccount;
-  // Seções do aluno: só para conta de estudante (não é equipe, admin nem responsável)
-  const isStudent = !!user && !isStaffAccount && !isAdmin && !isParent;
+  // Seções do aluno: só para conta de estudante (não é equipe, admin, responsável nem دكتور نفسي)
+  const isStudent = !!user && !isStaffAccount && !isAdmin && !isParent && !isPsychologist;
+
+  // روابط لوحة الحساب حسب الدور — التنقل لكل لوحة من القائمة الجانبية الرئيسية
+  const panelLinks: { label: string; href: string }[] = [];
+  if (isAdmin) {
+    panelLinks.push(
+      { label: "لوحة الإدارة", href: "/admin" },
+      { label: "الدفع والاشتراكات", href: "/admin/payments" },
+      { label: "الدورات", href: "/admin/courses" },
+      { label: "المدرّسون", href: "/admin/teachers" },
+      { label: "الحسابات", href: "/admin/accounts" },
+      { label: "الأجهزة", href: "/admin/devices" },
+      { label: "الأمان", href: "/admin/security" },
+      { label: "المراحل", href: "/admin/stages" },
+      { label: "معرفة الذكاء", href: "/admin/knowledge" },
+    );
+  } else if (isTeacher) {
+    panelLinks.push({ label: "لوحة المدرّس", href: "/teacher" });
+  } else if (isMontage) {
+    panelLinks.push({ label: "لوحة المونتاج", href: "/staff/montage" });
+  } else if (isCustomerService) {
+    panelLinks.push({ label: "خدمة العملاء", href: "/staff/support" });
+  } else if (isSecretary) {
+    panelLinks.push({ label: "لوحة السكرتارية", href: "/staff/students" });
+  } else if (isPhotographer) {
+    panelLinks.push({ label: "لوحة التصوير", href: "/staff/photographer" });
+  } else if (isParent) {
+    panelLinks.push(
+      { label: "لوحة ولي الأمر", href: "/parent" },
+      { label: "المواعيد", href: "/calendar" },
+      { label: "الإشعارات", href: "/notifications" },
+      { label: "الدعم", href: "/support" },
+    );
+  } else if (isPsychologist) {
+    panelLinks.push({ label: "الغرفة النفسية", href: "/psych" });
+  }
+  const homeTo = panelLinks[0]?.href ?? "/dashboard";
   const links = isStaffAccount
     ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
     : navLinks;
@@ -130,6 +166,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            {user ? <NotificationBell /> : null}
             <ThemeToggle />
             {user ? (
               <Link
@@ -241,13 +278,29 @@ export function Navbar() {
               ))}
             </>
           )}
+          {panelLinks.length > 0 && (
+            <>
+              <p className="mt-3 px-4 pb-1 pt-2 text-xs font-bold text-muted-foreground">لوحة حسابي</p>
+              {panelLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
+                >
+                  <LayoutDashboard className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                  <span className="truncate">{item.label}</span>
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="mt-3 space-y-2 border-t border-sidebar-border pt-3">
           {user ? (
             <>
               <Link
-                to="/dashboard"
+                to={homeTo}
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
               >
