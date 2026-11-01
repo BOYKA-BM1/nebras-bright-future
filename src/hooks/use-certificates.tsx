@@ -13,7 +13,7 @@ export function useMyCertificates() {
     enabled: !!user,
     queryFn: async (): Promise<(Certificate & { courseTitle: string })[]> => {
       const { data, error } = await supabase.from("certificates").select("*").order("issued_at", { ascending: false });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       const rows = data ?? [];
       const courseIds = [...new Set(rows.map((r) => r.course_id))];
       const { data: courses } = courseIds.length
@@ -35,7 +35,7 @@ export function useClaimCertificate() {
   return useMutation({
     mutationFn: async (courseId: string) => {
       const { data, error } = await supabase.rpc("claim_certificate", { _course_id: courseId });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-certificates"] }),
@@ -57,7 +57,7 @@ export function useVerifyCertificate(number: string | undefined) {
     enabled: !!number,
     queryFn: async (): Promise<VerifiedCertificate | null> => {
       const { data, error } = await supabase.rpc("verify_certificate", { _number: number! });
-      if (error) throw error;
+      if (error) { console.warn(error); return null; }
       return data?.[0] ?? null;
     },
   });

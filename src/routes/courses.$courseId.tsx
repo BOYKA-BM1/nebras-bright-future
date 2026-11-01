@@ -12,6 +12,7 @@ import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
 import { useMyPaymentRequests } from "@/hooks/use-payments";
 import { PaymentDialog } from "@/components/site/PaymentDialog";
+import { Navbar } from "@/components/site/Navbar";
 import { useProfile, profileCompletion } from "@/hooks/use-profile";
 import { resolveImage, levelLabel } from "@/lib/catalog";
 import { LoadingState, ErrorState } from "@/components/shared/ui-states";
@@ -175,14 +176,8 @@ function CourseDetail() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <Logo />
-          <Link to="/" hash="courses" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-            <ChevronLeft className="h-4 w-4" /> كل الدورات
-          </Link>
-        </div>
-      </header>
+      <Navbar />
+      <div className="pt-[60px]" />
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <div className="grid gap-8 lg:grid-cols-3">

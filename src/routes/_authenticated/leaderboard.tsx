@@ -2,7 +2,6 @@ import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Trophy, Home, Loader2, Crown, Medal, Sparkles } from "lucide-react";
 
-import { Navbar } from "@/components/site/Navbar";
 import { useAuth } from "@/hooks/use-auth";
 import { useMyXp, useLeaderboard } from "@/hooks/use-gamification";
 import { levelInfo, levelTitle } from "@/lib/gamification";
@@ -39,7 +38,6 @@ function LeaderboardPage() {
 
   return (
     <div className="min-h-screen bg-background pt-[60px]">
-      <Navbar />
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="mb-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -51,13 +49,7 @@ function LeaderboardPage() {
               <p className="text-xs text-muted-foreground">اجمع نقاط XP من الدروس والاشتراكات واطلع الأول</p>
             </div>
           </div>
-          <Link
-            to="/dashboard"
-            className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
-          >
-            <Home className="h-4 w-4" />
-            <span className="hidden sm:inline">لوحتي</span>
-          </Link>
+          
         </div>
 
         {/* بطاقة ترتيبي */}

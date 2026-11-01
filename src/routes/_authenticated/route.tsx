@@ -9,12 +9,16 @@ export const Route = createFileRoute("/_authenticated")({
     if (error || !data.user) throw redirect({ to: "/auth" });
     return { user: data.user };
   },
-  component: () => (
+  component: AuthenticatedLayout,
+});
+
+function AuthenticatedLayout() {
+  return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="pt-[60px]">
         <Outlet />
       </div>
     </div>
-  ),
-});
+  );
+}

@@ -3,6 +3,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Camera, Save, ArrowLeft, Home, Phone, MessageCircle, User as UserIcon, Calendar, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useMyEnrollments } from "@/hooks/use-content";
+import { useCourses } from "@/hooks/use-catalog";
 import { useProfile, useUpdateProfile, useUploadAvatar, profileCompletion } from "@/hooks/use-profile";
 import { useLinkedParents, useRevokeParentLink } from "@/hooks/use-parent";
 import {
@@ -23,6 +25,14 @@ function ProfilePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: profile, isLoading } = useProfile();
+  const { data: enrollments = [] } = useMyEnrollments();
+  const { data: courses = [] } = useCourses();
+  const myCourseCount = enrollments.length;
+  const totalValue = enrollments.reduce((s, e) => {
+    const c = courses.find((x) => x.id === e.course_id);
+    return s + (c?.price || 0);
+  }, 0);
+  const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
   const update = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -71,16 +81,7 @@ function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
-          <Logo />
-          <div className="flex items-center gap-2">
-            <Link to="/dashboard" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"><Home className="h-4 w-4" /><span className="hidden sm:inline">لوحتي</span></Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+<main className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
         <h1 className="text-2xl font-extrabold sm:text-3xl">ملفي الشخصي</h1>
 
         {/* اكتمال الملف */}
@@ -140,6 +141,18 @@ function ProfilePage() {
             تصفّح الدورات <ArrowLeft className="h-4 w-4" />
           </Link>
         )}
+
+        
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+            <p className="text-xs font-bold text-muted-foreground">دوراتي</p>
+            <p className="mt-1 text-2xl font-extrabold text-primary">{myCourseCount}</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+            <p className="text-xs font-bold text-muted-foreground">إجمالي القيمة</p>
+            <p className="mt-1 text-2xl font-extrabold text-primary">{fmt(totalValue)} ج.م</p>
+          </div>
+        </div>
 
         <EducationProfileCard />
         <ChildLinkCodeCard />

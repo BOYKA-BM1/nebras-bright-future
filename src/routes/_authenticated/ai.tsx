@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createFileRoute, Outlet, Link, useParams, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, GraduationCap, Plus, MessageSquare, Trash2, Menu, X } from "lucide-react";
-import { Navbar } from "@/components/site/Navbar";
 import { useProfile } from "@/hooks/use-profile";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,7 +59,6 @@ function AiLayout() {
 
   return (
     <div className="flex h-screen flex-col bg-background pt-[60px]">
-      <Navbar />
       <div className="flex min-h-0 flex-1">
         {/* الشريط الجانبي: المحادثات */}
         <aside

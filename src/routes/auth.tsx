@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchUserRoles, resolveRoleHome } from "@/lib/role-home";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/site/Logo";
 import { preAuthGuard, logAudit } from "@/lib/security.functions";
@@ -57,9 +58,16 @@ function AuthPage() {
   const audit = useServerFn(logAudit);
 
   useEffect(() => {
-    if (!loading && user) {
-      navigate({ to: "/dashboard" });
-    }
+    if (loading || !user) return;
+    let cancelled = false;
+    (async () => {
+      const roles = await fetchUserRoles(user.id);
+      if (cancelled) return;
+      navigate({ to: resolveRoleHome(roles) });
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, loading, navigate]);
 
   const sendResetCode = async () => {
@@ -88,7 +96,8 @@ function AuthPage() {
       if (updErr) throw updErr;
       audit({ data: { action: "password_change" } }).catch(() => {});
       toast.success("تم تغيير كلمة السر بنجاح! 🎉");
-      navigate({ to: "/dashboard" });
+      const roles = await fetchUserRoles((await supabase.auth.getUser()).data.user?.id || "");
+      navigate({ to: resolveRoleHome(roles) });
     } catch {
       toast.error("الكود غير صحيح أو انتهت صلاحيته، حاول تاني.");
     } finally {
@@ -99,27 +108,39 @@ function AuthPage() {
   const handleGoogle = async () => {
     setGoogleBusy(true);
     try {
+      // 1) Native Supabase Google OAuth (local + production)
+      const redirectTo = `${window.location.origin}/auth`;
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: { prompt: "select_account", access_type: "online" },
+        },
+      });
+      if (!error && data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      // 2) Lovable cloud auth fallback
       const { lovable } = await import("@/integrations/lovable/index");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
         extraParams: { prompt: "select_account" },
       });
-
       if (result.error) {
         setGoogleBusy(false);
-        toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
+        toast.error("تعذّر تسجيل الدخول بجوجل. فعّل Google في Supabase Auth → Providers.");
         return;
       }
-
-      if (result.redirected) {
-        return;
-      }
-
+      if (result.redirected) return;
       toast.success("أهلًا بعودتك! 👋");
-      navigate({ to: "/dashboard" });
+      const u = (await supabase.auth.getUser()).data.user;
+      const roles = u ? await fetchUserRoles(u.id) : [];
+      navigate({ to: resolveRoleHome(roles) });
     } catch {
       setGoogleBusy(false);
-      toast.error("تسجيل جوجل غير متاح حاليًا. استخدم البريد وكلمة المرور.");
+      toast.error("تسجيل جوجل غير متاح. فعّل مزوّد Google في لوحة Supabase.");
     }
   };
 
@@ -183,7 +204,9 @@ function AuthPage() {
       });
       if (error) throw error;
       toast.success("أهلًا بعودتك! 👋");
-      navigate({ to: "/dashboard" });
+      const u = (await supabase.auth.getUser()).data.user;
+      const roles = u ? await fetchUserRoles(u.id) : [];
+      navigate({ to: resolveRoleHome(roles) });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err ?? "حدث خطأ");
       if (/failed to fetch|networkerror|load failed|fetch|ERR_NAME/i.test(message)) {

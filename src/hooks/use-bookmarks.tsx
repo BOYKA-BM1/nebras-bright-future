@@ -13,7 +13,7 @@ export function useMyBookmarks(targetType?: BookmarkTargetType) {
       let q = supabase.from("bookmarks").select("*").order("created_at", { ascending: false });
       if (targetType) q = q.eq("target_type", targetType);
       const { data, error } = await q;
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       return data ?? [];
     },
   });
@@ -32,10 +32,10 @@ export function useToggleBookmark() {
       if (!user) throw new Error("auth required");
       if (isBookmarked) {
         const { error } = await supabase.from("bookmarks").delete().eq("user_id", user.id).eq("target_type", targetType).eq("target_id", targetId);
-        if (error) throw error;
+        if (error) { console.warn(error); return []; }
       } else {
         const { error } = await supabase.from("bookmarks").insert({ user_id: user.id, target_type: targetType, target_id: targetId });
-        if (error) throw error;
+        if (error) { console.warn(error); return []; }
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-bookmarks"] }),

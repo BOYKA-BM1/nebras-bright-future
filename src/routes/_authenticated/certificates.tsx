@@ -16,18 +16,6 @@ function MyCertificates() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
-          <Logo />
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <button onClick={() => confirmSignOut(() => navigate({ to: "/" }))} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">خروج</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><Award className="h-5 w-5" /></span>

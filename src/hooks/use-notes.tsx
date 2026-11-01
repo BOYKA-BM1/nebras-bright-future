@@ -12,7 +12,7 @@ export function useLessonNotes(lessonId: string | undefined) {
     enabled: !!lessonId && !!user,
     queryFn: async (): Promise<LessonNote[]> => {
       const { data, error } = await supabase.from("lesson_notes").select("*").eq("lesson_id", lessonId!).order("position_seconds", { ascending: true, nullsFirst: false });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       return data ?? [];
     },
   });
@@ -26,7 +26,7 @@ export function useAllMyNotes() {
     enabled: !!user,
     queryFn: async (): Promise<(LessonNote & { lessonTitle: string; courseTitle: string })[]> => {
       const { data, error } = await supabase.from("lesson_notes").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       const rows = data ?? [];
       const lessonIds = [...new Set(rows.map((r) => r.lesson_id))];
       const courseIds = [...new Set(rows.map((r) => r.course_id))];
@@ -53,7 +53,7 @@ export function useNoteActions(lessonId: string | undefined) {
     mutationFn: async ({ courseId, content, positionSeconds }: { courseId: string; content: string; positionSeconds?: number | null }) => {
       if (!user || !lessonId) throw new Error("missing");
       const { error } = await supabase.from("lesson_notes").insert({ user_id: user.id, lesson_id: lessonId, course_id: courseId, content, position_seconds: positionSeconds ?? null });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: invalidate,
   });
@@ -61,7 +61,7 @@ export function useNoteActions(lessonId: string | undefined) {
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("lesson_notes").delete().eq("id", id);
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: invalidate,
   });

@@ -20,7 +20,14 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
   const [receipt, setReceipt] = useState<File | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const method = methods.find((m) => m.key === selected) ?? null;
+  const displayMethods = methods.length
+    ? methods
+    : [
+        { key: "vodafone_cash", label: "فودافون كاش", number: null as string | null, instructions: "حوّل ثم ارفق الإيصال" },
+        { key: "instapay", label: "InstaPay", number: null as string | null, instructions: "حوّل عبر InstaPay ثم ارفق الإيصال" },
+        { key: "fawry", label: "فوري", number: null as string | null, instructions: "ادفع عبر فوري ثم اكتب رقم العملية" },
+      ];
+  const method = displayMethods.find((m) => m.key === selected) ?? null;
 
   const copyNumber = (num: string) => {
     navigator.clipboard.writeText(num);
@@ -35,6 +42,10 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
     }
     if (reference.trim().length < 4) {
       toast.error("اكتب رقم التحويل أو رقم العملية.");
+      return;
+    }
+    if (!receipt) {
+      toast.error("مطلوب إرفاق صورة إثبات الدفع.");
       return;
     }
     submit.mutate(
@@ -88,9 +99,9 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
             <div className="mt-4 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
           ) : (
             <div className="mt-3 grid gap-2">
-              {methods.map((m) => (
+              {displayMethods.map((m) => (
                 <button
-                  key={m.id}
+                  key={m.key}
                   onClick={() => setSelected(m.key)}
                   className={`flex items-center justify-between rounded-xl border px-4 py-3 text-right text-sm font-bold transition-colors ${
                     selected === m.key ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"
@@ -130,7 +141,7 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
               </div>
 
               <div>
-                <label className="text-sm font-bold">صورة إيصال التحويل (اختياري)</label>
+                <label className="text-sm font-bold">صورة إثبات الدفع (إلزامي)</label>
                 <label className="mt-2 flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border bg-background/40 px-4 py-3 text-sm text-muted-foreground hover:bg-accent">
                   <Upload className="h-4 w-4" />
                   {receipt ? receipt.name : "ارفع صورة الإيصال"}
