@@ -139,8 +139,8 @@ export function useNotificationPreferences() {
     enabled: !!user,
     queryFn: async (): Promise<typeof DEFAULT_PREFS> => {
       const { data, error } = await supabase.from("notification_preferences").select("*").eq("user_id", user!.id).maybeSingle();
-      if (error) throw error;
-      return data ?? DEFAULT_PREFS;
+      if (error) { console.warn(error); return { ...DEFAULT_PREFS }; }
+      return data ?? { ...DEFAULT_PREFS };
     },
   });
 }
@@ -151,9 +151,22 @@ export function useUpdateNotificationPreferences() {
   return useMutation({
     mutationFn: async (patch: Partial<typeof DEFAULT_PREFS>) => {
       if (!user) throw new Error("auth required");
-      const { error } = await supabase.from("notification_preferences").upsert({ user_id: user.id, ...patch }, { onConflict: "user_id" });
+      const { error } = await supabase
+        .from("notification_preferences")
+        .upsert({ user_id: user.id, ...patch, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["notification-preferences", user?.id] }),
+    onMutate: async (patch) => {
+      const key = ["notification-preferences", user?.id] as const;
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<typeof DEFAULT_PREFS>(key);
+      if (prev) qc.setQueryData(key, { ...prev, ...patch });
+      else qc.setQueryData(key, { ...DEFAULT_PREFS, ...patch });
+      return { prev };
+    },
+    onError: (_e, _p, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["notification-preferences", user?.id], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["notification-preferences", user?.id] }),
   });
 }

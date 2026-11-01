@@ -19,10 +19,10 @@ import {
   Bookmark,
 } from "lucide-react";
 import { SearchBar } from "./SearchBar";
-import { NotificationBell } from "./NotificationBell";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+import { NotificationBell } from "./NotificationBell";
 import { navLinks } from "@/data/site";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
@@ -38,19 +38,10 @@ const ICONS: Record<string, typeof Home> = {
   "/#help": LifeBuoy,
 };
 
-/** Seções exclusivas do aluno — todas pela barra lateral principal, sem menu duplicado */
-const STUDENT_LINKS = [
-  { label: "واجباتي", href: "/assignments", icon: ClipboardList },
-  { label: "شهاداتي", href: "/certificates", icon: Award },
-  { label: "المواعيد", href: "/calendar", icon: CalendarDays },
-  { label: "ملاحظاتي", href: "/notes", icon: StickyNote },
-  { label: "المفضّلة", href: "/bookmarks", icon: Bookmark },
-] as const;
-
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer, isParent, isPsychologist } =
+  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer } =
     useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
@@ -58,44 +49,6 @@ export function Navbar() {
   const isStaffAccount =
     !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary || isPhotographer);
   const showRooms = !!user && !isStaffAccount;
-  // Seções do aluno: só para conta de estudante (não é equipe, admin, responsável nem دكتور نفسي)
-  const isStudent = !!user && !isStaffAccount && !isAdmin && !isParent && !isPsychologist;
-
-  // روابط لوحة الحساب حسب الدور — التنقل لكل لوحة من القائمة الجانبية الرئيسية
-  const panelLinks: { label: string; href: string }[] = [];
-  if (isAdmin) {
-    panelLinks.push(
-      { label: "لوحة الإدارة", href: "/admin" },
-      { label: "الدفع والاشتراكات", href: "/admin/payments" },
-      { label: "الدورات", href: "/admin/courses" },
-      { label: "المدرّسون", href: "/admin/teachers" },
-      { label: "الحسابات", href: "/admin/accounts" },
-      { label: "الأجهزة", href: "/admin/devices" },
-      { label: "الأمان", href: "/admin/security" },
-      { label: "المراحل", href: "/admin/stages" },
-      { label: "معرفة الذكاء", href: "/admin/knowledge" },
-    );
-  } else if (isTeacher) {
-    panelLinks.push({ label: "لوحة المدرّس", href: "/teacher" });
-  } else if (isMontage) {
-    panelLinks.push({ label: "لوحة المونتاج", href: "/staff/montage" });
-  } else if (isCustomerService) {
-    panelLinks.push({ label: "خدمة العملاء", href: "/staff/support" });
-  } else if (isSecretary) {
-    panelLinks.push({ label: "لوحة السكرتارية", href: "/staff/students" });
-  } else if (isPhotographer) {
-    panelLinks.push({ label: "لوحة التصوير", href: "/staff/photographer" });
-  } else if (isParent) {
-    panelLinks.push(
-      { label: "لوحة ولي الأمر", href: "/parent" },
-      { label: "المواعيد", href: "/calendar" },
-      { label: "الإشعارات", href: "/notifications" },
-      { label: "الدعم", href: "/support" },
-    );
-  } else if (isPsychologist) {
-    panelLinks.push({ label: "الغرفة النفسية", href: "/psych" });
-  }
-  const homeTo = panelLinks[0]?.href ?? "/dashboard";
   const links = isStaffAccount
     ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
     : navLinks;
@@ -260,47 +213,39 @@ export function Navbar() {
               </Link>
             </>
           )}
-          {isStudent && (
+
+          {showRooms && (
             <>
-              <p className="mt-3 px-4 pb-1 pt-2 text-xs font-bold text-muted-foreground">
-                حسابي الدراسي
-              </p>
-              {STUDENT_LINKS.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
-                >
-                  <item.icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
+              <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                <ClipboardList className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                واجباتي
+              </Link>
+              <Link to="/certificates" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                <Award className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                شهاداتي
+              </Link>
+              <Link to="/calendar" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                <CalendarDays className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                المواعيد
+              </Link>
+              <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                <StickyNote className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                ملاحظاتي
+              </Link>
+              <Link to="/bookmarks" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                <Bookmark className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                المفضّلة
+              </Link>
             </>
           )}
-          {panelLinks.length > 0 && (
-            <>
-              <p className="mt-3 px-4 pb-1 pt-2 text-xs font-bold text-muted-foreground">لوحة حسابي</p>
-              {panelLinks.map((item) => (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
-                >
-                  <LayoutDashboard className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                  <span className="truncate">{item.label}</span>
-                </Link>
-              ))}
-            </>
-          )}
+
         </nav>
 
         <div className="mt-3 space-y-2 border-t border-sidebar-border pt-3">
           {user ? (
             <>
               <Link
-                to={homeTo}
+                to="/dashboard"
                 onClick={() => setOpen(false)}
                 className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
               >

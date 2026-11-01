@@ -13,7 +13,7 @@ export function useCourseAssignments(courseId: string | undefined) {
     enabled: !!courseId,
     queryFn: async (): Promise<Assignment[]> => {
       const { data, error } = await supabase.from("assignments").select("*").eq("course_id", courseId!).order("due_at", { ascending: true });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       return data ?? [];
     },
   });
@@ -35,7 +35,7 @@ export function useMyAssignments() {
         .in("course_id", courseIds)
         .eq("status", "open")
         .order("due_at", { ascending: true });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       const rows = assignments ?? [];
       const { data: courses } = await supabase.from("courses").select("id, title").in("id", courseIds);
       const courseMap = new Map((courses ?? []).map((c) => [c.id, c.title]));
@@ -56,7 +56,7 @@ export function useMySubmission(assignmentId: string | null) {
         .eq("assignment_id", assignmentId!)
         .eq("student_id", user!.id)
         .maybeSingle();
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       return data;
     },
   });
@@ -72,7 +72,7 @@ export function useAssignmentActions() {
   const create = useMutation({
     mutationFn: async (input: { course_id: string; title: string; description?: string; due_at?: string | null; max_score?: number; lesson_id?: string | null }) => {
       const { error } = await supabase.from("assignments").insert(input);
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: (_d, v) => invalidate(v.course_id),
   });
@@ -80,7 +80,7 @@ export function useAssignmentActions() {
   const update = useMutation({
     mutationFn: async ({ id, courseId, ...patch }: { id: string; courseId: string } & Partial<Pick<Assignment, "title" | "description" | "due_at" | "max_score" | "status">>) => {
       const { error } = await supabase.from("assignments").update(patch).eq("id", id);
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: (_d, v) => invalidate(v.courseId),
   });
@@ -88,7 +88,7 @@ export function useAssignmentActions() {
   const remove = useMutation({
     mutationFn: async ({ id }: { id: string; courseId: string }) => {
       const { error } = await supabase.from("assignments").delete().eq("id", id);
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: (_d, v) => invalidate(v.courseId),
   });
@@ -106,7 +106,7 @@ export function useSubmitAssignment() {
         { assignment_id: assignmentId, student_id: user.id, file_url: fileUrl ?? null, note: note ?? null, submitted_at: new Date().toISOString() },
         { onConflict: "assignment_id,student_id" },
       );
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ["assignment-submission", v.assignmentId] }),
   });
@@ -119,7 +119,7 @@ export function useAssignmentSubmissions(assignmentId: string | null) {
     enabled: !!assignmentId,
     queryFn: async (): Promise<(AssignmentSubmission & { studentName: string })[]> => {
       const { data, error } = await supabase.from("assignment_submissions").select("*").eq("assignment_id", assignmentId!).order("submitted_at", { ascending: false });
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       const rows = data ?? [];
       const ids = [...new Set(rows.map((r) => r.student_id))];
       const { data: profiles } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] as { id: string; full_name: string | null }[] };
@@ -134,7 +134,7 @@ export function useGradeSubmission() {
   return useMutation({
     mutationFn: async ({ id, score, feedback }: { id: string; assignmentId: string; score: number; feedback?: string | null }) => {
       const { error } = await supabase.from("assignment_submissions").update({ score, feedback: feedback ?? null }).eq("id", id);
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
     },
     onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ["assignment-submissions", v.assignmentId] }),
   });

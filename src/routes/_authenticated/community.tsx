@@ -54,9 +54,6 @@ function CommunityRoom() {
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
-        <Link to="/dashboard" className="mb-6 inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> رجوع للوحة
-        </Link>
 
         <header className="rounded-2xl border border-border bg-card p-5">
           <h1 className="flex items-center gap-2 text-2xl font-extrabold">

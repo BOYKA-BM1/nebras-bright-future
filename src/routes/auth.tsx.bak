@@ -1,0 +1,422 @@
+import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Mail, Lock, User as UserIcon, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { lovable } from "@/integrations/lovable/index";
+import { Logo } from "@/components/site/Logo";
+import { preAuthGuard, logAudit } from "@/lib/security.functions";
+
+export const Route = createFileRoute("/auth")({
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول | Edu Mindly التعليمية" },
+      {
+        name: "description",
+        content: "سجّل دخولك إلى منصة Edu Mindly بالبريد الإلكتروني أو حساب جوجل أو آبل وابدأ التعلم.",
+      },
+    ],
+  }),
+  component: AuthPage,
+});
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
+      <path fill="#FFC107" d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.3 6.1 29.4 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.3 6.1 29.4 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.3 0 10.1-2 13.7-5.3l-6.3-5.3C29.3 35.1 26.8 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.6 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.5l6.3 5.3C41.2 36.4 44 30.7 44 24c0-1.3-.1-2.3-.4-3.5z" />
+    </svg>
+  );
+}
+
+
+function AuthPage() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [accountType, setAccountType] = useState<"student" | "parent">("student");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+
+  
+
+  // استعادة كلمة السر بكود OTP
+  const [reset, setReset] = useState(false);
+  const [resetStep, setResetStep] = useState<"email" | "code">("email");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetBusy, setResetBusy] = useState(false);
+
+  const preAuth = useServerFn(preAuthGuard);
+  const audit = useServerFn(logAudit);
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate({ to: "/dashboard" });
+    }
+  }, [user, loading, navigate]);
+
+  const sendResetCode = async () => {
+    if (!email) { toast.error("اكتب بريدك الإلكتروني الأول."); return; }
+    setResetBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      toast.success("بعتنالك كود تأكيد على بريدك ✉️");
+      setResetStep("code");
+    } catch {
+      toast.error("تعذّر إرسال الكود، تأكد من البريد وحاول تاني.");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  const verifyResetCode = async () => {
+    if (code.trim().length < 6) { toast.error("اكتب الكود المكوّن من 6 أرقام."); return; }
+    if (newPassword.length < 8) { toast.error("كلمة السر الجديدة لازم تكون 8 أحرف على الأقل."); return; }
+    setResetBusy(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: code.trim(), type: "recovery" });
+      if (error) throw error;
+      const { error: updErr } = await supabase.auth.updateUser({ password: newPassword });
+      if (updErr) throw updErr;
+      audit({ data: { action: "password_change" } }).catch(() => {});
+      toast.success("تم تغيير كلمة السر بنجاح! 🎉");
+      navigate({ to: "/dashboard" });
+    } catch {
+      toast.error("الكود غير صحيح أو انتهت صلاحيته، حاول تاني.");
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setGoogleBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: "select_account" },
+      });
+
+      if (result.error) {
+        setGoogleBusy(false);
+        toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
+        return;
+      }
+
+      if (result.redirected) {
+        // المتصفح هيتحوّل لصفحة جوجل ثم يرجع للمنصة
+        return;
+      }
+
+      // تم تسجيل الدخول والجلسة جاهزة
+      toast.success("أهلًا بعودتك! 👋");
+      navigate({ to: "/dashboard" });
+    } catch {
+      setGoogleBusy(false);
+      toast.error("تعذّر تسجيل الدخول بجوجل، حاول مرة أخرى.");
+    }
+  };
+
+
+  const handleEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) {
+      toast.error("من فضلك أدخل البريد وكلمة المرور.");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("كلمة المرور لازم تكون 8 أحرف على الأقل.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      // امنع البريد المحظور من التسجيل/الدخول
+      const { data: banned } = await supabase.rpc("is_email_banned", { _email: email });
+      if (banned) {
+        toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
+        setSubmitting(false);
+        return;
+      }
+
+      // حد المعدل لمنع السبام على الدخول/الاشتراك
+      try {
+        const guard = await preAuth({
+          data: { action: mode === "signup" ? "signup" : "login", email },
+        });
+        if (!guard.allowed) {
+          toast.error(guard.message);
+          setSubmitting(false);
+          return;
+        }
+      } catch {
+        /* fail-open: لو تعذّر الفحص نكمّل عادي */
+      }
+
+      if (mode === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo:
+              window.location.origin + (accountType === "parent" ? "/parent-link" : "/dashboard"),
+            data: { full_name: fullName, account_type: accountType },
+          },
+        });
+        if (error) throw error;
+        toast.success("تم إنشاء حسابك بنجاح! 🎉");
+        navigate({ to: accountType === "parent" ? "/parent-link" : "/dashboard" });
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("أهلًا بعودتك! 👋");
+      navigate({ to: "/dashboard" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "حدث خطأ";
+      if (/banned|blocked|محظور/i.test(message)) {
+        toast.error("تم حظر هذا الحساب من المنصة. برجاء التواصل مع إدارة المنصة.");
+      } else if (/invalid login/i.test(message)) {
+        toast.error("البريد أو كلمة المرور غير صحيحة.");
+      } else if (/already registered|user already/i.test(message)) {
+        toast.error("هذا البريد مسجّل بالفعل، سجّل دخولك.");
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-hero px-4 py-12">
+      <div className="pointer-events-none absolute -right-24 top-24 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -left-24 bottom-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+
+      <div className="relative w-full max-w-md">
+        <div className="mb-8 flex justify-center">
+          <Logo />
+        </div>
+
+        <div className="rounded-3xl border border-border bg-card/80 p-7 shadow-card backdrop-blur-xl sm:p-9">
+          {reset ? (
+            <>
+              <h1 className="text-center text-2xl font-extrabold">نسيت كلمة السر؟</h1>
+              <p className="mt-2 text-center text-sm text-muted-foreground">
+                {resetStep === "email"
+                  ? "اكتب بريدك وهنبعتلك كود تأكيد من 6 أرقام."
+                  : "اكتب الكود اللي وصلك على البريد وكلمة السر الجديدة."}
+              </p>
+
+              {resetStep === "email" ? (
+                <div className="mt-7 grid gap-4">
+                  <div className="relative">
+                    <Mail className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      placeholder="البريد الإلكتروني"
+                      className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
+                    />
+                  </div>
+                  <button
+                    onClick={sendResetCode}
+                    disabled={resetBusy}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-70"
+                  >
+                    {resetBusy && <Loader2 className="h-4 w-4 animate-spin" />} إرسال الكود
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-7 grid gap-4">
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    placeholder="كود التأكيد (6 أرقام)"
+                    dir="ltr"
+                    className="w-full rounded-xl border border-input bg-background/60 px-4 py-3 text-center text-lg font-bold tracking-[0.4em] outline-none focus:border-primary"
+                  />
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      type="password"
+                      placeholder="كلمة السر الجديدة (8 أحرف على الأقل)"
+                      className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none focus:border-primary"
+                    />
+                  </div>
+                  <button
+                    onClick={verifyResetCode}
+                    disabled={resetBusy}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-70"
+                  >
+                    {resetBusy && <Loader2 className="h-4 w-4 animate-spin" />} تأكيد وتغيير كلمة السر
+                  </button>
+                  <button
+                    onClick={sendResetCode}
+                    disabled={resetBusy}
+                    className="text-center text-xs font-bold text-primary hover:underline"
+                  >
+                    إعادة إرسال الكود
+                  </button>
+                </div>
+              )}
+
+              <p className="mt-6 text-center text-sm">
+                <button
+                  onClick={() => { setReset(false); setResetStep("email"); setCode(""); setNewPassword(""); }}
+                  className="font-bold text-primary hover:underline"
+                >
+                  ← الرجوع لتسجيل الدخول
+                </button>
+              </p>
+            </>
+          ) : (
+            <>
+          <h1 className="text-center text-2xl font-extrabold">
+            {mode === "login" ? "تسجيل الدخول" : "إنشاء حساب جديد"}
+          </h1>
+          <p className="mt-2 text-center text-sm text-muted-foreground">
+            {mode === "login"
+              ? "أهلًا بعودتك! سجّل دخولك لمتابعة دوراتك."
+              : "انضم لآلاف الطلاب وابدأ رحلتك نحو التفوّق."}
+          </p>
+
+          {mode === "signup" && (
+            <div className="mt-6">
+              <p className="mb-2 text-center text-xs font-bold text-muted-foreground">نوع الحساب</p>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-border bg-background/50 p-1.5">
+                {([
+                  { key: "student", label: "طالب" },
+                  { key: "parent", label: "ولي أمر" },
+                ] as const).map((o) => (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => setAccountType(o.key)}
+                    className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors ${
+                      accountType === o.key
+                        ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                        : "text-muted-foreground hover:bg-accent"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-center text-[11px] text-muted-foreground">
+                {accountType === "parent"
+                  ? "بعد إنشاء الحساب هتكتب كود المتابعة اللي عند ابنك لربط الحسابين."
+                  : "هتكمل خطوات تسجيل الطالب عادي بعد إنشاء الحساب."}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-6">
+            <button
+              type="button"
+              onClick={handleGoogle}
+              disabled={googleBusy}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-bold transition-colors hover:bg-accent disabled:opacity-60"
+            >
+              {googleBusy ? <Loader2 className="h-5 w-5 animate-spin" /> : <GoogleIcon />}
+              المتابعة باستخدام Google
+            </button>
+          </div>
+
+          <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            أو بالبريد الإلكتروني
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <form onSubmit={handleEmail} className="grid gap-4">
+
+
+            {mode === "signup" && (
+              <div className="relative">
+                <UserIcon className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  type="text"
+                  placeholder="الاسم بالكامل"
+                  className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
+                />
+              </div>
+            )}
+            <div className="relative">
+              <Mail className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="البريد الإلكتروني"
+                className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
+              />
+            </div>
+            <div className="relative">
+              <Lock className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type="password"
+                placeholder="كلمة المرور (8 أحرف على الأقل)"
+                className="w-full rounded-xl border border-input bg-background/60 px-10 py-3 text-sm outline-none transition-colors focus:border-primary"
+              />
+            </div>
+
+            {mode === "login" && (
+              <button
+                type="button"
+                onClick={() => setReset(true)}
+                className="justify-self-start text-xs font-bold text-primary hover:underline"
+              >
+                نسيت كلمة السر؟
+              </button>
+            )}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="mt-1 flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold transition-transform hover:scale-[1.02] disabled:opacity-70"
+            >
+              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {mode === "login" ? "دخول" : "إنشاء الحساب"}
+              {!submitting && <ArrowRight className="h-4 w-4" />}
+            </button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            {mode === "login" ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}{" "}
+            <button
+              onClick={() => setMode(mode === "login" ? "signup" : "login")}
+              className="font-bold text-primary hover:underline"
+            >
+              {mode === "login" ? "أنشئ حساب جديد" : "سجّل دخولك"}
+            </button>
+          </p>
+            </>
+          )}
+        </div>
+
+        <div className="mt-6 text-center">
+          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
+            ← العودة للصفحة الرئيسية
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

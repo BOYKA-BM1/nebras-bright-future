@@ -353,7 +353,7 @@ export function useFavorites() {
     enabled: !!user,
     queryFn: async (): Promise<string[]> => {
       const { data, error } = await supabase.from("favorites").select("course_id").eq("user_id", user!.id);
-      if (error) throw error;
+      if (error) { console.warn(error); return []; }
       return (data ?? []).map((f) => f.course_id);
     },
   });
