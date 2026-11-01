@@ -57,7 +57,7 @@ export function useVerifyCertificate(number: string | undefined) {
     enabled: !!number,
     queryFn: async (): Promise<VerifiedCertificate | null> => {
       const { data, error } = await supabase.rpc("verify_certificate", { _number: number! });
-      if (error) { console.warn(error); return []; }
+      if (error) { console.warn(error); return null; }
       return data?.[0] ?? null;
     },
   });

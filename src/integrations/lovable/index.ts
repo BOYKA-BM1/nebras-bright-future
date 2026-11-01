@@ -34,7 +34,7 @@ async function signInWithOAuth(
     // Fallback: native Supabase OAuth if Lovable cloud auth is unavailable
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider === "lovable" ? "google" : provider,
+        provider: provider === "lovable" ? "google" : provider === "microsoft" ? "azure" : provider,
         options: {
           redirectTo: opts?.redirect_uri || (typeof window !== "undefined" ? window.location.origin : undefined),
         },

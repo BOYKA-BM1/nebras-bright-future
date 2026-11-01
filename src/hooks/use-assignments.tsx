@@ -56,7 +56,7 @@ export function useMySubmission(assignmentId: string | null) {
         .eq("assignment_id", assignmentId!)
         .eq("student_id", user!.id)
         .maybeSingle();
-      if (error) { console.warn(error); return []; }
+      if (error) { console.warn(error); return null; }
       return data;
     },
   });

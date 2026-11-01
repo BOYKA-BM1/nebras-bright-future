@@ -101,7 +101,7 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
             <div className="mt-3 grid gap-2">
               {displayMethods.map((m) => (
                 <button
-                  key={m.id}
+                  key={m.key}
                   onClick={() => setSelected(m.key)}
                   className={`flex items-center justify-between rounded-xl border px-4 py-3 text-right text-sm font-bold transition-colors ${
                     selected === m.key ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-accent"
