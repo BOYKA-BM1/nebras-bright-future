@@ -1,14 +1,32 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import {
-  Loader2, LayoutDashboard, BookOpen, Users, GraduationCap, LogOut, ShieldAlert, ShieldCheck,
-  Home, Ticket, UsersRound, Percent, Wallet, MonitorSmartphone, Database, Film, MessageCircle,
-  HeartHandshake, Menu, X,
+  Loader2,
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  GraduationCap,
+  ShieldAlert,
+  ShieldCheck,
+  Ticket,
+  UsersRound,
+  Percent,
+  Wallet,
+  MonitorSmartphone,
+  Database,
+  Film,
+  MessageCircle,
+  HeartHandshake,
+  Menu,
+  X,
+  Megaphone,
+  Library,
+  CreditCard,
+  Camera,
+  AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
-import { Logo } from "@/components/site/Logo";
-import { ThemeToggle } from "@/components/site/ThemeToggle";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
@@ -17,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const navItems = [
   { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
   { to: "/admin/payments", label: "الدفع", icon: Wallet, exact: false },
+  { to: "/admin/subscriptions", label: "الاشتراكات", icon: CreditCard, exact: false },
   { to: "/admin/earnings", label: "دخل المدرّسين", icon: Percent, exact: false },
   { to: "/admin/courses", label: "الدورات", icon: BookOpen, exact: false },
   { to: "/admin/teachers", label: "المدرّسون", icon: Users, exact: false },
@@ -24,20 +43,21 @@ const navItems = [
   { to: "/admin/devices", label: "الأجهزة", icon: MonitorSmartphone, exact: false },
   { to: "/admin/security", label: "الأمان", icon: ShieldCheck, exact: false },
   { to: "/admin/stages", label: "المراحل", icon: GraduationCap, exact: false },
+  { to: "/admin/education", label: "التعليم", icon: Library, exact: false },
   { to: "/admin/knowledge", label: "معرفة الذكاء", icon: Database, exact: false },
   { to: "/admin/coupons", label: "الكوبونات", icon: Ticket, exact: false },
+  { to: "/admin/broadcast", label: "البث الإداري", icon: Megaphone, exact: false },
   { to: "/psych", label: "الغرفة النفسية", icon: HeartHandshake, exact: false },
-  // لوحات الطاقم — الأدمن يقدر يفتحها ويتابعها مباشرة
   { to: "/staff/montage", label: "المونتاج", icon: Film, exact: false },
+  { to: "/staff/photographer", label: "التصوير", icon: Camera, exact: false },
   { to: "/staff/students", label: "الطلاب (سكرتارية)", icon: Users, exact: false },
   { to: "/staff/support", label: "خدمة العملاء", icon: MessageCircle, exact: false },
+  { to: "/staff/complaints", label: "الشكاوى", icon: AlertTriangle, exact: false },
 ];
-
 
 function AdminLayout() {
   const [open, setOpen] = useState(false);
-  const { confirmSignOut } = useAuth();
-  const { isAdmin, isFullAdmin, isLoading } = useRoles();
+  const { isAdmin, isLoading } = useRoles();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -54,9 +74,13 @@ function AdminLayout() {
     };
   }, [open]);
 
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
+
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-[40vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -64,73 +88,65 @@ function AdminLayout() {
 
   if (!isAdmin) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-4 text-center">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center">
         <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
           <ShieldAlert className="h-8 w-8" />
         </span>
         <h1 className="text-2xl font-extrabold">غير مصرّح لك</h1>
-        <p className="max-w-md text-muted-foreground">
-          الصفحة دي مخصّصة لإدارة المنصة فقط. لو محتاج صلاحية أدمن تواصل مع المسؤول.
-        </p>
-        <Link to="/" className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold">
+        <p className="max-w-md text-muted-foreground">هذه الصفحة مخصّصة للإدارة فقط.</p>
+        <button
+          type="button"
+          onClick={() => navigate({ to: "/" })}
+          className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold"
+        >
           الرجوع للرئيسية
-        </Link>
+        </button>
       </div>
     );
   }
 
-  const handleSignOut = () => {
-    confirmSignOut(() => navigate({ to: "/" }));
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card shadow-sm hover:bg-accent"
-              aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
-              aria-expanded={open}
-            >
-              {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-            <Logo />
-            <span className="hidden rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary sm:inline">
-              {isFullAdmin ? "لوحة الإدارة" : "لوحة إدارة (ثانوي)"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <ThemeToggle />
-            <Link to="/" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">الموقع</span>
-            </Link>
-            <button type="button" onClick={handleSignOut} className="flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent">
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline">خروج</span>
-            </button>
-          </div>
+      {/* بدون شريط علوي مكرر — Navbar الأب موجود */}
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 sm:px-6">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card shadow-sm hover:bg-accent"
+          aria-label="فتح قائمة الإدارة"
+          aria-expanded={open}
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        <div>
+          <p className="text-sm font-extrabold">لوحة الإدارة</p>
+          <p className="text-xs text-muted-foreground">كل الأقسام من القائمة الجانبية</p>
         </div>
-      </header>
+      </div>
 
       {open && (
-        <button type="button" className="fixed inset-0 z-[60] bg-black/45" aria-label="إغلاق" onClick={() => setOpen(false)} />
+        <button
+          type="button"
+          className="fixed inset-0 z-[60] bg-black/45"
+          aria-label="إغلاق"
+          onClick={() => setOpen(false)}
+        />
       )}
 
       <aside
-        style={{ transform: open ? "translateX(0)" : "translateX(var(--drawer-hide, -110%))" }}
         className={`fixed inset-y-0 z-[70] flex w-[min(20rem,88vw)] flex-col overflow-y-auto border-sidebar-border bg-sidebar p-4 shadow-lg transition-transform duration-300 start-0 ${
-          open ? "translate-x-0" : "pointer-events-none opacity-0"
+          open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
         }`}
         aria-label="قائمة الإدارة"
-        aria-hidden={!open}
       >
-        <div className="mb-6 flex items-center justify-between px-1">
-          <Logo showTagline />
-          <button type="button" onClick={() => setOpen(false)} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:bg-accent" aria-label="إغلاق">
+        <div className="mb-4 flex items-center justify-between">
+          <p className="font-extrabold">أقسام الإدارة</p>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:bg-accent"
+            aria-label="إغلاق"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -143,15 +159,13 @@ function AdminLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-colors ${
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${
                   active
-                    ? "bg-gradient-gold text-primary-foreground shadow-gold"
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 }`}
-                aria-current={active ? "page" : undefined}
               >
-                <item.icon className="h-5 w-5 shrink-0" aria-hidden />
+                <item.icon className="h-4 w-4 shrink-0" />
                 <span className="truncate">{item.label}</span>
               </Link>
             );
@@ -159,9 +173,9 @@ function AdminLayout() {
         </nav>
       </aside>
 
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 }
