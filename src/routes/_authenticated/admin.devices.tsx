@@ -1,3 +1,4 @@
+import { maskEmail, maskIp } from "@/lib/mask";
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -94,7 +95,7 @@ function DevicesPage() {
                 </span>
                 <div className="min-w-0">
                   <p className="truncate font-bold">{a.full_name ?? "—"}</p>
-                  <p className="truncate text-xs text-muted-foreground">{a.email}</p>
+                  <p className="truncate text-xs text-muted-foreground">{isFullAdmin ? a.email : maskEmail(a.email)}</p>
                 </div>
               </div>
 
@@ -109,7 +110,7 @@ function DevicesPage() {
 
               <button
                 onClick={() => {
-                  if (confirm(`إعادة تعيين جهاز ${a.email}؟ هيقدر يسجّل الدخول من جهاز جديد.`))
+                  if (confirm(`إعادة تعيين جهاز ${isFullAdmin ? a.email : maskEmail(a.email)}؟ هيقدر يسجّل الدخول من جهاز جديد.`))
                     resetDeviceM.mutate({ userId: a.id });
                 }}
                 disabled={resetDeviceM.isPending}

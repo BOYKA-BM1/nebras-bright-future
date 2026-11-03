@@ -36,6 +36,11 @@ export function useUpdateRoleShare() {
         .from("role_shares")
         .upsert({ role, percentage: pct }, { onConflict: "role" });
       if (error) throw error;
+      // عند تعديل نسبة المدرّس العامة: طبّقها على كل صفوف teachers
+      if (role === "teacher") {
+        const { error: e2 } = await supabase.from("teachers").update({ profit_percentage: pct }).not("id", "is", null);
+        if (e2) throw e2;
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["role-shares"] });

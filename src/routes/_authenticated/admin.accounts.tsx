@@ -5,6 +5,7 @@ import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown } from 
 import { useState } from "react";
 import { toast } from "sonner";
 import {
+import { maskEmail } from "@/lib/mask";
   listAccounts,
   banAccount,
   unbanAccount,
@@ -134,7 +135,7 @@ function AccountsPage() {
                 return (
                   <tr key={a.id} className="border-t border-border/60">
                     <td className="p-3 font-semibold">{a.full_name ?? "—"}</td>
-                    <td className="p-3 text-muted-foreground">{a.email}</td>
+                    <td className="p-3 text-muted-foreground">{isFullAdmin ? a.email : maskEmail(a.email)}</td>
                     <td className="p-3">
                       <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${rl.cls}`}>{rl.text}</span>
                     </td>
@@ -179,7 +180,7 @@ function AccountsPage() {
                                 key={r}
                                 disabled={r === "student" ? a.roles.length === 0 : a.roles.includes(r)}
                                 onClick={() => {
-                                  if (confirm(`تعيين ${a.email} كـ${ROLE_META[r].text}؟`))
+                                  if (confirm(`تعيين ${isFullAdmin ? a.email : maskEmail(a.email)} كـ${ROLE_META[r].text}؟`))
                                     roleM.mutate({ userId: a.id, role: r });
                                 }}
                                 className="cursor-pointer font-bold"
@@ -197,7 +198,7 @@ function AccountsPage() {
 
                         <button
                           onClick={() => {
-                            if (confirm(`حذف حساب ${a.email} نهائيًا؟ (لن يتم حظره)`))
+                            if (confirm(`حذف حساب ${isFullAdmin ? a.email : maskEmail(a.email)} نهائيًا؟ (لن يتم حظره)`))
                               delM.mutate({ userId: a.id, email: a.email });
                           }}
                           className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10"

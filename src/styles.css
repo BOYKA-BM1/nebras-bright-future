@@ -67,7 +67,7 @@
   --radius: 0.875rem;
 
   /* Approved light canvas #F5F7FC */
-  --background: #F8FAFC;
+  --background: #F7F4EF;
   --foreground: #0F172A;
 
   --card: #FFFFFF;
@@ -76,7 +76,7 @@
   --popover-foreground: #0F172A;
 
   /* Indigo primary #6366F1 */
-  --primary: #6366F1;
+  --primary: #7C83F7;
   --primary-foreground: #FFFFFF;
 
   --secondary: #EEF2FF;
@@ -141,7 +141,7 @@
   --radius: 0.875rem;
 
   /* Lighter elevated dark — less pure black, more readable */
-  --background: #121A2E;
+  --background: #151E33;
   --foreground: #F1F5F9;
 
   --card: #1A243B;
@@ -149,7 +149,7 @@
   --popover: #1A243B;
   --popover-foreground: #F1F5F9;
 
-  --primary: #8B93FF;
+  --primary: #A5ABFF;
   --primary-foreground: #0B1220;
 
   --secondary: #243049;

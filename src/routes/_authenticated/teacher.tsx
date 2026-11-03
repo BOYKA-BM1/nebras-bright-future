@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -14,7 +14,9 @@ import {
   Star,
   TrendingUp,
   UserRound,
-  CalendarDays,
+  LogOut,
+  ClipboardList,
+  Loader2,
 } from "lucide-react";
 import { ComplaintButton } from "@/components/site/ComplaintButton";
 import {
@@ -30,7 +32,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses, useTeachers } from "@/hooks/use-catalog";
 import { useCoupons } from "@/hooks/use-admin";
-import { getMyTeacherDashboard } from "@/lib/teacher.functions";
+import { getMyTeacherDashboard, getCourseAttendance } from "@/lib/teacher.functions";
 import { resolveImage } from "@/lib/catalog";
 import { LoadingState } from "@/components/shared/ui-states";
 
@@ -39,20 +41,30 @@ export const Route = createFileRoute("/_authenticated/teacher")({
 });
 
 function TeacherDashboard() {
-  const { user } = useAuth();
+  const { user, confirmSignOut } = useAuth();
+  const navigate = useNavigate();
   const { isTeacher, isAdmin, isLoading } = useRoles();
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
   const { data: teachers = [] } = useTeachers();
   const { data: coupons = [] } = useCoupons();
   const callDashboard = useServerFn(getMyTeacherDashboard);
+  const callAttendance = useServerFn(getCourseAttendance);
+  const [analyticsCourseId, setAnalyticsCourseId] = useState<string | null>(null);
+
   const { data: stats } = useQuery({
     queryKey: ["my-teacher-dashboard", user?.id],
     enabled: !!user && (isTeacher || isAdmin),
     queryFn: () => callDashboard(),
     staleTime: 30_000,
   });
-  const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
 
+  const { data: attendance, isLoading: attLoading } = useQuery({
+    queryKey: ["course-attendance", analyticsCourseId],
+    enabled: !!analyticsCourseId,
+    queryFn: () => callAttendance({ data: { courseId: analyticsCourseId! } }),
+  });
+
+  const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
   const myTeacherId =
     stats?.teacherId ?? teachers.find((t) => t.user_id === user?.id)?.id ?? null;
 
@@ -85,14 +97,9 @@ function TeacherDashboard() {
     }));
   }, [courses, isAdmin, stats?.courses]);
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success("تم نسخ الكود");
-  };
-
   if (isLoading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center bg-background px-4">
+      <div className="flex min-h-[50vh] items-center justify-center px-4">
         <LoadingState label="جاري تحميل لوحة المدرّس…" />
       </div>
     );
@@ -100,18 +107,12 @@ function TeacherDashboard() {
 
   if (!isTeacher && !isAdmin) {
     return (
-      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 bg-background px-4 text-center">
+      <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center">
         <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/15 text-destructive">
           <ShieldAlert className="h-8 w-8" />
         </span>
         <h1 className="text-2xl font-extrabold">غير مصرّح لك</h1>
-        <p className="max-w-md text-muted-foreground">
-          الصفحة دي مخصّصة للمدرّسين. لو إنت مدرّس وعايز حساب، تواصل مع الإدارة.
-        </p>
-        <Link
-          to="/"
-          className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold"
-        >
+        <Link to="/" className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold">
           الرجوع للرئيسية
         </Link>
       </div>
@@ -121,7 +122,6 @@ function TeacherDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        {/* شريط أدوات صغير — القائمة الجانبية الموحدة في Navbar */}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-extrabold sm:text-3xl">لوحة المدرّس</h1>
@@ -130,12 +130,8 @@ function TeacherDashboard() {
           <div className="flex flex-wrap items-center gap-2">
             <Dialog>
               <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
-                >
-                  <UserRound className="h-4 w-4" />
-                  بياناتي
+                <button type="button" className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent">
+                  <UserRound className="h-4 w-4" /> بياناتي
                 </button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
@@ -144,41 +140,36 @@ function TeacherDashboard() {
                   <DialogDescription>ملخص حساب المدرّس</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-2 text-sm">
-                  <p>
-                    <span className="text-muted-foreground">البريد: </span>
-                    {user?.email ?? "—"}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">معرّف المدرّس: </span>
-                    {myTeacherId ?? "غير مربوط بعد"}
-                  </p>
-                  <p>
-                    <span className="text-muted-foreground">عدد الدورات: </span>
-                    {myCourses.length}
-                  </p>
+                  <p><span className="text-muted-foreground">البريد: </span>{user?.email ?? "—"}</p>
+                  <p><span className="text-muted-foreground">معرّف المدرّس: </span>{myTeacherId ?? "غير مربوط بعد"}</p>
+                  <p><span className="text-muted-foreground">عدد الدورات: </span>{myCourses.length}</p>
                 </div>
-                <Link
-                  to="/profile"
-                  className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
-                >
+                <Link to="/profile" className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
                   فتح الملف الشخصي
                 </Link>
               </DialogContent>
             </Dialog>
 
-            <Link
-              to="/calendar"
+            <button
+              type="button"
+              onClick={() => toast.message("يتوفر لاحقًا", { description: "قسم الواجبات للمدرّس قيد التجهيز." })}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
-              <CalendarDays className="h-4 w-4" />
-              المواعيد
-            </Link>
+              <ClipboardList className="h-4 w-4" /> الواجبات
+            </button>
 
             <ComplaintButton />
+
+            <button
+              type="button"
+              onClick={() => confirmSignOut(() => navigate({ to: "/" }))}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"
+            >
+              <LogOut className="h-4 w-4" /> خروج
+            </button>
           </div>
         </div>
 
-        {/* إحصائيات */}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {[
             { icon: BookOpen, label: "دوراتي", value: fmt(myCourses.length) },
@@ -186,10 +177,7 @@ function TeacherDashboard() {
             { icon: Wallet, label: "الأرباح", value: fmt(Number(stats?.profit ?? 0)) },
             { icon: Star, label: "التقييم", value: stats?.rating != null ? String(stats.rating) : "—" },
           ].map((s) => (
-            <div
-              key={s.label}
-              className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-card"
-            >
+            <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4 shadow-card">
               <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <s.icon className="h-5 w-5" />
               </span>
@@ -201,7 +189,6 @@ function TeacherDashboard() {
           ))}
         </div>
 
-        {/* كوبونات */}
         {myCoupons.length > 0 && (
           <section className="mt-8">
             <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold">
@@ -209,10 +196,7 @@ function TeacherDashboard() {
             </h2>
             <div className="grid gap-2 sm:grid-cols-2">
               {myCoupons.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3"
-                >
+                <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
                   <div>
                     <p className="font-bold">{c.code}</p>
                     <p className="text-xs text-muted-foreground">
@@ -221,7 +205,10 @@ function TeacherDashboard() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => copyCode(c.code)}
+                    onClick={() => {
+                      navigator.clipboard.writeText(c.code);
+                      toast.success("تم نسخ الكود");
+                    }}
                     className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1.5 text-xs font-bold hover:bg-accent"
                   >
                     <Copy className="h-3.5 w-3.5" /> نسخ
@@ -232,7 +219,6 @@ function TeacherDashboard() {
           </section>
         )}
 
-        {/* الدورات */}
         <section className="mt-8">
           <h2 className="text-lg font-extrabold">دوراتي</h2>
           {coursesLoading && !stats ? (
@@ -240,19 +226,14 @@ function TeacherDashboard() {
           ) : myCourses.length === 0 ? (
             <div className="mt-6 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
               <BookOpen className="mx-auto h-10 w-10 text-muted-foreground" />
-              <p className="mt-3 text-muted-foreground">
-                لا توجد دورات مرتبطة بحسابك بعد. تواصل مع الإدارة لربط دوراتك.
-              </p>
+              <p className="mt-3 text-muted-foreground">لا توجد دورات مرتبطة بحسابك بعد.</p>
             </div>
           ) : (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {myCourses.map((c) => {
                 const img = resolveImage(c.image_url) ?? resolveImage(c.teacherImage);
                 return (
-                  <div
-                    key={c.id}
-                    className="overflow-hidden rounded-2xl border border-border bg-card shadow-card"
-                  >
+                  <div key={c.id} className="overflow-hidden rounded-2xl border border-border bg-card shadow-card">
                     {img ? (
                       <img src={img} alt={c.title} className="h-32 w-full object-cover" />
                     ) : (
@@ -268,11 +249,7 @@ function TeacherDashboard() {
                           <PlayCircle className="h-3.5 w-3.5 text-primary" />
                           {c.lessons} درس
                         </span>
-                        <span
-                          className={`rounded-full px-2 py-0.5 ${
-                            c.is_published ? "bg-primary/10 text-primary" : "bg-secondary"
-                          }`}
-                        >
+                        <span className={`rounded-full px-2 py-0.5 ${c.is_published ? "bg-primary/10 text-primary" : "bg-secondary"}`}>
                           {c.is_published ? "منشورة" : "مسودّة"}
                         </span>
                       </div>
@@ -284,14 +261,14 @@ function TeacherDashboard() {
                         >
                           <Settings2 className="h-4 w-4" /> إدارة المحتوى
                         </Link>
-                        <Link
-                          to="/manage/$courseId/analytics"
-                          params={{ courseId: c.id }}
+                        <button
+                          type="button"
+                          onClick={() => setAnalyticsCourseId(c.id)}
                           className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
                           title="تحليلات المشاهدة"
                         >
                           <TrendingUp className="h-4 w-4" />
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -301,6 +278,47 @@ function TeacherDashboard() {
           )}
         </section>
       </main>
+
+      <Dialog open={!!analyticsCourseId} onOpenChange={(o) => !o && setAnalyticsCourseId(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>تحليل المشاهدات</DialogTitle>
+            <DialogDescription>
+              عدد الطلاب اللي شافوا الكورس، وأسمائهم، وقدّام وصلوا لحد فين.
+            </DialogDescription>
+          </DialogHeader>
+          {attLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : !attendance?.authorized ? (
+            <p className="text-sm text-muted-foreground">غير مصرّح أو لا توجد بيانات.</p>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm font-bold">
+                إجمالي الطلاب المسجّلين: {attendance.students.length}
+              </p>
+              <div className="max-h-80 space-y-2 overflow-y-auto">
+                {attendance.students.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">لا يوجد طلاب مسجّلين بعد.</p>
+                ) : (
+                  attendance.students.map((s) => (
+                    <div key={s.userId} className="rounded-xl border border-border bg-card px-3 py-2 text-sm">
+                      <p className="font-bold">{s.fullName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        شاهد {s.lessonsWatched} من {s.totalLessons} درس
+                        {s.totalLessons > 0
+                          ? ` (${Math.round((s.lessonsWatched / s.totalLessons) * 100)}%)`
+                          : ""}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

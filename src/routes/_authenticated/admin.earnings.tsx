@@ -143,14 +143,31 @@ function RoleSharesCard() {
 function EditTeacherShareDialog({ teacher, onClose }: { teacher: TeacherEarning | null; onClose: () => void }) {
   const { update } = useTeacherAdmin();
   const [value, setValue] = useState("");
+  const [applyAll, setApplyAll] = useState(true);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   useEffect(() => {
     if (teacher) setValue(String(teacher.profit_percentage));
   }, [teacher]);
 
-  const save = () => {
+  const save = async () => {
     if (!teacher) return;
     const pct = Math.min(100, Math.max(0, Number(value) || 0));
+    if (applyAll) {
+      setBulkBusy(true);
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { error } = await supabase.from("teachers").update({ profit_percentage: pct }).not("id", "is", null);
+        if (error) throw error;
+        toast.success(`تم تطبيق ${pct}% على كل المدرّسين ✅`);
+        onClose();
+      } catch {
+        toast.error("تعذّر الحفظ.");
+      } finally {
+        setBulkBusy(false);
+      }
+      return;
+    }
     update.mutate(
       { id: teacher.id, name: teacher.name, subject: teacher.subject ?? "", profit_percentage: pct },
       {
@@ -172,12 +189,16 @@ function EditTeacherShareDialog({ teacher, onClose }: { teacher: TeacherEarning 
             <Input type="number" min="0" max="100" value={value} onChange={(e) => setValue(e.target.value)} dir="ltr" />
             <span className="text-muted-foreground">%</span>
           </div>
-          <p className="text-xs text-muted-foreground">دي نسبة خاصة بالمدرّس ده وبتتغلب على النسبة العامة للوظيفة.</p>
+          <label className="mt-2 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <input type="checkbox" checked={applyAll} onChange={(e) => setApplyAll(e.target.checked)} />
+            تطبيق نفس النسبة على كل المدرّسين
+          </label>
+          <p className="text-xs text-muted-foreground">لو مفعّل، أي نسبة هتتكتب هتتطبق على كل المدرّسين مرة واحدة.</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button onClick={save} disabled={update.isPending} className="gap-2 bg-gradient-gold text-primary-foreground">
-            {update.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+          <Button onClick={save} disabled={update.isPending || bulkBusy} className="gap-2 bg-gradient-gold text-primary-foreground">
+            {(update.isPending || bulkBusy) && <Loader2 className="h-4 w-4 animate-spin" />}
             حفظ
           </Button>
         </DialogFooter>

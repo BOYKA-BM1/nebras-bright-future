@@ -5,7 +5,6 @@ import {
   LogOut,
   LayoutDashboard,
   HeartHandshake,
-  MessagesSquare,
   Home,
   BookOpen,
   PlayCircle,
@@ -17,6 +16,21 @@ import {
   CalendarDays,
   StickyNote,
   Bookmark,
+  Wallet,
+  Percent,
+  Users,
+  UsersRound,
+  MonitorSmartphone,
+  ShieldCheck,
+  GraduationCap,
+  Library,
+  Database,
+  Ticket,
+  Megaphone,
+  Film,
+  Camera,
+  AlertTriangle,
+  CreditCard,
 } from "lucide-react";
 import { SearchBar } from "./SearchBar";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -38,26 +52,63 @@ const ICONS: Record<string, typeof Home> = {
   "/#help": LifeBuoy,
 };
 
+const ADMIN_NAV = [
+  { to: "/admin", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
+  { to: "/admin/payments", label: "الدفع", icon: Wallet },
+  { to: "/admin/subscriptions", label: "الاشتراكات", icon: CreditCard },
+  { to: "/admin/earnings", label: "دخل المدرّسين", icon: Percent },
+  { to: "/admin/courses", label: "الدورات", icon: BookOpen },
+  { to: "/admin/teachers", label: "المدرّسون", icon: Users },
+  { to: "/admin/accounts", label: "الحسابات", icon: UsersRound },
+  { to: "/admin/devices", label: "الأجهزة", icon: MonitorSmartphone },
+  { to: "/admin/security", label: "الأمان", icon: ShieldCheck },
+  { to: "/admin/stages", label: "المراحل", icon: GraduationCap },
+  { to: "/admin/education", label: "التعليم", icon: Library },
+  { to: "/admin/knowledge", label: "معرفة الذكاء", icon: Database },
+  { to: "/admin/coupons", label: "الكوبونات", icon: Ticket },
+  { to: "/admin/broadcast", label: "البث الإداري", icon: Megaphone },
+  { to: "/psych", label: "الغرفة النفسية", icon: HeartHandshake },
+  { to: "/staff/montage", label: "المونتاج", icon: Film },
+  { to: "/staff/photographer", label: "التصوير", icon: Camera },
+  { to: "/staff/students", label: "الطلاب", icon: Users },
+  { to: "/staff/support", label: "خدمة العملاء", icon: MessageCircle },
+  { to: "/staff/complaints", label: "الشكاوى", icon: AlertTriangle },
+];
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
-  const { isAdmin, isTeacher, isMontage, isCustomerService, isSecretary, isPhotographer } =
-    useRoles();
+  const {
+    isAdmin,
+    isTeacher,
+    isMontage,
+    isCustomerService,
+    isSecretary,
+    isPhotographer,
+    isPsychologist,
+  } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
 
-  const isStaffAccount =
-    !isAdmin && (isTeacher || isMontage || isCustomerService || isSecretary || isPhotographer);
-  const showRooms = !!user && !isStaffAccount;
-  const links = isStaffAccount
-    ? navLinks.filter((l) => l.href !== "/courses" && l.href !== "/lectures")
-    : navLinks;
+  const isOpsRole =
+    !isAdmin &&
+    (isTeacher ||
+      isMontage ||
+      isCustomerService ||
+      isSecretary ||
+      isPhotographer ||
+      isPsychologist);
 
-  const accountTo = isAdmin ? "/admin" : isTeacher ? "/teacher" : "/profile";
+  /** أدوار التشغيل: بدون قائمة جانبية */
+  const hideDrawer = isOpsRole;
+  const showStudentLinks = !!user && !isOpsRole && !isAdmin;
+  const links = isOpsRole
+    ? []
+    : navLinks.filter((l) => !(isAdmin && (l.href === "/courses" || l.href === "/lectures")));
+
   const avatar = resolveImage(profile?.avatar_url);
   const initial = (profile?.full_name || user?.email || "ط").trim().charAt(0).toUpperCase();
 
-  // إغلاق عند Escape
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -88,193 +139,163 @@ export function Navbar() {
       }
       return;
     }
-    navigate({ to: href });
+    navigate({ to: href as "/" });
   };
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75">
-        <nav
-          className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-4 sm:px-6"
-          aria-label="شريط التنقل العلوي"
-        >
-          <div className="flex items-center gap-2">
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
+        <div className="mx-auto flex h-[60px] max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
+          {/* زر قائمة واحد فقط — للطلاب والأدمن */}
+          {!hideDrawer && (
             <button
               type="button"
-              onClick={() => setOpen((v) => !v)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-sm transition-colors hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-              aria-label={open ? "إغلاق القائمة" : "فتح القائمة"}
+              onClick={() => setOpen(true)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card hover:bg-accent"
+              aria-label="فتح القائمة"
               aria-expanded={open}
-              aria-controls="app-side-drawer"
             >
-              {open ? <X className="h-6 w-6" aria-hidden /> : <Menu className="h-6 w-6" aria-hidden />}
+              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
-            <Logo />
+          )}
+
+          <Logo />
+
+          <div className="mx-auto hidden min-w-0 flex-1 md:block md:max-w-md">
+            {!isOpsRole && <SearchBar />}
           </div>
 
-          <div className="hidden flex-1 justify-center md:flex">
-            <div className="w-full max-w-md">
-              <SearchBar />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            {user ? <NotificationBell /> : null}
-            <ThemeToggle />
-            {user ? (
-              <Link
-                to={accountTo}
-                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-border bg-secondary text-sm font-bold"
-                aria-label="الحساب"
-              >
-                {avatar ? (
-                  <img src={avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  initial
+          <div className="ms-auto flex items-center gap-1.5 sm:gap-2">
+            {user && (
+              <>
+                <NotificationBell />
+                <ThemeToggle />
+                {user && !isOpsRole && (
+                  <Link
+                    to={isAdmin ? "/admin" : "/profile"}
+                    className="hidden items-center gap-2 rounded-full border border-border bg-card px-2 py-1 text-sm font-bold hover:bg-accent sm:flex"
+                  >
+                    {avatar ? (
+                      <img src={avatar} alt="" className="h-7 w-7 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/15 text-xs font-extrabold text-primary">
+                        {initial}
+                      </span>
+                    )}
+                    <span className="max-w-[7rem] truncate">{isAdmin ? "لوحتي" : "حسابي"}</span>
+                  </Link>
                 )}
-              </Link>
-            ) : (
-              <Link
-                to="/auth"
-                className="rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold"
-              >
-                دخول
-              </Link>
+                <button
+                  type="button"
+                  onClick={() => confirmSignOut(() => navigate({ to: "/" }))}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"
+                  title="تسجيل الخروج"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline">خروج</span>
+                </button>
+              </>
+            )}
+            {!user && (
+              <>
+                <ThemeToggle />
+                <Link
+                  to="/auth"
+                  className="rounded-xl bg-gradient-gold px-4 py-2 text-sm font-bold text-primary-foreground shadow-gold"
+                >
+                  دخول
+                </Link>
+              </>
             )}
           </div>
-        </nav>
+        </div>
       </header>
 
-      {/* Overlay + drawer (ثلاث شرط → تفتح القائمة) */}
-      {open && (
+      {open && !hideDrawer && (
         <button
           type="button"
-          className="fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px]"
-          aria-label="إغلاق القائمة"
+          className="fixed inset-0 z-[60] bg-black/45"
+          aria-label="إغلاق"
           onClick={() => setOpen(false)}
         />
       )}
 
-      <aside
-        id="app-side-drawer"
-        style={{
-          transform: open ? "translateX(0)" : "translateX(var(--drawer-hide, -110%))",
-        }}
-        className={`fixed inset-y-0 z-[70] flex w-[min(20rem,88vw)] flex-col border-sidebar-border bg-sidebar p-4 shadow-lg transition-transform duration-300 ease-out start-0 ${
-          open ? "" : "pointer-events-none"
-        }`}
-        aria-label="القائمة الجانبية"
-        aria-hidden={!open}
-      >
-        <div className="mb-6 flex items-center justify-between gap-2 px-1">
-          <Logo showTagline />
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:bg-accent"
-            aria-label="إغلاق"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
-          {links.map((link) => {
-            const Icon = ICONS[link.href] ?? Home;
-            return (
-              <button
-                key={link.href}
-                type="button"
-                onClick={() => handleNav(link.href, link.gated)}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sidebar-ring"
-              >
-                <Icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                <span className="truncate">{link.label}</span>
-              </button>
-            );
-          })}
-          {showRooms && (
-            <>
-              <Link
-                to="/psych"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent"
-              >
-                <HeartHandshake className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                الغرفة النفسية
-              </Link>
-              <Link
-                to="/community"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent"
-              >
-                <MessagesSquare className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                غرفة صفّي
-              </Link>
-            </>
-          )}
-
-          {showRooms && (
-            <>
-              <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                <ClipboardList className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                واجباتي
-              </Link>
-              <Link to="/certificates" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                <Award className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                شهاداتي
-              </Link>
-              <Link to="/calendar" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                <CalendarDays className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                المواعيد
-              </Link>
-              <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                <StickyNote className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                ملاحظاتي
-              </Link>
-              <Link to="/bookmarks" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                <Bookmark className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                المفضّلة
-              </Link>
-            </>
-          )}
-
-        </nav>
-
-        <div className="mt-3 space-y-2 border-t border-sidebar-border pt-3">
-          {user ? (
-            <>
-              <Link
-                to="/dashboard"
-                onClick={() => setOpen(false)}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold"
-              >
-                <LayoutDashboard className="h-4 w-4" aria-hidden />
-                لوحتي
-              </Link>
-              <button
-                type="button"
-                onClick={() => {
-                  setOpen(false);
-                  confirmSignOut(() => navigate({ to: "/" }));
-                }}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm font-bold"
-              >
-                <LogOut className="h-4 w-4" aria-hidden />
-                خروج
-              </button>
-            </>
-          ) : (
-            <Link
-              to="/auth"
+      {!hideDrawer && (
+        <aside
+          className={`fixed inset-y-0 z-[70] flex w-[min(20rem,88vw)] flex-col overflow-y-auto border-sidebar-border bg-sidebar p-4 shadow-lg transition-transform duration-300 start-0 ${
+            open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
+          }`}
+          aria-label="القائمة الجانبية"
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <Logo />
+            <button
+              type="button"
               onClick={() => setOpen(false)}
-              className="flex items-center justify-center rounded-2xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border hover:bg-accent"
+              aria-label="إغلاق"
             >
-              تسجيل الدخول
-            </Link>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {isAdmin ? (
+            <nav className="flex flex-col gap-1">
+              <p className="mb-2 px-2 text-xs font-bold text-muted-foreground">أقسام الإدارة</p>
+              {ADMIN_NAV.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                >
+                  <item.icon className="h-4 w-4 shrink-0" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          ) : (
+            <nav className="flex flex-col gap-1">
+              {links.map((l) => {
+                const Icon = ICONS[l.href] ?? Home;
+                return (
+                  <button
+                    key={l.href}
+                    type="button"
+                    onClick={() => handleNav(l.href, false)}
+                    className="flex items-center gap-3 rounded-2xl px-4 py-3 text-start text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent"
+                  >
+                    <Icon className="h-4 w-4" />
+                    {l.label}
+                  </button>
+                );
+              })}
+              {showStudentLinks && (
+                <>
+                  <Link to="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <LayoutDashboard className="h-4 w-4" /> لوحتي
+                  </Link>
+                  <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <ClipboardList className="h-4 w-4" /> واجباتي
+                  </Link>
+                  <Link to="/certificates" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Award className="h-4 w-4" /> شهاداتي
+                  </Link>
+                  <Link to="/calendar" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <CalendarDays className="h-4 w-4" /> المواعيد
+                  </Link>
+                  <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <StickyNote className="h-4 w-4" /> ملاحظاتي
+                  </Link>
+                  <Link to="/bookmarks" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Bookmark className="h-4 w-4" /> المفضلة
+                  </Link>
+                </>
+              )}
+            </nav>
           )}
-        </div>
-      </aside>
+        </aside>
+      )}
     </>
   );
 }

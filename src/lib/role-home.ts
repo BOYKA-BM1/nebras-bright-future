@@ -1,6 +1,5 @@
 import type { AppRole } from "@/hooks/use-roles";
 
-/** الصفحة الرئيسية حسب أدوار المستخدم بعد تسجيل الدخول */
 export function resolveRoleHome(roles: AppRole[]): string {
   if (roles.includes("admin") || roles.includes("admin_secondary")) return "/admin";
   if (roles.includes("teacher")) return "/teacher";
@@ -8,7 +7,7 @@ export function resolveRoleHome(roles: AppRole[]): string {
   if (roles.includes("montage")) return "/staff/montage";
   if (roles.includes("photographer")) return "/staff/photographer";
   if (roles.includes("customer_service")) return "/staff/support";
-  if (roles.includes("secretary")) return "/staff/students";
+  if (roles.includes("secretary")) return "/staff/complaints";
   if (roles.includes("parent")) return "/parent";
   return "/dashboard";
 }
