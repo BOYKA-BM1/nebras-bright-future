@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Loader2, BookOpen, Settings2, LogOut, Home, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp, UserRound, CalendarDays } from "lucide-react";
+import { Loader2, BookOpen, Settings2, ShieldAlert, PlayCircle, Ticket, Copy, Wallet, Users, Star, TrendingUp, UserRound, CalendarDays } from "lucide-react";
 import { ComplaintButton } from "@/components/site/ComplaintButton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -11,9 +11,6 @@ import { useRoles } from "@/hooks/use-roles";
 import { useCourses, useTeachers } from "@/hooks/use-catalog";
 import { useCoupons } from "@/hooks/use-admin";
 import { getMyTeacherDashboard } from "@/lib/teacher.functions";
-import { Logo } from "@/components/site/Logo";
-import { NotificationBell } from "@/components/site/NotificationBell";
-import { SearchBar } from "@/components/site/SearchBar";
 import { resolveImage } from "@/lib/catalog";
 import { LoadingState } from "@/components/shared/ui-states";
 

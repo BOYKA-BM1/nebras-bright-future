@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,35 +15,53 @@ export type AppNotification = Database["public"]["Tables"]["notifications"]["Row
  * فحتى لو حصل أي تسريب على مستوى الـbroadcast نفسه، البيانات المعروضة فعليًا
  * هتفضل محكومة بصلاحيات المستخدم الحقيقية.
  */
+// قناة واحدة مشتركة بعدّاد مراجع — تمنع الاشتراك المزدوج اللي بيسقّط الصفحة
+let notifChannel: RealtimeChannel | null = null;
+let notifRefs = 0;
+let notifTopic = "";
+
 export function useNotifications() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`notifications-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        (payload) => {
-          const row = payload.new as AppNotification;
-          if (row?.title) toast.info(row.title, { description: row.body ?? undefined });
-          qc.invalidateQueries({ queryKey: ["notifications", user.id] });
-          qc.invalidateQueries({ queryKey: ["notification-history", user.id] });
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
-        () => {
-          qc.invalidateQueries({ queryKey: ["notifications", user.id] });
-          qc.invalidateQueries({ queryKey: ["notification-history", user.id] });
-        },
-      )
-      .subscribe();
+    notifRefs++;
+    const topic = `notifications-${user.id}`;
+    // لو مفيش قناة فعّالة بنفس الموضوع، اعمل واحدة (متعدد المكوّنات/الـStrictMode آمن)
+    if (!notifChannel || notifTopic !== topic) {
+      if (notifChannel) supabase.removeChannel(notifChannel);
+      notifTopic = topic;
+      const invalidate = () => {
+        qc.invalidateQueries({ queryKey: ["notifications", user.id] });
+        qc.invalidateQueries({ queryKey: ["notification-history", user.id] });
+      };
+      notifChannel = supabase
+        .channel(topic)
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            const row = payload.new as AppNotification;
+            if (row?.title) toast.info(row.title, { description: row.body ?? undefined });
+            invalidate();
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+          invalidate,
+        )
+        .subscribe();
+    }
     return () => {
-      supabase.removeChannel(channel);
+      notifRefs--;
+      if (notifRefs <= 0) {
+        const ch = notifChannel;
+        notifChannel = null;
+        notifTopic = "";
+        if (ch) supabase.removeChannel(ch);
+      }
     };
   }, [user, qc]);
 
