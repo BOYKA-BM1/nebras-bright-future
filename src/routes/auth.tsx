@@ -108,21 +108,7 @@ function AuthPage() {
   const handleGoogle = async () => {
     setGoogleBusy(true);
     try {
-      // 1) Native Supabase Google OAuth (local + production)
-      const redirectTo = `${window.location.origin}/auth`;
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo,
-          queryParams: { prompt: "select_account", access_type: "online" },
-        },
-      });
-      if (!error && data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-
-      // 2) Lovable cloud auth fallback
+      // تسجيل دخول جوجل عبر التسجيل المُدار (Managed Social Login)
       const { lovable } = await import("@/integrations/lovable/index");
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin,
@@ -130,17 +116,18 @@ function AuthPage() {
       });
       if (result.error) {
         setGoogleBusy(false);
-        toast.error("تعذّر تسجيل الدخول بجوجل. فعّل Google في Supabase Auth → Providers.");
+        toast.error("تعذّر تسجيل الدخول بجوجل، حاول تاني.");
         return;
       }
-      if (result.redirected) return;
-      toast.success("أهلًا بعودتك! 👋");
+      if (result.redirected) return; // المتصفح بيروح لجوجل ويرجع تلقائيًا
+      // الجلسة اتعيّنت مباشرة — وجّه المستخدم لصفحته حسب دوره
+      toast.success("أهلًا بيك! 👋");
       const u = (await supabase.auth.getUser()).data.user;
       const roles = u ? await fetchUserRoles(u.id) : [];
       navigate({ to: resolveRoleHome(roles) });
     } catch {
       setGoogleBusy(false);
-      toast.error("تسجيل جوجل غير متاح. فعّل مزوّد Google في لوحة Supabase.");
+      toast.error("تعذّر تسجيل الدخول بجوجل، حاول تاني.");
     }
   };
 
