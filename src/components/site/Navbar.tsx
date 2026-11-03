@@ -146,8 +146,8 @@ export function Navbar() {
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex h-[60px] max-w-7xl items-center gap-2 px-3 sm:gap-3 sm:px-6">
-          {/* زر قائمة واحد فقط — للطلاب والأدمن */}
-          {!hideDrawer && (
+          {/* زر قائمة واحد — طلاب: منيو · أدمن: لوحتي تفتح نفس القائمة */}
+          {!hideDrawer && !isAdmin && (
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -156,6 +156,18 @@ export function Navbar() {
               aria-expanded={open}
             >
               {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          )}
+          {!hideDrawer && isAdmin && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-extrabold text-primary hover:bg-primary/15"
+              aria-label="فتح لوحة الإدارة"
+              aria-expanded={open}
+            >
+              {open ? <X className="h-5 w-5" /> : <LayoutDashboard className="h-5 w-5" />}
+              <span>لوحتي</span>
             </button>
           )}
 
@@ -170,9 +182,9 @@ export function Navbar() {
               <>
                 <NotificationBell />
                 <ThemeToggle />
-                {user && !isOpsRole && (
+                {user && !isOpsRole && !isAdmin && (
                   <Link
-                    to={isAdmin ? "/admin" : "/profile"}
+                    to="/profile"
                     className="hidden items-center gap-2 rounded-full border border-border bg-card px-2 py-1 text-sm font-bold hover:bg-accent sm:flex"
                   >
                     {avatar ? (
@@ -182,7 +194,7 @@ export function Navbar() {
                         {initial}
                       </span>
                     )}
-                    <span className="max-w-[7rem] truncate">{isAdmin ? "لوحتي" : "حسابي"}</span>
+                    <span className="max-w-[7rem] truncate">حسابي</span>
                   </Link>
                 )}
                 <button
@@ -228,7 +240,7 @@ export function Navbar() {
           aria-label="القائمة الجانبية"
         >
           <div className="mb-4 flex items-center justify-between">
-            <Logo />
+            <p className="text-sm font-extrabold">{isAdmin ? "أقسام الإدارة" : "القائمة"}</p>
             <button
               type="button"
               onClick={() => setOpen(false)}

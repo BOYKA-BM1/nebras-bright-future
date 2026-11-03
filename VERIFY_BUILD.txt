@@ -1,0 +1,10 @@
+Edu Mindly roles build
+date: 2026-11-04
+checks:
+- teacher: no calendar, logout, assignments later, analytics dialog
+- admin: single لوحتي menu in Navbar, no second sidebar in admin.tsx
+- staff/psych/ops: no drawer (hideDrawer)
+- role-home: secretary->complaints, montage/photographer/support homes
+- secondary admin: maskEmail + maskIp
+- earnings: applyAll teachers percent
+- theme: paper #F7F4EF, primary #7C83F7 / dark #A5ABFF
