@@ -34,7 +34,6 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPsychRouteImport } from './routes/_authenticated/psych'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
-import { Route as AuthenticatedTeacherApplyRouteImport } from './routes/_authenticated/teacher-apply'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
@@ -198,12 +197,6 @@ const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
   path: '/teacher',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedTeacherApplyRoute =
-  AuthenticatedTeacherApplyRouteImport.update({
-    id: '/teacher-apply',
-    path: '/teacher-apply',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const ApiTtsRoute = ApiTtsRouteImport.update({
   id: '/api/tts',
   path: '/api/tts',
@@ -418,7 +411,6 @@ export interface FileRoutesByFullPath {
   '/psych': typeof AuthenticatedPsychRoute
   '/staff': typeof AuthenticatedStaffRouteWithChildren
   '/teacher': typeof AuthenticatedTeacherRoute
-  '/teacher-apply': typeof AuthenticatedTeacherApplyRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
@@ -475,7 +467,6 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/psych': typeof AuthenticatedPsychRoute
   '/teacher': typeof AuthenticatedTeacherRoute
-  '/teacher-apply': typeof AuthenticatedTeacherApplyRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
@@ -537,7 +528,6 @@ export interface FileRoutesById {
   '/_authenticated/psych': typeof AuthenticatedPsychRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRouteWithChildren
   '/_authenticated/teacher': typeof AuthenticatedTeacherRoute
-  '/_authenticated/teacher-apply': typeof AuthenticatedTeacherApplyRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
@@ -599,7 +589,6 @@ export interface FileRouteTypes {
     | '/psych'
     | '/staff'
     | '/teacher'
-    | '/teacher-apply'
     | '/api/tts'
     | '/courses/$courseId'
     | '/stages/$level'
@@ -656,7 +645,6 @@ export interface FileRouteTypes {
     | '/profile'
     | '/psych'
     | '/teacher'
-    | '/teacher-apply'
     | '/api/tts'
     | '/courses/$courseId'
     | '/stages/$level'
@@ -717,7 +705,6 @@ export interface FileRouteTypes {
     | '/_authenticated/psych'
     | '/_authenticated/staff'
     | '/_authenticated/teacher'
-    | '/_authenticated/teacher-apply'
     | '/api/tts'
     | '/courses/$courseId'
     | '/stages/$level'
@@ -942,13 +929,6 @@ declare module '@tanstack/react-router' {
       path: '/teacher'
       fullPath: '/teacher'
       preLoaderRoute: typeof AuthenticatedTeacherRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/teacher-apply': {
-      id: '/_authenticated/teacher-apply'
-      path: '/teacher-apply'
-      fullPath: '/teacher-apply'
-      preLoaderRoute: typeof AuthenticatedTeacherApplyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/tts': {
@@ -1296,7 +1276,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPsychRoute: typeof AuthenticatedPsychRoute
   AuthenticatedStaffRoute: typeof AuthenticatedStaffRouteWithChildren
   AuthenticatedTeacherRoute: typeof AuthenticatedTeacherRoute
-  AuthenticatedTeacherApplyRoute: typeof AuthenticatedTeacherApplyRoute
   AuthenticatedLearnCourseIdRoute: typeof AuthenticatedLearnCourseIdRoute
   AuthenticatedManageCourseIdRoute: typeof AuthenticatedManageCourseIdRouteWithChildren
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
@@ -1323,7 +1302,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPsychRoute: AuthenticatedPsychRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRouteWithChildren,
   AuthenticatedTeacherRoute: AuthenticatedTeacherRoute,
-  AuthenticatedTeacherApplyRoute: AuthenticatedTeacherApplyRoute,
   AuthenticatedLearnCourseIdRoute: AuthenticatedLearnCourseIdRoute,
   AuthenticatedManageCourseIdRoute:
     AuthenticatedManageCourseIdRouteWithChildren,
