@@ -66,7 +66,8 @@ function Dashboard() {
   const accountType = user?.user_metadata?.account_type as string | undefined;
   useEffect(() => {
     if (rolesLoading || isAdmin || isStaffRole || isPsychologist) return;
-    if (!accountType) {
+    // "teacher" من التسجيل القديم بدون دور — يرجع يختار نوعه
+    if (!accountType || accountType === "teacher") {
       navigate({ to: "/account-type" });
       return;
     }
