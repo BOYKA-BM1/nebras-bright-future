@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -14,7 +14,7 @@ import {
   Star,
   TrendingUp,
   UserRound,
-  LogOut,
+  
   ClipboardList,
   Loader2,
 } from "lucide-react";
@@ -41,8 +41,7 @@ export const Route = createFileRoute("/_authenticated/teacher")({
 });
 
 function TeacherDashboard() {
-  const { user, confirmSignOut } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const { isTeacher, isAdmin, isLoading } = useRoles();
   const { data: courses = [], isLoading: coursesLoading } = useCourses();
   const { data: teachers = [] } = useTeachers();
@@ -162,10 +161,8 @@ function TeacherDashboard() {
 
             <button
               type="button"
-              onClick={() => confirmSignOut(() => navigate({ to: "/" }))}
               className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"
             >
-              <LogOut className="h-4 w-4" /> خروج
             </button>
           </div>
         </div>

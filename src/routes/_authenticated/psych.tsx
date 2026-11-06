@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { HeartHandshake, Loader2, Send, Phone, ArrowLeft, CheckCircle2, XCircle, Users, LogOut } from "lucide-react";
+import { HeartHandshake, Loader2, Send, Phone, ArrowLeft, CheckCircle2, XCircle, Users } from "lucide-react";
 import { ComplaintButton } from "@/components/site/ComplaintButton";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
@@ -221,7 +221,6 @@ function CallRequestForm({ defaultName, defaultPhone }: { defaultName: string; d
 /* ================= الدكتور النفسي / الإدارة ================= */
 
 function DoctorPanel() {
-  const { confirmSignOut } = useAuth();
   const { data: threads = [], isLoading } = usePsychThreads();
   const { data: calls = [] } = useAllCallRequests();
   const updateCall = useUpdateCallRequest();
@@ -254,12 +253,6 @@ function DoctorPanel() {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <ComplaintButton />
-            <button
-              onClick={() => confirmSignOut()}
-              className="flex shrink-0 items-center gap-2 rounded-xl border border-border px-3 py-2 text-sm font-bold text-destructive hover:bg-destructive/10"
-            >
-              <LogOut className="h-4 w-4" /> خروج
-            </button>
           </div>
 
         </div>

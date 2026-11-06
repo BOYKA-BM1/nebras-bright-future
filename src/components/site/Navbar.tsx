@@ -254,28 +254,32 @@ export function Navbar() {
           </div>
 
           {isAdmin ? (
-            <nav className="flex flex-col gap-1">
-              <p className="mb-2 px-2 text-xs font-bold text-muted-foreground">أقسام الإدارة</p>
-              {ADMIN_NAV.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setOpen(false)}
-                  className="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            <div className="flex min-h-0 flex-1 flex-col">
+              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+                <p className="mb-2 px-2 text-xs font-bold text-muted-foreground">أقسام الإدارة</p>
+                {ADMIN_NAV.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setOpen(false)}
+                    className="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+              <div className="mt-auto border-t border-sidebar-border pt-3">
+                <button
+                  type="button"
+                  onClick={() => { setOpen(false); confirmSignOut(() => navigate({ to: "/" })); }}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-destructive/30 px-4 py-3 text-start text-sm font-bold text-destructive hover:bg-destructive/10"
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {item.label}
-                </Link>
-              ))}
-              <button
-                type="button"
-                onClick={() => { setOpen(false); confirmSignOut(() => navigate({ to: "/" })); }}
-                className="mt-3 flex items-center gap-3 rounded-2xl border border-destructive/30 px-4 py-2.5 text-start text-sm font-bold text-destructive hover:bg-destructive/10"
-              >
-                <LogOut className="h-4 w-4 shrink-0" />
-                تسجيل الخروج
-              </button>
-            </nav>
+                  <LogOut className="h-4 w-4 shrink-0" />
+                  تسجيل الخروج
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col">
               <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">

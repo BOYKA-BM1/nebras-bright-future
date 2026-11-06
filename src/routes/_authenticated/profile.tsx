@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Loader2, Camera, Save, ArrowLeft, Home, Phone, MessageCircle, User as UserIcon, Calendar, Users } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { useRoles } from "@/hooks/use-roles";
 import { useMyEnrollments } from "@/hooks/use-content";
 import { useCourses } from "@/hooks/use-catalog";
 import { useProfile, useUpdateProfile, useUploadAvatar, profileCompletion } from "@/hooks/use-profile";
@@ -154,6 +155,7 @@ function ProfilePage() {
           </div>
         </div>
 
+        <TeacherProfileCard />
         <EducationProfileCard />
         <ChildLinkCodeCard />
       </main>
@@ -342,5 +344,172 @@ function EducationProfileCard() {
         </div>
       )}
     </div>
+  );
+}
+
+
+/** بيانات المدرّس القابلة للتعديل (مرتبطة بـ teachers.user_id) */
+function TeacherProfileCard() {
+  const { user } = useAuth();
+  const { isTeacher, isAdmin } = useRoles();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [teacherId, setTeacherId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    name: "",
+    subject: "",
+    bio: "",
+    experience_years: "0",
+    stage: "",
+    grade: "",
+  });
+
+  useEffect(() => {
+    if (!user || (!isTeacher && !isAdmin)) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("id, name, subject, bio, experience_years, stage, grade")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) {
+        if (data && !error) {
+          setTeacherId(data.id);
+          setForm({
+            name: data.name ?? "",
+            subject: data.subject ?? "",
+            bio: data.bio ?? "",
+            experience_years: String(data.experience_years ?? 0),
+            stage: data.stage ?? "",
+            grade: data.grade ?? "",
+          });
+        }
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, isTeacher, isAdmin]);
+
+  if (!isTeacher && !isAdmin) return null;
+  if (loading) {
+    return (
+      <div className="mt-8 flex justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!teacherId) {
+    return (
+      <div className="mt-8 rounded-2xl border border-dashed border-border bg-card/50 p-6 text-sm text-muted-foreground">
+        لا يوجد ملف مدرّس مربوط بحسابك بعد. تواصل مع الإدارة لربط حسابك.
+      </div>
+    );
+  }
+
+  const saveTeacher = async () => {
+    if (!form.name.trim()) {
+      toast.error("اسم المدرّس مطلوب.");
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("teachers")
+        .update({
+          name: form.name.trim(),
+          subject: form.subject.trim(),
+          bio: form.bio.trim() || null,
+          experience_years: Math.max(0, Number(form.experience_years) || 0),
+          stage: form.stage.trim() || null,
+          grade: form.grade.trim() || null,
+        })
+        .eq("id", teacherId);
+      if (error) throw error;
+      toast.success("تم حفظ بيانات المدرّس ✅");
+    } catch {
+      toast.error("تعذّر حفظ بيانات المدرّس.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="mt-10 rounded-2xl border border-border bg-card p-5 shadow-card sm:p-6">
+      <h2 className="text-lg font-extrabold">بيانات المدرّس</h2>
+      <p className="mt-1 text-sm text-muted-foreground">عدّل اسمك الظاهر للطلاب، المادة، الخبرة، والنبذة التعريفية.</p>
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <label className="grid gap-1.5 sm:col-span-2">
+          <span className="text-sm font-bold text-muted-foreground">الاسم الظاهر</span>
+          <input
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-bold text-muted-foreground">المادة</span>
+          <input
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            value={form.subject}
+            onChange={(e) => setForm({ ...form, subject: e.target.value })}
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-bold text-muted-foreground">سنوات الخبرة</span>
+          <input
+            type="number"
+            min={0}
+            dir="ltr"
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            value={form.experience_years}
+            onChange={(e) => setForm({ ...form, experience_years: e.target.value })}
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-bold text-muted-foreground">المرحلة</span>
+          <input
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            value={form.stage}
+            onChange={(e) => setForm({ ...form, stage: e.target.value })}
+            placeholder="مثلاً: ثانوي"
+          />
+        </label>
+        <label className="grid gap-1.5">
+          <span className="text-sm font-bold text-muted-foreground">الصف</span>
+          <input
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            value={form.grade}
+            onChange={(e) => setForm({ ...form, grade: e.target.value })}
+            placeholder="مثلاً: ثالثة ثانوي"
+          />
+        </label>
+        <label className="grid gap-1.5 sm:col-span-2">
+          <span className="text-sm font-bold text-muted-foreground">نبذة عنك</span>
+          <textarea
+            rows={4}
+            className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
+            value={form.bio}
+            onChange={(e) => setForm({ ...form, bio: e.target.value })}
+            placeholder="خبرتك، أسلوب الشرح، إنجازاتك…"
+          />
+        </label>
+      </div>
+      <button
+        type="button"
+        onClick={saveTeacher}
+        disabled={saving}
+        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-gold px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-gold disabled:opacity-70"
+      >
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+        حفظ بيانات المدرّس
+      </button>
+    </section>
   );
 }
