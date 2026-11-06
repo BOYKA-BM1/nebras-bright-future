@@ -1,53 +1,19 @@
 import { useState } from "react";
 import { createFileRoute, Outlet, Link, useParams, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Sparkles, GraduationCap, Plus, MessageSquare, Trash2, Menu, X } from "lucide-react";
-import { useProfile } from "@/hooks/use-profile";
-import { useAuth } from "@/hooks/use-auth";
-import { supabase } from "@/integrations/supabase/client";
+import { Plus, MessageSquare, Trash2, X, PanelRight } from "lucide-react";
 import { useConversations, useConversationActions } from "@/hooks/use-ai-chat";
 
 export const Route = createFileRoute("/_authenticated/ai")({
   component: AiLayout,
 });
 
-function stageLabel(grade?: string | null): string {
-  if (!grade) return "";
-  if (grade.includes("الابتدائي")) return "المرحلة الابتدائية";
-  if (grade.includes("الإعدادي")) return "المرحلة الإعدادية";
-  if (grade.includes("الثانوي")) return "المرحلة الثانوية";
-  return "";
-}
-
 function AiLayout() {
-  const { data: profile, isLoading: profileLoading } = useProfile();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const { data: teacherRow, isLoading: teacherLoading } = useQuery({
-    queryKey: ["my-teacher-grade", user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("teachers")
-        .select("grade, stage")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      return data;
-    },
-  });
-
+  const [open, setOpen] = useState(false);
   const { data: conversations } = useConversations();
   const { deleteConversation } = useConversationActions();
-
-  // المحادثة النشطة من الـ URL
   const params = useParams({ strict: false }) as { threadId?: string };
   const activeId = params.threadId ?? null;
-
-  const grade = teacherRow?.grade?.trim() || profile?.grade?.trim() || "";
-  const hasGrade = !!grade;
-  const loading = profileLoading || teacherLoading;
 
   const handleDelete = (id: string) => {
     deleteConversation.mutate(id, {
@@ -58,117 +24,97 @@ function AiLayout() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-background pt-[60px]">
-      <div className="flex min-h-0 flex-1">
-        {/* الشريط الجانبي: المحادثات */}
-        <aside
-          className={`fixed inset-y-0 right-0 z-40 mt-[60px] w-72 shrink-0 overflow-hidden border-l border-border bg-card transition-all duration-300 sm:static sm:mt-0 ${
-            sidebarOpen ? "translate-x-0 sm:w-72" : "translate-x-full sm:w-0 sm:translate-x-0 sm:border-l-0"
-          }`}
-        >
-          <div className="flex h-full flex-col p-3">
-            <Link
-              to="/ai"
-              onClick={() => setSidebarOpen(false)}
-              className="flex items-center justify-center gap-2 rounded-xl bg-gradient-gold px-4 py-3 text-sm font-bold text-primary-foreground shadow-gold hover:opacity-90"
-            >
-              <Plus className="h-4 w-4" /> محادثة جديدة
-            </Link>
-
-            <div className="mt-3 flex-1 space-y-1 overflow-y-auto">
-              {(conversations ?? []).length === 0 ? (
-                <p className="px-2 py-6 text-center text-xs text-muted-foreground">مفيش محادثات لسه</p>
-              ) : (
-                (conversations ?? []).map((c) => (
-                  <div
-                    key={c.id}
-                    className={`group flex items-center gap-2 rounded-xl px-2 py-2 transition-colors ${
-                      activeId === c.id ? "bg-accent" : "hover:bg-accent/60"
-                    }`}
-                  >
-                    <Link
-                      to="/ai/$threadId"
-                      params={{ threadId: c.id }}
-                      onClick={() => setSidebarOpen(false)}
-                      className="flex min-w-0 flex-1 items-center gap-2 text-sm"
-                    >
-                      <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <span className="truncate">{c.title}</span>
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(c.id)}
-                      className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:opacity-70 md:group-hover:opacity-100"
-                      aria-label="حذف المحادثة"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </aside>
-
-        {sidebarOpen && (
-          <div className="fixed inset-0 z-30 bg-black/40 sm:hidden" onClick={() => setSidebarOpen(false)} />
-        )}
-
-        {/* لسان جانبي عائم للهاتف يفتح المحادثات (زي شات جي بي تي) */}
-        {!sidebarOpen && (
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed right-0 top-1/2 z-30 flex -translate-y-1/2 items-center gap-1 rounded-l-xl bg-gradient-gold py-3 pl-2 pr-1.5 text-primary-foreground shadow-gold sm:hidden"
-            aria-label="فتح المحادثات"
-          >
-            <MessageSquare className="h-4 w-4" />
-          </button>
-        )}
-
-        {/* العمود الرئيسي */}
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
-          {/* رأس */}
-          <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <button
-              onClick={() => setSidebarOpen((v) => !v)}
-              className="hidden shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:bg-accent sm:flex"
-              aria-label="قائمة المحادثات"
-            >
-              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-              <span>المحادثات</span>
-            </button>
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-gold text-primary-foreground shadow-gold">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <h1 className="text-base font-extrabold sm:text-lg">Edu Mindly المساعد الذكي</h1>
-              <p className="truncate text-xs text-muted-foreground">
-                {hasGrade ? `${grade} — ${stageLabel(grade)}` : "بيجاوبك من محاضرات ومذكرات مدرّسينك بس"}
-              </p>
-            </div>
-          </div>
-
-          {/* المحتوى */}
-          {!loading && !hasGrade ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-4 p-10 text-center">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                <GraduationCap className="h-7 w-7" />
-              </span>
-              <h2 className="text-lg font-extrabold">اختر مرحلتك وصفّك الأول</h2>
-              <p className="max-w-sm text-sm text-muted-foreground">
-                المساعد الذكي بيفتح نسخة مخصّصة لمرحلتك وصفّك تلقائيًا. كمّل بياناتك واختر صفّك من صفحة حسابك عشان نبدأ.
-              </p>
-              <Link
-                to="/onboarding"
-                className="rounded-xl bg-gradient-gold px-6 py-3 text-sm font-bold text-primary-foreground shadow-gold"
-              >
-                أكمل بياناتي
-              </Link>
-            </div>
-          ) : (
-            <Outlet />
-          )}
-        </main>
+    <div className="relative flex h-[calc(100dvh-60px)] min-h-0 flex-col bg-background">
+      {/* الشات بيملأ المساحة تحت البار الرئيسي فقط */}
+      <div className="min-h-0 flex-1">
+        <Outlet />
       </div>
+
+      {/* زر المحادثات العائم — وسط يمين الشاشة */}
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="fixed end-3 top-1/2 z-40 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-card/95 text-foreground shadow-lg backdrop-blur transition hover:scale-105 hover:border-primary/40 hover:text-primary sm:end-5"
+        aria-label="المحادثات"
+        title="المحادثات"
+      >
+        <PanelRight className="h-5 w-5" />
+      </button>
+
+      {open && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-black/40"
+          aria-label="إغلاق"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 end-0 z-50 flex w-[min(19rem,88vw)] flex-col border-s border-border bg-card shadow-2xl transition-transform duration-300 ${
+          open ? "translate-x-0" : "ltr:translate-x-full rtl:-translate-x-full"
+        }`}
+        style={{ top: 60 }}
+        aria-label="قائمة المحادثات"
+      >
+        <div className="flex items-center justify-between border-b border-border px-3 py-3">
+          <p className="text-sm font-extrabold">المحادثات</p>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-accent"
+            aria-label="إغلاق"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="p-3">
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              navigate({ to: "/ai" });
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary/15 px-3 py-2.5 text-sm font-bold text-primary hover:bg-primary/20"
+          >
+            <Plus className="h-4 w-4" /> محادثة جديدة
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-1 overflow-y-auto px-2 pb-4">
+          {(conversations ?? []).length === 0 ? (
+            <p className="px-3 py-6 text-center text-xs text-muted-foreground">لا توجد محادثات بعد</p>
+          ) : (
+            (conversations ?? []).map((c) => (
+              <div
+                key={c.id}
+                className={`group flex items-center gap-1 rounded-xl px-2 py-2 ${
+                  activeId === c.id ? "bg-primary/15 text-primary" : "hover:bg-accent"
+                }`}
+              >
+                <Link
+                  to="/ai/$threadId"
+                  params={{ threadId: c.id }}
+                  onClick={() => setOpen(false)}
+                  className="flex min-w-0 flex-1 items-center gap-2 px-1 text-sm font-semibold"
+                >
+                  <MessageSquare className="h-4 w-4 shrink-0 opacity-70" />
+                  <span className="truncate">{c.title || "محادثة"}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(c.id)}
+                  className="rounded-lg p-1.5 text-muted-foreground opacity-0 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                  aria-label="حذف"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </aside>
     </div>
   );
 }

@@ -315,3 +315,85 @@ export const transcribeVideo = createServerFn({ method: "POST" })
     if (!transcript) throw new Error("لم ينتج نص من الفيديو، حاول تاني.");
     return { transcript };
   });
+
+
+/* =========================================================
+   توليد صورة تعليمية من وصف نصي
+========================================================= */
+export const generateTutorImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(z.object({ prompt: z.string().min(3).max(2000) }))
+  .handler(async ({ data, context }) => {
+    const apiKey = process.env.LOVABLE_API_KEY;
+    if (!apiKey) throw new Error("لم يتم تهيئة توليد الصور بعد.");
+
+    const okRate = await enforceRateLimit(`ai-img:${context.userId}`, 8, 600);
+    if (!okRate) throw new Error("طلبات صور كتير، استنى شوية وحاول تاني.");
+    await writeAudit({
+      userId: context.userId,
+      action: "ai_image",
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+
+    const prompt = data.prompt.trim();
+
+    // محاولة عبر بوابة Lovable (نماذج تدعم توليد صور عند التوفّر)
+    const res = await fetch(GATEWAY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-image",
+        messages: [
+          {
+            role: "user",
+            content: `Generate an educational illustration. Return only the image. Prompt: ${prompt}`,
+          },
+        ],
+      }),
+    });
+
+    if (res.status === 429) throw new Error("الضغط عالي على توليد الصور، جرّب بعد شوية.");
+    if (res.status === 402) throw new Error("انتهى رصيد توليد الصور، تواصل مع الإدارة.");
+    if (!res.ok) {
+      // fallback: اطلب من النموذج وصفًا أو رابطًا إن وُجد
+      const res2 = await fetch(GATEWAY, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content:
+                "أنت تولّد صورًا تعليمية. إذا لم تستطع إخراج صورة مباشرة، اكتب وصفًا بصريًا دقيقًا بالعربية يمكن استخدامه لاحقًا، وابدأ الرد بـ [وصف صورة].",
+            },
+            { role: "user", content: prompt },
+          ],
+        }),
+      });
+      if (!res2.ok) throw new Error("تعذّر توليد الصورة حاليًا.");
+      const json2 = (await res2.json()) as { choices?: { message?: { content?: string } }[] };
+      const text = json2.choices?.[0]?.message?.content?.trim();
+      if (!text) throw new Error("لم ينتج وصف للصورة.");
+      return { kind: "text" as const, content: text };
+    }
+
+    const json = (await res.json()) as {
+      choices?: { message?: { content?: string | { type?: string; image_url?: { url?: string } }[] } }[];
+    };
+    const msg = json.choices?.[0]?.message?.content;
+    if (typeof msg === "string" && msg.startsWith("data:image")) {
+      return { kind: "image" as const, content: msg };
+    }
+    if (Array.isArray(msg)) {
+      for (const part of msg) {
+        const url = (part as { image_url?: { url?: string } }).image_url?.url;
+        if (url) return { kind: "image" as const, content: url };
+      }
+    }
+    if (typeof msg === "string" && msg.trim()) {
+      return { kind: "text" as const, content: msg.trim() };
+    }
+    throw new Error("تعذّر استخراج الصورة من الرد.");
+  });

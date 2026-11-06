@@ -303,12 +303,18 @@ export function Navbar() {
               <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
                 {links.map((l) => {
                   const Icon = ICONS[l.href] ?? Home;
+                  const pathOnly = l.href.startsWith("/#") ? "/" : l.href.split("#")[0];
+                  const active =
+                    pathOnly === "/"
+                      ? pathname === "/"
+                      : isNavActive(pathname, pathOnly);
                   return (
                     <button
                       key={l.href}
                       type="button"
                       onClick={() => handleNav(l.href, false)}
-                      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-start text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent"
+                      className={navItemClass(active) + " w-full text-start"}
+                      aria-current={active ? "page" : undefined}
                     >
                       <Icon className="h-4 w-4" />
                       {l.label}

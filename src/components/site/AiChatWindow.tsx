@@ -8,29 +8,27 @@ import {
   User as UserIcon,
   Square,
   Mic,
-  Volume2,
-  VolumeX,
   ImagePlus,
   X,
   Sparkles,
-  Paperclip,
 } from "lucide-react";
 import { toast } from "sonner";
-import { askTutor } from "@/lib/ai-tutor.functions";
-import { useSpeechRecognition, useSpeech } from "@/hooks/use-voice";
+import { askTutor, generateTutorImage } from "@/lib/ai-tutor.functions";
+import { useSpeechRecognition } from "@/hooks/use-voice";
 import { useMessages, useConversationActions } from "@/hooks/use-ai-chat";
 
 type ChatMsg = {
   role: "user" | "assistant";
   content: string;
   imageDataUrl?: string | null;
+  generatedImageUrl?: string | null;
 };
 
 const STARTERS = [
   "اشرحلي أصعب جزء في آخر محاضرة",
   "لخّصلي المحاضرة في نقاط",
   "اديني تمرين على الدرس وصحّحلي",
-  "اسألني أسئلة مراجعة على المحاضرة",
+  "ارسملي مخطط توضيحي للدرس",
 ];
 
 const MAX_IMAGE_BYTES = 4 * 1024 * 1024;
@@ -46,13 +44,17 @@ async function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
+function wantsImageGen(text: string) {
+  const t = text.trim();
+  return /^(ارسم|ولّد|ولد|ولدّ|generate|draw|صورة|صمم|صمّم)/i.test(t) || /توليد\s*صورة|ارسملي|ارسم لي/i.test(t);
+}
+
 export function AiChatWindow({ conversationId }: { conversationId: string | null }) {
   const callTutor = useServerFn(askTutor);
+  const callImage = useServerFn(generateTutorImage);
   const navigate = useNavigate();
   const { createConversation, saveMessage } = useConversationActions();
   const voice = useSpeechRecognition();
-  const tts = useSpeech();
-  const [autoSpeak, setAutoSpeak] = useState(false);
 
   const { data: loaded } = useMessages(conversationId);
 
@@ -62,7 +64,6 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const [busy, setBusy] = useState(false);
   const [typing, setTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const typingTimer = useRef<number | null>(null);
   const loadedFor = useRef<string | null | undefined>(undefined);
@@ -79,13 +80,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       return;
     }
     if (loaded && loadedFor.current !== conversationId) {
-      setMessages(
-        loaded.map((m) => ({
-          role: m.role,
-          content: m.content,
-          imageDataUrl: m.content.startsWith("![صورة]") ? null : null,
-        })),
-      );
+      setMessages(loaded.map((m) => ({ role: m.role, content: m.content })));
       loadedFor.current = conversationId;
     }
   }, [conversationId, loaded]);
@@ -106,7 +101,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   const onScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
-    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 96;
   };
 
   const typeOut = (full: string) =>
@@ -122,7 +117,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
           resolve();
           return;
         }
-        i = Math.min(chars.length, i + 2);
+        i = Math.min(chars.length, i + 3);
         const shown = chars.slice(0, i).join("");
         shownRef.current = shown;
         setMessages((m) => {
@@ -130,9 +125,8 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
           copy[copy.length - 1] = { role: "assistant", content: shown };
           return copy;
         });
-        if (i < chars.length) {
-          typingTimer.current = window.setTimeout(step, 14);
-        } else {
+        if (i < chars.length) typingTimer.current = window.setTimeout(step, 12);
+        else {
           setTyping(false);
           resolve();
         }
@@ -146,7 +140,6 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       clearTimeout(typingTimer.current);
       typingTimer.current = null;
     }
-    tts.cancel();
     setTyping(false);
     setBusy(false);
   };
@@ -160,16 +153,13 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       toast.error("متصفحك مش بيدعم الإدخال الصوتي.");
       return;
     }
-    tts.cancel();
-    tts.prime();
     voice.start((text) => void send(text));
   };
 
   const onPickImage = async (file: File | null) => {
     if (!file) return;
     try {
-      const dataUrl = await fileToDataUrl(file);
-      setPendingImage(dataUrl);
+      setPendingImage(await fileToDataUrl(file));
     } catch (e: any) {
       toast.error(e?.message || "تعذّر إرفاق الصورة.");
     }
@@ -197,23 +187,35 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
         loadedFor.current = id;
       }
 
-      const storeText = imageDataUrl ? `${content}\n\n[مرفقة صورة للمسألة]` : content;
+      const storeText = imageDataUrl ? `${content}\n\n[مرفقة صورة]` : content;
       await saveMessage(id, "user", storeText);
 
-      const payload = history.slice(-12).map((m) => ({
-        role: m.role,
-        content: m.content,
-        imageDataUrl: m.imageDataUrl ?? null,
-      }));
-
-      const { reply } = await callTutor({ data: { messages: payload } });
-      if (stoppedRef.current) return;
-
-      await typeOut(reply);
-      await saveMessage(id, "assistant", shownRef.current || reply);
-
-      if (autoSpeak && !stoppedRef.current) {
-        tts.speak(shownRef.current || reply);
+      // توليد صورة
+      if (!imageDataUrl && wantsImageGen(content)) {
+        const result = await callImage({ data: { prompt: content } });
+        if (stoppedRef.current) return;
+        if (result.kind === "image") {
+          const msg: ChatMsg = {
+            role: "assistant",
+            content: "اتفضّل الصورة حسب طلبك 👇",
+            generatedImageUrl: result.content,
+          };
+          setMessages((m) => [...m, msg]);
+          await saveMessage(id, "assistant", `${msg.content}\n${result.content}`);
+        } else {
+          await typeOut(result.content);
+          await saveMessage(id, "assistant", shownRef.current || result.content);
+        }
+      } else {
+        const payload = history.slice(-12).map((m) => ({
+          role: m.role,
+          content: m.content,
+          imageDataUrl: m.imageDataUrl ?? null,
+        }));
+        const { reply } = await callTutor({ data: { messages: payload } });
+        if (stoppedRef.current) return;
+        await typeOut(reply);
+        await saveMessage(id, "assistant", shownRef.current || reply);
       }
 
       if (!conversationId && id) {
@@ -221,7 +223,7 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
       }
     } catch (e: any) {
       toast.error(e?.message || "حصل خطأ أثناء الرد.");
-      setMessages((m) => m.slice(0, -1));
+      setMessages((m) => (m[m.length - 1]?.role === "user" ? m.slice(0, -1) : m));
     } finally {
       setBusy(false);
       setTyping(false);
@@ -229,115 +231,88 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
   };
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-gradient-to-b from-primary/[0.04] via-background to-background">
-      {/* شريط علوي أنيق */}
-      <div className="shrink-0 border-b border-border/60 bg-card/70 px-4 py-3 backdrop-blur-md sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-gold text-primary-foreground shadow-gold">
-            <Sparkles className="h-5 w-5" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-base font-extrabold sm:text-lg">Edu Mindly المساعد الذكي</h2>
-            <p className="truncate text-xs text-muted-foreground">
-              اسأل بالكتابة أو ارفع صورة مسألة — هشرحلك خطوة بخطوة
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setAutoSpeak((v) => !v)}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-colors ${
-              autoSpeak ? "border-primary/40 bg-primary/15 text-primary" : "border-border bg-background text-muted-foreground"
-            }`}
-            title={autoSpeak ? "إيقاف القراءة الصوتية" : "تفعيل القراءة الصوتية"}
-          >
-            {autoSpeak ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* الرسائل */}
-      <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto px-3 py-5 sm:px-6">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      {/* الرسائل — بدون هيدر إضافي */}
+      <div ref={scrollRef} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto">
+        <div className="mx-auto flex min-h-full max-w-3xl flex-col px-3 py-6 sm:px-4">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center px-2 py-10 text-center">
-              <div className="relative mb-5">
-                <div className="absolute inset-0 rounded-3xl bg-primary/20 blur-2xl" />
-                <span className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-gold text-primary-foreground shadow-gold">
-                  <Bot className="h-10 w-10" />
-                </span>
-              </div>
-              <h3 className="text-xl font-extrabold">جاهز نذاكر مع بعض؟</h3>
-              <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-                اكتب سؤالك، أو ارفع صورة لمسألة/واجب، والمساعد هيقرأ الصورة ويشرحلك الحل بأسلوب مناسب لمرحلتك.
+            <div className="my-auto flex flex-col items-center px-2 pb-16 pt-8 text-center">
+              <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                <Sparkles className="h-7 w-7" />
+              </span>
+              <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">كيف أقدر أساعدك؟</h1>
+              <p className="mt-2 max-w-md text-sm text-muted-foreground">
+                اسأل عن درسك، ارفع صورة مسألة، أو اطلب رسمة توضيحية.
               </p>
-              <div className="mt-6 grid w-full max-w-lg gap-2 sm:grid-cols-2">
+              <div className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2">
                 {STARTERS.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="rounded-2xl border border-border bg-card/90 px-4 py-3 text-start text-sm font-semibold shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                    className="rounded-2xl border border-border bg-card px-4 py-3 text-start text-sm font-medium transition hover:bg-accent"
                   >
                     {s}
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => fileRef.current?.click()}
-                className="mt-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-bold text-primary hover:bg-primary/15"
-              >
-                <ImagePlus className="h-4 w-4" />
-                ارفع صورة مسألة
-              </button>
             </div>
           ) : (
-            messages.map((m, i) => (
-              <div key={i} className={`flex gap-3 ${m.role === "user" ? "flex-row-reverse" : ""}`}>
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                    m.role === "user" ? "bg-secondary" : "bg-gradient-gold text-primary-foreground shadow-sm"
-                  }`}
-                >
-                  {m.role === "user" ? <UserIcon className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                </span>
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
-                    m.role === "user"
-                      ? "bg-gradient-gold text-primary-foreground"
-                      : "border border-border/80 bg-card/95"
-                  }`}
-                >
-                  {m.imageDataUrl && (
-                    <img
-                      src={m.imageDataUrl}
-                      alt="صورة مرفقة"
-                      className="mb-2 max-h-56 w-auto rounded-xl border border-black/10 object-contain"
-                    />
+            <div className="flex flex-col gap-6 pb-4">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  {m.role === "assistant" && (
+                    <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+                      <Bot className="h-4 w-4" />
+                    </span>
                   )}
-                  <div className="whitespace-pre-wrap">{m.content}</div>
-                  {typing && m.role === "assistant" && i === messages.length - 1 && (
-                    <span className="ms-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-primary align-middle" />
+                  <div
+                    className={`max-w-[min(100%,36rem)] rounded-3xl px-4 py-3 text-[15px] leading-7 ${
+                      m.role === "user"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-secondary/60 text-foreground"
+                    }`}
+                  >
+                    {m.imageDataUrl && (
+                      <img
+                        src={m.imageDataUrl}
+                        alt=""
+                        className="mb-2 max-h-64 w-auto rounded-2xl object-contain"
+                      />
+                    )}
+                    {m.generatedImageUrl && (
+                      <img
+                        src={m.generatedImageUrl}
+                        alt="صورة مولّدة"
+                        className="mb-2 max-h-80 w-auto rounded-2xl object-contain"
+                      />
+                    )}
+                    <div className="whitespace-pre-wrap">{m.content}</div>
+                    {typing && m.role === "assistant" && i === messages.length - 1 && (
+                      <span className="ms-0.5 inline-block h-4 w-[2px] animate-pulse bg-primary align-middle" />
+
+                    )}
+                  </div>
+                  {m.role === "user" && (
+                    <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
+                      <UserIcon className="h-4 w-4" />
+                    </span>
                   )}
                 </div>
-              </div>
-            ))
-          )}
-          {busy && !typing && (
-            <div className="flex gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-gold text-primary-foreground">
-                <Bot className="h-4 w-4" />
-              </span>
-              <div className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> بيفكّر في سؤالك...
-              </div>
+              ))}
+              {busy && !typing && (
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  جاري التفكير…
+                </div>
+              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* الإدخال */}
-      <div className="shrink-0 border-t border-border/70 bg-card/80 p-3 backdrop-blur-xl sm:p-4">
+      {/* شريط الإدخال — ستايل ChatGPT/Grok */}
+      <div className="shrink-0 px-3 pb-4 pt-1 sm:px-4">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -345,90 +320,90 @@ export function AiChatWindow({ conversationId }: { conversationId: string | null
           }}
           className="mx-auto max-w-3xl"
         >
-          {pendingImage && (
-            <div className="mb-2 flex items-start gap-2 rounded-2xl border border-primary/30 bg-primary/5 p-2">
-              <img src={pendingImage} alt="معاينة" className="h-20 w-20 rounded-xl object-cover" />
-              <div className="min-w-0 flex-1 text-xs text-muted-foreground">
-                <p className="font-bold text-foreground">صورة جاهزة للإرسال</p>
-                <p className="mt-0.5">اكتب تعليقًا أو ابعت مباشرة والمساعد هيقرأ المسألة.</p>
+          <div className="rounded-[28px] border border-border bg-card shadow-sm focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
+            {/* معاينة الصورة المرفقة — شريحة مضغوطة زي Grok */}
+            {pendingImage && (
+              <div className="flex items-center gap-2 border-b border-border/60 px-3 pt-3">
+                <div className="relative">
+                  <img src={pendingImage} alt="" className="h-14 w-14 rounded-xl object-cover ring-1 ring-border" />
+                  <button
+                    type="button"
+                    onClick={() => setPendingImage(null)}
+                    className="absolute -end-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-background shadow"
+                    aria-label="إزالة"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                <span className="text-xs text-muted-foreground">صورة مرفقة</span>
               </div>
-              <button
-                type="button"
-                onClick={() => setPendingImage(null)}
-                className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                aria-label="إزالة الصورة"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
-          <div className="flex items-end gap-2 rounded-2xl border border-border bg-background p-2 shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif"
-              className="hidden"
-              onChange={(e) => void onPickImage(e.target.files?.[0] ?? null)}
-            />
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={busy}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-muted-foreground hover:bg-accent hover:text-primary disabled:opacity-50"
-              title="إرفاق صورة"
-            >
-              <ImagePlus className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={toggleMic}
-              disabled={busy}
-              className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl disabled:opacity-50 ${
-                voice.listening ? "bg-destructive/15 text-destructive" : "text-muted-foreground hover:bg-accent"
-              }`}
-              title="إدخال صوتي"
-            >
-              <Mic className="h-5 w-5" />
-            </button>
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  void send(input);
-                }
-              }}
-              rows={1}
-              placeholder={pendingImage ? "علّق على الصورة أو ابعت مباشرة..." : "اكتب سؤالك هنا..."}
-              className="max-h-32 min-h-[40px] flex-1 resize-none bg-transparent px-1 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
-              disabled={busy}
-            />
-            {busy ? (
-              <button
-                type="button"
-                onClick={stop}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-foreground"
-                title="إيقاف"
-              >
-                <Square className="h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={!input.trim() && !pendingImage}
-                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-gold text-primary-foreground shadow-gold disabled:opacity-40"
-                title="إرسال"
-              >
-                <Send className="h-4 w-4" />
-              </button>
             )}
+
+            <div className="flex items-end gap-1 px-2 py-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                className="hidden"
+                onChange={(e) => void onPickImage(e.target.files?.[0] ?? null)}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={busy}
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground disabled:opacity-50"
+                title="إرفاق صورة"
+              >
+                <ImagePlus className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                onClick={toggleMic}
+                disabled={busy}
+                className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full disabled:opacity-50 ${
+                  voice.listening ? "bg-destructive/15 text-destructive" : "text-muted-foreground hover:bg-accent"
+                }`}
+                title="صوت"
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void send(input);
+                  }
+                }}
+                rows={1}
+                placeholder="اسأل أي شيء..."
+                className="max-h-40 min-h-[44px] flex-1 resize-none bg-transparent px-2 py-2.5 text-[15px] outline-none placeholder:text-muted-foreground"
+                disabled={busy}
+              />
+              {busy ? (
+                <button
+                  type="button"
+                  onClick={stop}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary"
+                  title="إيقاف"
+                >
+                  <Square className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!input.trim() && !pendingImage}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground disabled:opacity-30"
+                  title="إرسال"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
-          <p className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-            <Paperclip className="h-3 w-3" />
-            يدعم رفع صور المسائل (JPG / PNG / WEBP) حتى 4 ميجا
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            يمكن أن يخطئ المساعد — راجع الإجابات المهمة
           </p>
         </form>
       </div>
