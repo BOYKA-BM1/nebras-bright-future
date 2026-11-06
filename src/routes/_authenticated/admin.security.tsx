@@ -50,8 +50,6 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 function actionLabel(a: string): string {
-  const { isFullAdmin } = useRoles();
-
   return ACTION_LABELS[a] ?? a;
 }
 
@@ -252,7 +250,7 @@ function SecurityPage() {
                       <td className="px-4 py-3 font-semibold">{actionLabel(l.action)}</td>
                       <td className="px-4 py-3 text-muted-foreground">{l.profiles?.full_name ?? "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground">{l.entity ?? "—"}</td>
-                      <td dir="ltr" className="px-4 py-3 text-muted-foreground">{isFullAdmin ? (l.ip ?? "—") : maskIp(l.ip)}</td>
+                      <td dir="ltr" className="px-4 py-3 text-muted-foreground">{maskIp(l.ip)}</td>
                       <td className="px-4 py-3 text-muted-foreground">{fmt(l.created_at)}</td>
                     </tr>
                   ))}

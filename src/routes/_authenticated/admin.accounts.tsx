@@ -4,8 +4,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, Ban, ShieldCheck, Trash2, Search, UserCog, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
+import { useRoles } from "@/hooks/use-roles";
 import { maskEmail } from "@/lib/mask";
+import {
   listAccounts,
   banAccount,
   unbanAccount,
@@ -48,6 +49,7 @@ function roleLabel(roles: string[]) {
 }
 
 function AccountsPage() {
+  const { isFullAdmin } = useRoles();
   const fetchAccounts = useServerFn(listAccounts);
   const ban = useServerFn(banAccount);
   const unban = useServerFn(unbanAccount);

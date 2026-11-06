@@ -2,8 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
   Loader2, BookOpen, Clock, Video, PlayCircle, Lock, Check, Heart,
-  ArrowRight, GraduationCap, ChevronLeft, FileText, Ticket, X, XCircle,
-} from "lucide-react";
+  ArrowRight, GraduationCap, ChevronLeft, FileText, Ticket, X, XCircle, Star, Briefcase} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/site/Logo";
@@ -202,15 +201,56 @@ function CourseDetail() {
             </div>
 
             {course.teacher && (
-              <div className="mt-6 flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
-                {resolveImage(course.teacher.image_url) ? (
-                  <img src={resolveImage(course.teacher.image_url)!} alt={course.teacher.name} className="h-12 w-12 rounded-full object-cover" />
-                ) : (
-                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/15 font-extrabold text-primary">{course.teacher.name.charAt(0)}</span>
-                )}
-                <div>
-                  <p className="font-bold">{course.teacher.name}</p>
-                  <p className="text-sm text-muted-foreground">{course.teacher.subject}</p>
+              <div className="mt-6 rounded-2xl border border-border bg-card/80 p-4 shadow-sm sm:p-5">
+                <div className="flex flex-wrap items-start gap-4">
+                  {resolveImage(course.teacher.image_url) ? (
+                    <img
+                      src={resolveImage(course.teacher.image_url)!}
+                      alt={course.teacher.name}
+                      className="h-16 w-16 rounded-full border-2 border-primary/40 object-cover sm:h-20 sm:w-20"
+                    />
+                  ) : (
+                    <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-xl font-extrabold text-primary sm:h-20 sm:w-20">
+                      {course.teacher.name.charAt(0)}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-lg font-extrabold">{course.teacher.name}</p>
+                    {course.teacher.subject && (
+                      <p className="text-sm font-semibold text-primary">{course.teacher.subject}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                      {typeof course.teacher.experience_years === "number" && course.teacher.experience_years > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 font-semibold">
+                          <Briefcase className="h-3.5 w-3.5 text-primary" />
+                          {course.teacher.experience_years} سنة خبرة
+                        </span>
+                      )}
+                      {course.teacher.rating != null && Number(course.teacher.rating) > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 font-semibold">
+                          <Star className="h-3.5 w-3.5 text-primary" />
+                          {Number(course.teacher.rating).toFixed(1)}
+                        </span>
+                      )}
+                      {course.teacher.students_label && (
+                        <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 font-semibold">
+                          {course.teacher.students_label}
+                        </span>
+                      )}
+                    </div>
+                    {course.teacher.bio && (
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                        {course.teacher.bio}
+                      </p>
+                    )}
+                    <Link
+                      to="/teachers/$teacherId"
+                      params={{ teacherId: course.teacher.id }}
+                      className="mt-3 inline-flex text-sm font-bold text-primary underline-offset-4 hover:underline"
+                    >
+                      عرض ملف المدرّس كامل
+                    </Link>
+                  </div>
                 </div>
               </div>
             )}

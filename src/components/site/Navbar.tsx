@@ -197,15 +197,17 @@ export function Navbar() {
                     <span className="max-w-[7rem] truncate">حسابي</span>
                   </Link>
                 )}
-                <button
-                  type="button"
-                  onClick={() => confirmSignOut(() => navigate({ to: "/" }))}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"
-                  title="تسجيل الخروج"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline">خروج</span>
-                </button>
+                {isOpsRole && (
+                  <button
+                    type="button"
+                    onClick={() => confirmSignOut(() => navigate({ to: "/" }))}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"
+                    title="تسجيل الخروج"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span className="hidden sm:inline">خروج</span>
+                  </button>
+                )}
               </>
             )}
             {!user && (
@@ -234,7 +236,7 @@ export function Navbar() {
 
       {!hideDrawer && (
         <aside
-          className={`fixed inset-y-0 z-[70] flex w-[min(20rem,88vw)] flex-col overflow-y-auto border-sidebar-border bg-sidebar p-4 shadow-lg transition-transform duration-300 start-0 ${
+          className={`fixed inset-y-0 z-[70] flex w-[min(20rem,88vw)] flex-col border-sidebar-border bg-sidebar p-4 shadow-lg transition-transform duration-300 start-0 ${
             open ? "translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
           }`}
           aria-label="القائمة الجانبية"
@@ -265,46 +267,78 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
+              <button
+                type="button"
+                onClick={() => { setOpen(false); confirmSignOut(() => navigate({ to: "/" })); }}
+                className="mt-3 flex items-center gap-3 rounded-2xl border border-destructive/30 px-4 py-2.5 text-start text-sm font-bold text-destructive hover:bg-destructive/10"
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                تسجيل الخروج
+              </button>
             </nav>
           ) : (
-            <nav className="flex flex-col gap-1">
-              {links.map((l) => {
-                const Icon = ICONS[l.href] ?? Home;
-                return (
-                  <button
-                    key={l.href}
-                    type="button"
-                    onClick={() => handleNav(l.href, false)}
-                    className="flex items-center gap-3 rounded-2xl px-4 py-3 text-start text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent"
+            <div className="flex min-h-0 flex-1 flex-col">
+              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
+                {links.map((l) => {
+                  const Icon = ICONS[l.href] ?? Home;
+                  return (
+                    <button
+                      key={l.href}
+                      type="button"
+                      onClick={() => handleNav(l.href, false)}
+                      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-start text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent"
+                    >
+                      <Icon className="h-4 w-4" />
+                      {l.label}
+                    </button>
+                  );
+                })}
+                {showStudentLinks && (
+                  <>
+                    <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                      <ClipboardList className="h-4 w-4" /> واجباتي
+                    </Link>
+                    <Link to="/certificates" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                      <Award className="h-4 w-4" /> شهاداتي
+                    </Link>
+                    <Link to="/calendar" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                      <CalendarDays className="h-4 w-4" /> المواعيد
+                    </Link>
+                    <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                      <StickyNote className="h-4 w-4" /> ملاحظاتي
+                    </Link>
+                    <Link to="/bookmarks" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                      <Bookmark className="h-4 w-4" /> المفضلة
+                    </Link>
+                  </>
+                )}
+              </nav>
+
+              {/* أسفل القائمة — زي الإصدارات القديمة */}
+              {user && (
+                <div className="mt-auto space-y-2 border-t border-sidebar-border pt-3">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setOpen(false)}
+                    className="flex w-full items-center gap-3 rounded-2xl bg-primary/15 px-4 py-3 text-sm font-extrabold text-primary hover:bg-primary/20"
                   >
-                    <Icon className="h-4 w-4" />
-                    {l.label}
+                    <LayoutDashboard className="h-4 w-4" />
+                    لوحتي
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOpen(false);
+                      confirmSignOut(() => navigate({ to: "/" }));
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl border border-destructive/30 px-4 py-3 text-start text-sm font-bold text-destructive hover:bg-destructive/10"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    تسجيل الخروج
                   </button>
-                );
-              })}
-              {showStudentLinks && (
-                <>
-                  <Link to="/dashboard" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                    <LayoutDashboard className="h-4 w-4" /> لوحتي
-                  </Link>
-                  <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                    <ClipboardList className="h-4 w-4" /> واجباتي
-                  </Link>
-                  <Link to="/certificates" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                    <Award className="h-4 w-4" /> شهاداتي
-                  </Link>
-                  <Link to="/calendar" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                    <CalendarDays className="h-4 w-4" /> المواعيد
-                  </Link>
-                  <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                    <StickyNote className="h-4 w-4" /> ملاحظاتي
-                  </Link>
-                  <Link to="/bookmarks" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
-                    <Bookmark className="h-4 w-4" /> المفضلة
-                  </Link>
-                </>
+                </div>
               )}
-            </nav>
+            </div>
           )}
         </aside>
       )}

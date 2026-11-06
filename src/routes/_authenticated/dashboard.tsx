@@ -32,6 +32,7 @@ function Dashboard() {
     isCustomerService,
     isSecretary,
     isPsychologist,
+    isPhotographer,
     isParent,
     isLoading: rolesLoading,
   } = useRoles();
@@ -49,12 +50,14 @@ function Dashboard() {
           ? "/parent"
           : isPsychologist
             ? "/psych"
-            : isMontage
+            : isPhotographer
+              ? "/staff/photographer"
+              : isMontage
               ? "/staff/montage"
               : isCustomerService
                 ? "/staff/support"
                 : isSecretary
-                  ? "/staff/students"
+                  ? "/staff/complaints"
                   : null;
 
   useEffect(() => {

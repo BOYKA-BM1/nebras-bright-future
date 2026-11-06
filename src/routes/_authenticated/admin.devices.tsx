@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2, MonitorSmartphone, RotateCcw, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useRoles } from "@/hooks/use-roles";
 import { listAccounts, resetAccountDevice } from "@/lib/admin-accounts.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/devices")({
@@ -30,6 +31,7 @@ function deviceName(ua: string | null): string {
 }
 
 function DevicesPage() {
+  const { isFullAdmin } = useRoles();
   const fetchAccounts = useServerFn(listAccounts);
   const resetDevice = useServerFn(resetAccountDevice);
   const qc = useQueryClient();
