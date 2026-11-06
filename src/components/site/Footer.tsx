@@ -6,7 +6,7 @@ const contacts = [
   { icon: Mail, label: "البريد الإلكتروني", value: "edumindly@gmail.com" },
   { icon: Phone, label: "الهاتف", value: "+20 100 000 0000" },
   { icon: MessageCircle, label: "الدردشة المباشرة", value: "من 9 صباحًا إلى 6 مساءً" },
-  { icon: MapPin, label: "العنوان", value: "القاهرة، قنا" },
+  { icon: MapPin, label: "العنوان", value: "مصر، قنا" },
 ];
 
 export function Footer() {

@@ -32,6 +32,8 @@ function levelFromGrade(grade?: string | null): "primary" | "prep" | "secondary"
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   content: z.string().min(1).max(100000),
+  /** صورة اختيارية (data URL) لفهم المسائل المكتوبة/المرسومة */
+  imageDataUrl: z.string().max(6_000_000).optional().nullable(),
 });
 
 /* =========================================================
@@ -186,7 +188,7 @@ export const askTutor = createServerFn({ method: "POST" })
     }
 
     const system = [
-      "أنت «Edu Mindly المساعد الذكي»، مدرّس خصوصي عربي ودود. لو سألك الطالب عن اسمك قُل إن اسمك «Edu Mindly المساعد الذكي».",
+      "أنت «Edu Mindly المساعد الذكي»، مدرّس خصوصي عربي ودود. لو سألك الطالب عن اسمك قُل إن اسمك «Edu Mindly المساعد الذكي». إذا أرسل الطالب صورة لمسألة أو واجب أو سكرين من الكتاب: اقرأ ما فيها بدقة، اشرح المطلوب، وحلّ خطوة بخطوة بلغة مناسبة لمرحلته، واذكر أي أجزاء غير واضحة في الصورة.",
       STAGE_PERSONA[stage],
       `الطالب في: ${grade} — ${STAGE_LABEL[stage]}.`,
       educationContextLine,
@@ -210,7 +212,21 @@ export const askTutor = createServerFn({ method: "POST" })
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: system }, ...data.messages],
+        messages: [
+          { role: "system", content: system },
+          ...data.messages.map((m) => {
+            if (m.role === "user" && m.imageDataUrl && m.imageDataUrl.startsWith("data:image/")) {
+              return {
+                role: "user" as const,
+                content: [
+                  { type: "text" as const, text: m.content },
+                  { type: "image_url" as const, image_url: { url: m.imageDataUrl } },
+                ],
+              };
+            }
+            return { role: m.role, content: m.content };
+          }),
+        ],
       }),
     });
 
