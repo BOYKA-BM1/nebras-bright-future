@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Percent, Wallet, Users, ChevronDown, TrendingUp, Pencil, Briefcase, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { useFinance, type TeacherEarning } from "@/hooks/use-finance";
 import { useTeacherAdmin } from "@/hooks/use-catalog";
+import { useServerFn } from "@tanstack/react-start";
+import { updateTeacherProfitPercentages, updateRoleSharePercent } from "@/lib/teacher-admin.functions";
 import { useRoleShares, useUpdateRoleShare, SHARE_ROLES } from "@/hooks/use-role-shares";
 
 export const Route = createFileRoute("/_authenticated/admin/earnings")({
@@ -72,6 +75,8 @@ function EarningsPage() {
 
 /* ======= إدارة نسب الوظائف ======= */
 function RoleSharesCard() {
+  const callRoleShare = useServerFn(updateRoleSharePercent);
+  const qc = useQueryClient();
   const { data: shares, isLoading } = useRoleShares();
   const updateShare = useUpdateRoleShare();
   const [draft, setDraft] = useState<Record<string, string>>({});
@@ -119,13 +124,9 @@ function RoleSharesCard() {
                 size="sm"
                 disabled={updateShare.isPending}
                 onClick={() =>
-                  updateShare.mutate(
-                    { role: r.role, percentage: Number(draft[r.role]) || 0 },
-                    {
-                      onSuccess: () => toast.success(`تم تحديث نسبة ${r.label} ✅`),
-                      onError: () => toast.error("تعذّر الحفظ."),
-                    },
-                  )
+                  callRoleShare({ data: { role: r.role, percentage: Number(draft[r.role]) || 0 } })
+                    .then(() => { toast.success(`تم تحديث نسبة ${r.label} ✅`); void qc.invalidateQueries({ queryKey: ["role-shares"] }); void qc.invalidateQueries({ queryKey: ["admin-finance"] }); })
+                    .catch((e: any) => toast.error(e?.message || "تعذّر الحفظ."))
                 }
                 className="gap-1.5 bg-gradient-gold text-primary-foreground"
               >
@@ -150,31 +151,30 @@ function EditTeacherShareDialog({ teacher, onClose }: { teacher: TeacherEarning 
     if (teacher) setValue(String(teacher.profit_percentage));
   }, [teacher]);
 
+  const callProfit = useServerFn(updateTeacherProfitPercentages);
+  const qc = useQueryClient();
+
   const save = async () => {
     if (!teacher) return;
     const pct = Math.min(100, Math.max(0, Number(value) || 0));
-    if (applyAll) {
-      setBulkBusy(true);
-      try {
-        const { supabase } = await import("@/integrations/supabase/client");
-        const { error } = await supabase.from("teachers").update({ profit_percentage: pct }).not("id", "is", null);
-        if (error) throw error;
-        toast.success(`تم تطبيق ${pct}% على كل المدرّسين ✅`);
-        onClose();
-      } catch {
-        toast.error("تعذّر الحفظ.");
-      } finally {
-        setBulkBusy(false);
-      }
-      return;
+    setBulkBusy(true);
+    try {
+      await callProfit({
+        data: {
+          percentage: pct,
+          teacherId: applyAll ? null : teacher.id,
+          applyAll,
+        },
+      });
+      toast.success(applyAll ? `تم تطبيق ${pct}% على كل المدرّسين ✅` : "تم تحديث نسبة المدرّس ✅");
+      void qc.invalidateQueries({ queryKey: ["admin-finance"] });
+      void qc.invalidateQueries({ queryKey: ["role-shares"] });
+      onClose();
+    } catch (e: any) {
+      toast.error(e?.message || "تعذّر الحفظ.");
+    } finally {
+      setBulkBusy(false);
     }
-    update.mutate(
-      { id: teacher.id, name: teacher.name, subject: teacher.subject ?? "", profit_percentage: pct },
-      {
-        onSuccess: () => { toast.success("تم تحديث نسبة المدرّس ✅"); onClose(); },
-        onError: () => toast.error("تعذّر الحفظ."),
-      },
-    );
   };
 
   return (

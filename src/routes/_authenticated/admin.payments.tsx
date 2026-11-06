@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_authenticated/admin/payments")({
 });
 
 const METHOD_LABEL: Record<string, string> = {
+  instapay: "InstaPay",
   vodafone_cash: "فودافون كاش",
   etisalat_cash: "اتصالات كاش",
   fawry: "فوري",

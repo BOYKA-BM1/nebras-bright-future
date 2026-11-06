@@ -33,7 +33,7 @@ import {
   CreditCard,
 } from "lucide-react";
 import { SearchBar } from "./SearchBar";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
 import { NotificationBell } from "./NotificationBell";
@@ -75,7 +75,20 @@ const ADMIN_NAV = [
   { to: "/staff/complaints", label: "الشكاوى", icon: AlertTriangle },
 ];
 
+function isNavActive(pathname: string, to: string, exact = false) {
+  if (exact) return pathname === to;
+  if (to === "/admin") return pathname === "/admin" || pathname === "/admin/";
+  return pathname === to || pathname.startsWith(to + "/");
+}
+
+function navItemClass(active: boolean) {
+  return active
+    ? "flex items-center gap-3 rounded-2xl bg-primary/15 px-4 py-2.5 text-sm font-extrabold text-primary ring-1 ring-primary/30"
+    : "flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground";
+}
+
 export function Navbar() {
+
   const [open, setOpen] = useState(false);
   const { user, confirmSignOut } = useAuth();
   const {
@@ -89,6 +102,7 @@ export function Navbar() {
   } = useRoles();
   const { data: profile } = useProfile();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   const isOpsRole =
     !isAdmin &&
@@ -257,17 +271,21 @@ export function Navbar() {
             <div className="flex min-h-0 flex-1 flex-col">
               <nav className="flex flex-1 flex-col gap-1 overflow-y-auto">
                 <p className="mb-2 px-2 text-xs font-bold text-muted-foreground">أقسام الإدارة</p>
-                {ADMIN_NAV.map((item) => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                  >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
-                  </Link>
-                ))}
+                {ADMIN_NAV.map((item) => {
+                  const active = isNavActive(pathname, item.to, !!(item as { exact?: boolean }).exact);
+                  return (
+                    <Link
+                      key={item.to}
+                      to={item.to}
+                      onClick={() => setOpen(false)}
+                      className={navItemClass(active)}
+                      aria-current={active ? "page" : undefined}
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </nav>
               <div className="mt-auto border-t border-sidebar-border pt-3">
                 <button
@@ -299,19 +317,19 @@ export function Navbar() {
                 })}
                 {showStudentLinks && (
                   <>
-                    <Link to="/assignments" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Link to="/assignments" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/assignments"))} aria-current={isNavActive(pathname, "/assignments") ? "page" : undefined}>
                       <ClipboardList className="h-4 w-4" /> واجباتي
                     </Link>
-                    <Link to="/certificates" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Link to="/certificates" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/certificates"))} aria-current={isNavActive(pathname, "/certificates") ? "page" : undefined}>
                       <Award className="h-4 w-4" /> شهاداتي
                     </Link>
-                    <Link to="/calendar" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Link to="/calendar" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/calendar"))} aria-current={isNavActive(pathname, "/calendar") ? "page" : undefined}>
                       <CalendarDays className="h-4 w-4" /> المواعيد
                     </Link>
-                    <Link to="/notes" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Link to="/notes" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/notes"))} aria-current={isNavActive(pathname, "/notes") ? "page" : undefined}>
                       <StickyNote className="h-4 w-4" /> ملاحظاتي
                     </Link>
-                    <Link to="/bookmarks" onClick={() => setOpen(false)} className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-sidebar-foreground/80 hover:bg-sidebar-accent">
+                    <Link to="/bookmarks" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/bookmarks"))} aria-current={isNavActive(pathname, "/bookmarks") ? "page" : undefined}>
                       <Bookmark className="h-4 w-4" /> المفضلة
                     </Link>
                   </>
@@ -324,7 +342,12 @@ export function Navbar() {
                   <Link
                     to="/dashboard"
                     onClick={() => setOpen(false)}
-                    className="flex w-full items-center gap-3 rounded-2xl bg-primary/15 px-4 py-3 text-sm font-extrabold text-primary hover:bg-primary/20"
+                    className={
+                      isNavActive(pathname, "/dashboard", true)
+                        ? "flex w-full items-center gap-3 rounded-2xl bg-primary/20 px-4 py-3 text-sm font-extrabold text-primary ring-1 ring-primary/40"
+                        : "flex w-full items-center gap-3 rounded-2xl bg-primary/15 px-4 py-3 text-sm font-extrabold text-primary hover:bg-primary/20"
+                    }
+                    aria-current={isNavActive(pathname, "/dashboard", true) ? "page" : undefined}
                   >
                     <LayoutDashboard className="h-4 w-4" />
                     لوحتي

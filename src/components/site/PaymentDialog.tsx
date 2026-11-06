@@ -20,13 +20,24 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
   const [receipt, setReceipt] = useState<File | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const displayMethods = methods.length
-    ? methods
-    : [
-        { key: "vodafone_cash", label: "فودافون كاش", number: null as string | null, instructions: "حوّل ثم ارفق الإيصال" },
-        { key: "instapay", label: "InstaPay", number: null as string | null, instructions: "حوّل عبر InstaPay ثم ارفق الإيصال" },
-        { key: "fawry", label: "فوري", number: null as string | null, instructions: "ادفع عبر فوري ثم اكتب رقم العملية" },
-      ];
+  const fallbackMethods = [
+    { key: "vodafone_cash", label: "فودافون كاش", number: null as string | null, instructions: "حوّل ثم ارفق الإيصال" },
+    { key: "instapay", label: "InstaPay", number: null as string | null, instructions: "حوّل عبر InstaPay ثم ارفق الإيصال" },
+    { key: "fawry", label: "فوري", number: null as string | null, instructions: "ادفع عبر فوري ثم ادخل رقم العملية" },
+  ];
+  const displayMethods = (() => {
+    const list = methods.length ? [...methods] : [...fallbackMethods];
+    if (!list.some((m) => String(m.key).toLowerCase() === "instapay")) {
+      list.push({
+        key: "instapay",
+        label: "InstaPay",
+        number: null as string | null,
+        instructions: "حوّل عبر InstaPay ثم ارفق الإيصال",
+        // extra fields tolerated at runtime
+      } as (typeof list)[number]);
+    }
+    return list;
+  })();
   const method = displayMethods.find((m) => m.key === selected) ?? null;
 
   const copyNumber = (num: string) => {

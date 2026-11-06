@@ -95,3 +95,67 @@ export const createTeacherAccount = createServerFn({ method: "POST" })
 
     return { userId: newUserId, teacherId, email: data.email };
   });
+
+async function assertAnyAdmin(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "admin_secondary"]);
+  if (error) throw new Error("تعذّر التحقق من الصلاحيات.");
+  if (!data?.length) throw new Error("غير مصرّح: هذه العملية للإدارة فقط.");
+}
+
+/** تحديث نسبة ربح مدرّس واحد أو كل المدرّسين — يتجاوز قيود RLS بأمان عبر service role */
+export const updateTeacherProfitPercentages = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        percentage: z.number().min(0).max(100),
+        teacherId: z.string().uuid().optional().nullable(),
+        applyAll: z.boolean().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const pct = Math.min(100, Math.max(0, Math.round(data.percentage)));
+
+    if (data.applyAll || !data.teacherId) {
+      const { error } = await supabaseAdmin
+        .from("teachers")
+        .update({ profit_percentage: pct })
+        .not("id", "is", null);
+      if (error) throw new Error("تعذّر تحديث نسب المدرّسين: " + error.message);
+      // مزامنة نسبة وظيفة المدرّس العامة
+      await supabaseAdmin.from("role_shares").upsert({ role: "teacher", percentage: pct }, { onConflict: "role" });
+      return { ok: true as const, percentage: pct, scope: "all" as const };
+    }
+
+    const { error } = await supabaseAdmin
+      .from("teachers")
+      .update({ profit_percentage: pct })
+      .eq("id", data.teacherId);
+    if (error) throw new Error("تعذّر تحديث نسبة المدرّس: " + error.message);
+    return { ok: true as const, percentage: pct, scope: "one" as const };
+  });
+
+/** تحديث نسبة وظيفة (role_shares) للإدارة */
+export const updateRoleSharePercent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ role: z.string().min(1), percentage: z.number().min(0).max(100) }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const pct = Math.min(100, Math.max(0, Math.round(data.percentage)));
+    const { error } = await supabaseAdmin
+      .from("role_shares")
+      .upsert({ role: data.role as any, percentage: pct }, { onConflict: "role" });
+    if (error) throw new Error("تعذّر حفظ النسبة: " + error.message);
+    if (data.role === "teacher") {
+      await supabaseAdmin.from("teachers").update({ profit_percentage: pct }).not("id", "is", null);
+    }
+    return { ok: true as const, percentage: pct };
+  });
