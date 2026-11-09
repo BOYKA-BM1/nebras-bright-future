@@ -33,6 +33,7 @@ const ROLE_META: Record<AppRoleName, { text: string; cls: string }> = {
   psychologist: { text: "دكتور نفسي", cls: "bg-pink-500/15 text-pink-400" },
   teacher: { text: "مدرّس", cls: "bg-blue-500/15 text-blue-400" },
   student: { text: "طالب", cls: "bg-secondary text-muted-foreground" },
+  parent: { text: "ولي أمر", cls: "bg-teal-500/15 text-teal-400" },
   customer_service: { text: "خدمة عملاء", cls: "bg-emerald-500/15 text-emerald-400" },
   secretary: { text: "سكرتير", cls: "bg-purple-500/15 text-purple-400" },
   montage: { text: "مونتاج", cls: "bg-orange-500/15 text-orange-400" },
@@ -84,7 +85,7 @@ function AccountsPage() {
   const roleM = useMutation({
     mutationFn: (a: { userId: string; role: AppRoleName }) => assignRole({ data: a }),
     onSuccess: (_d, v) => { toast.success(`تم تعيين الحساب كـ${ROLE_META[v.role].text}.`); invalidate(); },
-    onError: (e: any) => toast.error(e?.message ?? "تعذّر تعيين الصلاحية."),
+    onError: (e: any) => toast.error(e?.message || e?.data?.message || "تعذّر تعيين الصلاحية."),
   });
 
 
@@ -177,7 +178,7 @@ function AccountsPage() {
                             </button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="min-w-40">
-                            {ASSIGNABLE_ROLES.map((r) => (
+                            {(isFullAdmin ? ASSIGNABLE_ROLES : ASSIGNABLE_ROLES.filter((r) => r !== "admin" && r !== "admin_secondary")).map((r) => (
                               <DropdownMenuItem
                                 key={r}
                                 disabled={r === "student" ? a.roles.length === 0 : a.roles.includes(r)}

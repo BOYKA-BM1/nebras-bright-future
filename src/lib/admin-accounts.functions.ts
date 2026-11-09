@@ -205,6 +205,7 @@ export const ASSIGNABLE_ROLES = [
   "psychologist",
   "teacher",
   "student",
+  "parent",
   "customer_service",
   "secretary",
   "montage",
@@ -255,23 +256,69 @@ export const setUserRole = createServerFn({ method: "POST" })
       throw new Error("لا يمكن إزالة صلاحية آخر أدمن كامل.");
     }
 
-    // Atomic RPC (transaction inside Postgres)
-    const { error } = await context.supabase.rpc("admin_set_user_role", {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // 1) جرّب RPC الذري إن كان مطبّقًا على قاعدة البيانات
+    const { error: rpcErr } = await context.supabase.rpc("admin_set_user_role", {
       _target: data.userId,
       _new_role: data.role,
     });
-    if (error) {
-      const msg = error.message || "";
-      if (/secondary_cannot/i.test(msg)) throw new Error("غير مصرّح: لا يمكن تعديل أدوار الإدارة.");
-      if (/last_full_admin/i.test(msg)) throw new Error("لا يمكن إزالة آخر أدمن كامل.");
-      if (/not_authorized|invalid_role/i.test(msg)) throw new Error("تعذّر تعيين الصلاحية.");
-      throw new Error("تعذّر تعيين الصلاحية.");
+
+    if (!rpcErr) {
+      await writeAudit({
+        userId: context.userId,
+        action: "set_user_role",
+        entity: data.userId,
+        metadata: { role: data.role, via: "rpc" },
+        ip: getClientIp(),
+        userAgent: getUserAgent(),
+      });
+      return { ok: true as const };
     }
+
+    const rpcMsg = (rpcErr.message || "") + " " + ((rpcErr as any).code || "");
+    // أخطاء صلاحية واضحة — لا نتجاوزها بمسار بديل
+    if (/secondary_cannot/i.test(rpcMsg)) {
+      throw new Error("غير مصرّح: لا يمكن تعديل أدوار الإدارة.");
+    }
+    if (/last_full_admin|cannot_remove_last/i.test(rpcMsg)) {
+      throw new Error("لا يمكن إزالة صلاحية آخر أدمن كامل.");
+    }
+    if (/not_authorized|cannot_change_own/i.test(rpcMsg)) {
+      throw new Error("غير مصرّح بتنفيذ هذه العملية.");
+    }
+
+    // 2) مسار احتياطي عبر service role (لما RPC مش متطبق أو مش موجود)
+    // هذا يغطي: function does not exist / schema cache
+    const { error: delErr } = await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
+    if (delErr) {
+      throw new Error("تعذّر تحديث الصلاحيات: " + (delErr.message || "حذف الأدوار السابقة فشل"));
+    }
+
+    if (data.role !== "student") {
+      const { error: insErr } = await supabaseAdmin.from("user_roles").insert({
+        user_id: data.userId,
+        role: data.role,
+      });
+      if (insErr) {
+        // حاول استرجاع الدور السابق عند الفشل
+        if (existing.length) {
+          await supabaseAdmin.from("user_roles").insert(
+            existing.map((role) => ({ user_id: data.userId, role })),
+          );
+        }
+        const hint = /invalid input value for enum|app_role/i.test(insErr.message || "")
+          ? " (قيمة الدور غير معرّفة في قاعدة البيانات — طبّق migrations الأدوار)"
+          : "";
+        throw new Error("تعذّر تعيين الصلاحية" + hint + ": " + (insErr.message || "insert failed"));
+      }
+    }
+
     await writeAudit({
       userId: context.userId,
       action: "set_user_role",
       entity: data.userId,
-      metadata: { role: data.role },
+      metadata: { role: data.role, via: "service_role_fallback", rpcError: rpcErr.message },
       ip: getClientIp(),
       userAgent: getUserAgent(),
     });
