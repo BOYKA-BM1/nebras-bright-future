@@ -59,6 +59,7 @@ function AccountsPage() {
 
   const qc = useQueryClient();
   const [q, setQ] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "teachers" | "students" | "staff">("all");
 
   const { data: accounts = [], isLoading } = useQuery({
     queryKey: ["admin-accounts"],
@@ -91,7 +92,12 @@ function AccountsPage() {
 
 
 
-  const filtered = accounts.filter(
+  const filtered = accounts.filter((a) => {
+    if (roleFilter === "teachers") return a.roles.includes("teacher");
+    if (roleFilter === "students") return a.roles.includes("student") && !a.roles.some((r) => r !== "student");
+    if (roleFilter === "staff") return a.roles.some((r) => ["customer_service","secretary","montage","photographer","psychologist","admin","admin_secondary"].includes(r));
+    return true;
+  }).filter(
     (a) =>
       a.email.toLowerCase().includes(q.toLowerCase()) ||
       (a.full_name ?? "").toLowerCase().includes(q.toLowerCase()),
@@ -106,14 +112,26 @@ function AccountsPage() {
         جميع الحسابات والإيميلات المسجّلة في المنصة ({accounts.length}).
       </p>
 
-      <div className="relative mt-6 max-w-sm">
-        <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="ابحث بالبريد أو الاسم..."
-          className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-sm outline-none focus:border-primary"
-        />
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <div className="relative max-w-sm min-w-[200px] flex-1">
+          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="ابحث بالبريد أو الاسم..."
+            className="w-full rounded-xl border border-input bg-background/60 px-10 py-2.5 text-sm outline-none focus:border-primary"
+          />
+        </div>
+        <select
+          value={roleFilter}
+          onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)}
+          className="rounded-xl border border-input bg-background/60 px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
+        >
+          <option value="all">كل الحسابات</option>
+          <option value="teachers">المدرّسين فقط</option>
+          <option value="students">الطلاب فقط</option>
+          <option value="staff">طاقم المنصة</option>
+        </select>
       </div>
 
       {isLoading ? (

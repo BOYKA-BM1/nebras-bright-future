@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { adminDeleteAcademicYear } from "@/lib/catalog-admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -125,7 +127,14 @@ export function useAcademicYearActions() {
     },
     onSuccess: invalidate,
   });
-  return { create, activate };
+  const delYear = useServerFn(adminDeleteAcademicYear);
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      await delYear({ data: { yearId: id } });
+    },
+    onSuccess: invalidate,
+  });
+  return { create, activate, remove };
 }
 
 /** أدمن فقط — إدارة المواد */

@@ -163,7 +163,7 @@ function SubjectsTab() {
 
 function AcademicYearsTab() {
   const { data: years = [], isLoading } = useAcademicYearsAdmin();
-  const { create, activate } = useAcademicYearActions();
+  const { create, activate, remove } = useAcademicYearActions();
   const [name, setName] = useState("");
 
   return (
@@ -192,7 +192,17 @@ function AcademicYearsTab() {
               {y.is_active ? (
                 <span className="flex items-center gap-1 rounded-full bg-green-500/15 px-3 py-1 text-xs font-bold text-green-500"><Star className="h-3 w-3" /> فعّالة الآن</span>
               ) : (
-                <button onClick={() => activate.mutate(y.id)} className="text-xs font-bold text-primary hover:underline">تفعيل هذه السنة</button>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={() => activate.mutate(y.id)} className="text-xs font-bold text-primary hover:underline">تفعيل هذه السنة</button>
+                  <button
+                    onClick={() => {
+                      if (confirm(`حذف السنة «${y.name}»؟`)) remove.mutate(y.id);
+                    }}
+                    className="text-xs font-bold text-destructive hover:underline"
+                  >
+                    حذف السنة
+                  </button>
+                </div>
               )}
             </div>
           ))}

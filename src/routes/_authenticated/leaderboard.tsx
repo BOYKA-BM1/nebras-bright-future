@@ -103,7 +103,13 @@ function LeaderboardPage() {
                     {RB ? <RB className="h-5 w-5" /> : fmt(row.rank)}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold">
+                    <p
+                      className={`truncate text-sm font-bold ${
+                        row.rank <= 3
+                          ? "rounded-lg bg-gradient-to-l from-primary/25 via-amber-500/20 to-transparent px-2 py-0.5 text-primary"
+                          : ""
+                      }`}
+                    >
                       {row.name || "طالب"}
                       {isMe && <span className="mr-2 text-xs font-bold text-primary">(أنت)</span>}
                     </p>

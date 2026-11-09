@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { adminDeleteCourse, adminDeleteTeacher } from "@/lib/catalog-admin.functions";
 import { auditEvent } from "@/lib/audit";
 import type {
   Stage,
@@ -191,13 +193,17 @@ export function useTeacherAdmin() {
     },
     onSuccess: invalidate,
   });
+  const delTeacher = useServerFn(adminDeleteTeacher);
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("teachers").delete().eq("id", id);
-      if (error) throw error;
+      await delTeacher({ data: { teacherId: id } });
       auditEvent("delete", "teacher", { id });
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["photo-teachers"] });
+      qc.invalidateQueries({ queryKey: ["teachers"] });
+    },
   });
   return { create, update, remove };
 }
@@ -220,13 +226,16 @@ export function useCourseAdmin() {
     },
     onSuccess: invalidate,
   });
+  const delCourse = useServerFn(adminDeleteCourse);
   const remove = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("courses").delete().eq("id", id);
-      if (error) throw error;
+      await delCourse({ data: { courseId: id } });
       auditEvent("delete", "course", { id });
     },
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ["photo-courses"] });
+    },
   });
   return { create, update, remove };
 }
