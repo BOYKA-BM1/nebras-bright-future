@@ -193,7 +193,17 @@ function AcademicYearsTab() {
                 {y.is_active ? (
                   <span className="flex items-center gap-1 rounded-full bg-green-500/15 px-3 py-1 text-xs font-bold text-green-500"><Star className="h-3 w-3" /> فعّالة الآن</span>
                 ) : (
-                  <button onClick={() => activate.mutate(y.id)} className="text-xs font-bold text-primary hover:underline">تفعيل هذه السنة</button>
+                  <button
+                    onClick={() =>
+                      activate.mutate(y.id, {
+                        onSuccess: () => toast.success(`تم تفعيل السنة «${y.name}»`),
+                        onError: (e: any) => toast.error(e?.message || "تعذّر التفعيل"),
+                      })
+                    }
+                    className="text-xs font-bold text-primary hover:underline"
+                  >
+                    تفعيل هذه السنة
+                  </button>
                 )}
                 <button
                   onClick={() => {

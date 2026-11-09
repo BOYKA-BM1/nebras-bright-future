@@ -104,6 +104,7 @@ export const levels: { id: string; label: string }[] = [
   { id: "primary", label: "ابتدائي" },
   { id: "prep", label: "إعدادي" },
   { id: "secondary", label: "ثانوي" },
+  { id: "baccalaureate", label: "بكالوريا" },
 ];
 
 export const courseTypes: { id: string; label: string }[] = [

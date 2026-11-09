@@ -98,3 +98,25 @@ export const adminCreateAcademicYear = createServerFn({ method: "POST" })
     });
     return { ok: true as const };
   });
+
+
+export const adminActivateAcademicYear = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ yearId: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    await supabaseAdmin.from("academic_years").update({ is_active: false }).eq("is_active", true);
+    const { error } = await supabaseAdmin
+      .from("academic_years")
+      .update({ is_active: true })
+      .eq("id", data.yearId);
+    if (error) throw new Error(error.message || "تعذّر تفعيل السنة");
+    await writeAudit({
+      userId: context.userId,
+      action: "activate_academic_year",
+      entity: data.yearId,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
+  });

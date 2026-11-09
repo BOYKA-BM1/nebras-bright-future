@@ -367,8 +367,10 @@ function AdminTeachers() {
                 <StageGradeFields
                   stage={acct.stage}
                   grade={acct.grade}
-                  onStage={(v) => setAcct((a) => ({ ...a, stage: v, grade: "" }))}
+                  track={acct.track ?? ""}
+                  onStage={(v) => setAcct((a) => ({ ...a, stage: v, grade: "", track: "" }))}
                   onGrade={(v) => setA("grade", v)}
+                  onTrack={(v) => setAcct((a) => ({ ...a, track: v }))}
                 />
                 <Field label="البريد الإلكتروني"><Input type="email" value={acct.email} onChange={(e) => setA("email", e.target.value)} placeholder="teacher@example.com" dir="ltr" /></Field>
                 <Field label="كلمة المرور">
@@ -518,9 +520,16 @@ function StageGradeFields({
         <Field label="المسار">
           <select className={selectCls} value={track ?? ""} onChange={(e) => onTrack(e.target.value)}>
             <option value="">اختر المسار</option>
+            <option value="medicine">طب</option>
+            <option value="engineering">هندسة</option>
+            <option value="pharmacy">صيدلة</option>
+            <option value="cs">حاسبات ومعلومات</option>
+            <option value="commerce">تجارة</option>
+            <option value="law">حقوق</option>
             <option value="science_sci">علمي علوم</option>
             <option value="science_math">علمي رياضة</option>
             <option value="literary">أدبي</option>
+            <option value="other">أخرى</option>
           </select>
         </Field>
       )}

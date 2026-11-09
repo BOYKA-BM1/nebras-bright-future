@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { adminDeleteAcademicYear, adminCreateAcademicYear } from "@/lib/catalog-admin.functions";
+import { adminDeleteAcademicYear, adminCreateAcademicYear, adminActivateAcademicYear } from "@/lib/catalog-admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -118,12 +118,10 @@ export function useAcademicYearActions() {
     },
     onSuccess: invalidate,
   });
+  const activateYearFn = useServerFn(adminActivateAcademicYear);
   const activate = useMutation({
     mutationFn: async (id: string) => {
-      // نلغي أي سنة فعّالة تانية الأول (index unique بيمنع أكتر من سنة فعّالة واحدة في نفس الوقت)
-      await supabase.from("academic_years").update({ is_active: false }).eq("is_active", true);
-      const { error } = await supabase.from("academic_years").update({ is_active: true }).eq("id", id);
-      if (error) throw error;
+      await activateYearFn({ data: { yearId: id } });
     },
     onSuccess: invalidate,
   });
