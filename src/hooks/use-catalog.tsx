@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { adminDeleteCourse, adminDeleteTeacher } from "@/lib/catalog-admin.functions";
+import { adminDeleteCourse, adminDeleteTeacher, adminCreateStage, adminUpdateStage } from "@/lib/catalog-admin.functions";
 import { auditEvent } from "@/lib/audit";
 import type {
   Stage,
@@ -146,19 +146,22 @@ import type { Database } from "@/integrations/supabase/types";
 
 export function useStageAdmin() {
   const qc = useQueryClient();
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["stages"] });
+  const invalidate = () => {
+    void qc.invalidateQueries({ queryKey: ["stages"] });
+    void qc.refetchQueries({ queryKey: ["stages"] });
+  };
+  const createFn = useServerFn(adminCreateStage);
+  const updateFn = useServerFn(adminUpdateStage);
 
   const create = useMutation({
-    mutationFn: async (input: StageInput) => {
-      const { error } = await supabase.from("stages").insert(input);
-      if (error) throw error;
+    mutationFn: async (input: any) => {
+      await createFn({ data: input });
     },
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: async ({ id, ...input }: StageInput & { id: string }) => {
-      const { error } = await supabase.from("stages").update(input).eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, ...input }: any) => {
+      await updateFn({ data: { id, ...input } });
     },
     onSuccess: invalidate,
   });

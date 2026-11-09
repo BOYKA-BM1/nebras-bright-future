@@ -7,9 +7,10 @@ import {
   useReviewPaymentRequest,
   usePaymentMethods,
   useUpdatePaymentMethod,
-  useEnsurePaymentMethods,
   type PaymentMethod,
 } from "@/hooks/use-payments";
+import { useServerFn } from "@tanstack/react-start";
+import { adminEnsurePaymentMethods } from "@/lib/catalog-admin.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/payments")({
   component: AdminPaymentsPage,
@@ -138,10 +139,17 @@ function AdminPaymentsPage() {
 }
 
 function PaymentMethodsEditor() {
-  const { data: methods = [], isLoading } = usePaymentMethods(false);
-  const ensure = useEnsurePaymentMethods();
+  const { data: methods = [], isLoading, refetch } = usePaymentMethods(false);
+  const ensureFn = useServerFn(adminEnsurePaymentMethods);
   useEffect(() => {
-    ensure.mutate();
+    void (async () => {
+      try {
+        await ensureFn({});
+        await refetch();
+      } catch (e) {
+        console.warn("ensure payment methods", e);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

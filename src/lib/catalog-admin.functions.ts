@@ -120,3 +120,88 @@ export const adminActivateAcademicYear = createServerFn({ method: "POST" })
     });
     return { ok: true as const };
   });
+
+
+export const adminCreateStage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      name: z.string().min(2),
+      short: z.string().optional().nullable(),
+      level: z.string().min(1),
+      description: z.string().optional().nullable(),
+      icon: z.string().optional().nullable(),
+      sort_order: z.number().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("stages").insert({
+      name: data.name.trim(),
+      short: data.short ?? null,
+      level: data.level,
+      description: data.description ?? null,
+      icon: data.icon ?? "GraduationCap",
+      sort_order: data.sort_order ?? 0,
+    });
+    if (error) throw new Error(error.message || "تعذّرت إضافة المرحلة");
+    return { ok: true as const };
+  });
+
+export const adminUpdateStage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      name: z.string().min(2),
+      short: z.string().optional().nullable(),
+      level: z.string().min(1),
+      description: z.string().optional().nullable(),
+      icon: z.string().optional().nullable(),
+      sort_order: z.number().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const { id, ...rest } = data;
+    const { error } = await supabaseAdmin.from("stages").update(rest).eq("id", id);
+    if (error) throw new Error(error.message || "تعذّر تحديث المرحلة");
+    return { ok: true as const };
+  });
+
+export const adminEnsurePaymentMethods = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAnyAdmin(context.userId);
+    const defaults = [
+      { key: "instapay", label: "InstaPay", sort_order: 1, instructions: "حوّل عبر InstaPay بالمبلغ المطلوب ثم ارفق رقم العملية أو صورة الإيصال.", is_active: true },
+      { key: "vodafone_cash", label: "فودافون كاش", sort_order: 2, instructions: "حوّل عبر فودافون كاش ثم ارفق رقم العملية.", is_active: true },
+      { key: "etisalat_cash", label: "اتصالات كاش", sort_order: 3, instructions: "حوّل عبر اتصالات كاش ثم ارفق رقم العملية.", is_active: true },
+      { key: "fawry", label: "فوري", sort_order: 4, instructions: "ادفع عبر فوري ثم أدخل رقم العملية.", is_active: false },
+    ];
+    for (const m of defaults) {
+      const { data: existing } = await supabaseAdmin
+        .from("payment_methods")
+        .select("id, key")
+        .eq("key", m.key)
+        .maybeSingle();
+      if (!existing) {
+        const { error } = await supabaseAdmin.from("payment_methods").insert({
+          key: m.key,
+          label: m.label,
+          number: m.key === "instapay" ? "" : null,
+          instructions: m.instructions,
+          is_active: m.is_active,
+          sort_order: m.sort_order,
+        });
+        if (error) throw new Error("تعذّر إضافة " + m.label + ": " + error.message);
+      } else if (m.key === "instapay") {
+        // تأكد إن InstaPay موجود ومفعّل
+        await supabaseAdmin
+          .from("payment_methods")
+          .update({ is_active: true, label: "InstaPay", sort_order: 1 })
+          .eq("key", "instapay");
+      }
+    }
+    return { ok: true as const };
+  });

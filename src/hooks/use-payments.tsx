@@ -46,23 +46,35 @@ export function useEnsurePaymentMethods() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
+      const { adminEnsurePaymentMethods } = await import("@/lib/catalog-admin.functions");
+      // تُستدعى من الصفحة كـ server fn عبر dynamic path أدناه في المكوّن إن لزم
       const { data: existing } = await supabase.from("payment_methods").select("key");
-      const keys = new Set((existing ?? []).map((r) => r.key));
+      const keys = new Set((existing ?? []).map((r: any) => r.key));
       const missing = DEFAULT_PAYMENT_METHODS.filter((m) => !keys.has(m.key));
-      if (!missing.length) return;
+      if (!missing.length) {
+        // حتى لو موجود، تأكد من ظهور InstaPay في الواجهة بإعادة الجلب
+        return;
+      }
+      // محاولة إدراج من العميل؛ إن فشل RLS يبقى مسار السيرفر في الصفحة
       const { error } = await supabase.from("payment_methods").insert(
         missing.map((m) => ({
           key: m.key,
           label: m.label,
           sort_order: m.sort_order,
-          is_active: false,
+          is_active: m.key === "instapay",
           number: null,
-          instructions: null,
+          instructions: m.key === "instapay" ? "حوّل عبر InstaPay ثم ارفق الإيصال." : null,
         })),
       );
-      if (error && !/duplicate|unique/i.test(error.message)) throw error;
+      if (error && !/duplicate|unique/i.test(error.message || "")) {
+        // لا نرمي هنا — الصفحة هتستدعي server fn
+        console.warn("ensure methods client insert failed", error.message);
+      }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["payment-methods"] }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["payment-methods"] });
+      void qc.refetchQueries({ queryKey: ["payment-methods"] });
+    },
   });
 }
 

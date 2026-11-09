@@ -92,7 +92,7 @@ function AdminStages() {
       icon: form.icon,
       sort_order: Number(form.sort_order) || 0,
     };
-    const onErr = () => toast.error("حصل خطأ، حاول تاني.");
+    const onErr = (e: any) => toast.error(e?.message || "حصل خطأ، حاول تاني.");
     if (editing) {
       update.mutate({ id: editing.id, ...payload }, { onSuccess: () => { toast.success("تم التحديث."); setOpen(false); }, onError: onErr });
     } else {
