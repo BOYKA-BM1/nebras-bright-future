@@ -7,6 +7,7 @@ import {
   useReviewPaymentRequest,
   usePaymentMethods,
   useUpdatePaymentMethod,
+  useEnsurePaymentMethods,
   type PaymentMethod,
 } from "@/hooks/use-payments";
 
@@ -138,6 +139,11 @@ function AdminPaymentsPage() {
 
 function PaymentMethodsEditor() {
   const { data: methods = [], isLoading } = usePaymentMethods(false);
+  const ensure = useEnsurePaymentMethods();
+  useEffect(() => {
+    ensure.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <section className="mt-8 rounded-2xl border border-primary/30 bg-primary/5 p-5">

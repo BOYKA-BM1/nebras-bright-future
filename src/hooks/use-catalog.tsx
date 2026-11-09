@@ -198,11 +198,22 @@ export function useTeacherAdmin() {
     mutationFn: async (id: string) => {
       await delTeacher({ data: { teacherId: id } });
       auditEvent("delete", "teacher", { id });
+      return id;
+    },
+    onMutate: async (id: string) => {
+      await qc.cancelQueries({ queryKey: ["teachers"] });
+      const prev = qc.getQueryData<any[]>(["teachers"]);
+      if (prev) qc.setQueryData(["teachers"], prev.filter((t) => t.id !== id));
+      return { prev };
+    },
+    onError: (_e, _id, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["teachers"], ctx.prev);
     },
     onSuccess: () => {
       invalidate();
-      qc.invalidateQueries({ queryKey: ["photo-teachers"] });
-      qc.invalidateQueries({ queryKey: ["teachers"] });
+      void qc.refetchQueries({ queryKey: ["teachers"] });
+      void qc.refetchQueries({ queryKey: ["photo-teachers"] });
+      void qc.refetchQueries({ queryKey: ["courses"] });
     },
   });
   return { create, update, remove };

@@ -189,21 +189,26 @@ function AcademicYearsTab() {
           {years.map((y) => (
             <div key={y.id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-card px-4 py-3">
               <span className="font-bold" dir="ltr">{y.name}</span>
-              {y.is_active ? (
-                <span className="flex items-center gap-1 rounded-full bg-green-500/15 px-3 py-1 text-xs font-bold text-green-500"><Star className="h-3 w-3" /> فعّالة الآن</span>
-              ) : (
-                <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                {y.is_active ? (
+                  <span className="flex items-center gap-1 rounded-full bg-green-500/15 px-3 py-1 text-xs font-bold text-green-500"><Star className="h-3 w-3" /> فعّالة الآن</span>
+                ) : (
                   <button onClick={() => activate.mutate(y.id)} className="text-xs font-bold text-primary hover:underline">تفعيل هذه السنة</button>
-                  <button
-                    onClick={() => {
-                      if (confirm(`حذف السنة «${y.name}»؟`)) remove.mutate(y.id);
-                    }}
-                    className="text-xs font-bold text-destructive hover:underline"
-                  >
-                    حذف السنة
-                  </button>
-                </div>
-              )}
+                )}
+                <button
+                  onClick={() => {
+                    if (confirm(`حذف السنة «${y.name}» نهائيًا؟`)) {
+                      remove.mutate(y.id, {
+                        onSuccess: () => toast.success("تم حذف السنة"),
+                        onError: (e: any) => toast.error(e?.message || "تعذّر الحذف"),
+                      });
+                    }
+                  }}
+                  className="text-xs font-bold text-destructive hover:underline"
+                >
+                  حذف السنة
+                </button>
+              </div>
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { adminDeleteAcademicYear } from "@/lib/catalog-admin.functions";
+import { adminDeleteAcademicYear, adminCreateAcademicYear } from "@/lib/catalog-admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -111,10 +111,10 @@ export function useAcademicYearActions() {
     qc.invalidateQueries({ queryKey: ["academic-years-admin"] });
     qc.invalidateQueries({ queryKey: ["active-academic-year"] });
   };
+  const createYearFn = useServerFn(adminCreateAcademicYear);
   const create = useMutation({
     mutationFn: async (input: { name: string; start_date?: string | null; end_date?: string | null }) => {
-      const { error } = await supabase.from("academic_years").insert(input);
-      if (error) throw error;
+      await createYearFn({ data: input });
     },
     onSuccess: invalidate,
   });

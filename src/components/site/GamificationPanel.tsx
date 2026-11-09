@@ -105,7 +105,15 @@ export function GamificationPanel({ courses = 0 }: { courses?: number }) {
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center text-sm font-extrabold">
                     {medal ?? <span className="text-muted-foreground">{r.rank}</span>}
                   </span>
-                  <span className="flex-1 truncate text-sm font-bold">{me ? "أنت" : r.name}</span>
+                  <span
+                    className={`flex-1 truncate text-sm font-bold ${
+                      r.rank <= 3
+                        ? "rounded-md bg-gradient-to-l from-primary/30 via-amber-500/20 to-transparent px-2 py-0.5 text-primary"
+                        : ""
+                    }`}
+                  >
+                    {me ? "أنت" : r.name}
+                  </span>
                   <span className="shrink-0 text-sm font-extrabold text-primary">{fmt(r.xp)}</span>
                 </li>
               );

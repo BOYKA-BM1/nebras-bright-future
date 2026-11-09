@@ -69,3 +69,32 @@ export const adminDeleteAcademicYear = createServerFn({ method: "POST" })
     });
     return { ok: true as const };
   });
+
+
+export const adminCreateAcademicYear = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      name: z.string().min(2).max(40),
+      start_date: z.string().optional().nullable(),
+      end_date: z.string().optional().nullable(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const { error } = await supabaseAdmin.from("academic_years").insert({
+      name: data.name.trim(),
+      start_date: data.start_date ?? null,
+      end_date: data.end_date ?? null,
+      is_active: false,
+    });
+    if (error) throw new Error(error.message || "تعذّرت إضافة السنة");
+    await writeAudit({
+      userId: context.userId,
+      action: "create_academic_year",
+      entity: data.name,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
+  });

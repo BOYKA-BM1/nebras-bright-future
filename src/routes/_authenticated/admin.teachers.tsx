@@ -39,6 +39,7 @@ type FormState = {
   subject: string;
   stage: string;
   grade: string;
+  track: string;
   bio: string;
   experience_years: string;
   image_url: string;
@@ -53,6 +54,7 @@ const empty: FormState = {
   subject: "",
   stage: "",
   grade: "",
+  track: "",
   bio: "",
   experience_years: "0",
   image_url: "",
@@ -63,7 +65,7 @@ const empty: FormState = {
 };
 
 
-type AcctState = { name: string; subject: string; stage: string; grade: string; email: string; password: string; bio: string; image_url: string };
+type AcctState = { name: string; subject: string; stage: string; grade: string; track?: string; email: string; password: string; bio: string; image_url: string };
 const emptyAcct: AcctState = { name: "", subject: "", stage: "", grade: "", email: "", password: "", bio: "", image_url: "" };
 
 /** صفوف المرحلة المختارة */
@@ -288,8 +290,10 @@ function AdminTeachers() {
             <StageGradeFields
               stage={form.stage}
               grade={form.grade}
-              onStage={(v) => setForm((f) => ({ ...f, stage: v, grade: "" }))}
+              track={(form as any).track ?? ""}
+              onStage={(v) => setForm((f) => ({ ...f, stage: v, grade: "", track: "" } as any))}
               onGrade={(v) => set("grade", v)}
+              onTrack={(v) => setForm((f) => ({ ...f, track: v } as any))}
             />
             <Field label="النبذة التعريفية"><Textarea value={form.bio} onChange={(e) => set("bio", e.target.value)} rows={3} /></Field>
             <Field label="صورة المدرّس (مطلوبة)">
@@ -469,31 +473,57 @@ function StageGradeFields({
   grade,
   onStage,
   onGrade,
+  track,
+  onTrack,
 }: {
   stage: string;
   grade: string;
   onStage: (v: string) => void;
   onGrade: (v: string) => void;
+  track?: string;
+  onTrack?: (v: string) => void;
 }) {
   const grades = gradesForStage(stage);
+  const isBacc = stage === "baccalaureate";
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <Field label="المرحلة">
-        <select className={selectCls} value={stage} onChange={(e) => onStage(e.target.value)}>
-          <option value="">اختر المرحلة</option>
-          {stages.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
-      </Field>
-      <Field label="السنة الدراسية">
-        <select className={selectCls} value={grade} onChange={(e) => onGrade(e.target.value)} disabled={!stage}>
-          <option value="">{stage ? "اختر السنة" : "اختر المرحلة أولًا"}</option>
-          {grades.map((g) => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
-      </Field>
+    <div className="grid gap-4">
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="المرحلة">
+          <select className={selectCls} value={stage} onChange={(e) => onStage(e.target.value)}>
+            <option value="">اختر المرحلة</option>
+            {stages.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+            <option value="baccalaureate">نظام البكالوريا</option>
+          </select>
+        </Field>
+        <Field label="السنة الدراسية">
+          <select className={selectCls} value={grade} onChange={(e) => onGrade(e.target.value)} disabled={!stage}>
+            <option value="">{stage ? "اختر السنة" : "اختر المرحلة أولًا"}</option>
+            {isBacc ? (
+              <>
+                <option value="السنة الأولى بكالوريا">السنة الأولى بكالوريا</option>
+                <option value="السنة الثانية بكالوريا">السنة الثانية بكالوريا</option>
+                <option value="السنة الثالثة بكالوريا">السنة الثالثة بكالوريا</option>
+              </>
+            ) : (
+              grades.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))
+            )}
+          </select>
+        </Field>
+      </div>
+      {isBacc && onTrack && (
+        <Field label="المسار">
+          <select className={selectCls} value={track ?? ""} onChange={(e) => onTrack(e.target.value)}>
+            <option value="">اختر المسار</option>
+            <option value="science_sci">علمي علوم</option>
+            <option value="science_math">علمي رياضة</option>
+            <option value="literary">أدبي</option>
+          </select>
+        </Field>
+      )}
     </div>
   );
 }

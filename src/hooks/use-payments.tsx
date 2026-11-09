@@ -33,6 +33,39 @@ export function usePaymentMethods(activeOnly = true) {
 }
 
 /* ============ طلبات الدفع الخاصة بالطالب ============ */
+
+const DEFAULT_PAYMENT_METHODS = [
+  { key: "instapay", label: "InstaPay", sort_order: 1 },
+  { key: "vodafone_cash", label: "فودافون كاش", sort_order: 2 },
+  { key: "etisalat_cash", label: "اتصالات كاش", sort_order: 3 },
+  { key: "fawry", label: "فوري", sort_order: 4 },
+] as const;
+
+/** يضمن وجود الطرق الأربع في لوحة الإدارة (بدون تفعيل حتى تُضبط الأرقام) */
+export function useEnsurePaymentMethods() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data: existing } = await supabase.from("payment_methods").select("key");
+      const keys = new Set((existing ?? []).map((r) => r.key));
+      const missing = DEFAULT_PAYMENT_METHODS.filter((m) => !keys.has(m.key));
+      if (!missing.length) return;
+      const { error } = await supabase.from("payment_methods").insert(
+        missing.map((m) => ({
+          key: m.key,
+          label: m.label,
+          sort_order: m.sort_order,
+          is_active: false,
+          number: null,
+          instructions: null,
+        })),
+      );
+      if (error && !/duplicate|unique/i.test(error.message)) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["payment-methods"] }),
+  });
+}
+
 export function useMyPaymentRequests() {
   const { user } = useAuth();
   return useQuery({
