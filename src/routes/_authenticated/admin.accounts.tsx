@@ -67,17 +67,17 @@ function AccountsPage() {
   const invalidate = () => qc.invalidateQueries({ queryKey: ["admin-accounts"] });
 
   const banM = useMutation({
-    mutationFn: (a: { userId: string; email: string }) => ban({ data: a }),
+    mutationFn: (a: { userId: string }) => ban({ data: { userId: a.userId } }),
     onSuccess: () => { toast.success("تم حظر الحساب."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر الحظر."),
   });
   const unbanM = useMutation({
-    mutationFn: (a: { userId: string; email: string }) => unban({ data: a }),
+    mutationFn: (a: { userId: string }) => unban({ data: { userId: a.userId } }),
     onSuccess: () => { toast.success("تم رفع الحظر."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر رفع الحظر."),
   });
   const delM = useMutation({
-    mutationFn: (a: { userId: string; email: string }) => del({ data: { ...a, alsoBan: false } }),
+    mutationFn: (a: { userId: string }) => del({ data: { userId: a.userId, alsoBan: false } }),
     onSuccess: () => { toast.success("تم حذف الحساب."); invalidate(); },
     onError: (e: any) => toast.error(e?.message ?? "تعذّر الحذف."),
   });
@@ -156,14 +156,14 @@ function AccountsPage() {
                       <div className="flex flex-wrap gap-2">
                         {a.banned ? (
                           <button
-                            onClick={() => unbanM.mutate({ userId: a.id, email: a.email })}
+                            onClick={() => unbanM.mutate({ userId: a.id })}
                             className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold hover:bg-accent"
                           >
                             <ShieldCheck className="h-3.5 w-3.5" /> رفع الحظر
                           </button>
                         ) : (
                           <button
-                            onClick={() => banM.mutate({ userId: a.id, email: a.email })}
+                            onClick={() => banM.mutate({ userId: a.id })}
                             className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10"
                           >
                             <Ban className="h-3.5 w-3.5" /> حظر
@@ -201,7 +201,7 @@ function AccountsPage() {
                         <button
                           onClick={() => {
                             if (confirm(`حذف حساب ${isFullAdmin ? a.email : maskEmail(a.email)} نهائيًا؟ (لن يتم حظره)`))
-                              delM.mutate({ userId: a.id, email: a.email });
+                              delM.mutate({ userId: a.id });
                           }}
                           className="flex items-center gap-1 rounded-lg border border-border px-2.5 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10"
                         >

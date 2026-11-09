@@ -20,24 +20,12 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
   const [receipt, setReceipt] = useState<File | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const fallbackMethods = [
-    { key: "vodafone_cash", label: "فودافون كاش", number: null as string | null, instructions: "حوّل ثم ارفق الإيصال" },
-    { key: "instapay", label: "InstaPay", number: null as string | null, instructions: "حوّل عبر InstaPay ثم ارفق الإيصال" },
-    { key: "fawry", label: "فوري", number: null as string | null, instructions: "ادفع عبر فوري ثم ادخل رقم العملية" },
-  ];
-  const displayMethods = (() => {
-    const list = methods.length ? [...methods] : [...fallbackMethods];
-    if (!list.some((m) => String(m.key).toLowerCase() === "instapay")) {
-      list.push({
-        key: "instapay",
-        label: "InstaPay",
-        number: null as string | null,
-        instructions: "حوّل عبر InstaPay ثم ارفق الإيصال",
-        // extra fields tolerated at runtime
-      } as (typeof list)[number]);
-    }
-    return list;
-  })();
+  const displayMethods = (methods ?? []).filter((m) => {
+    if (!m.is_active) return false;
+    const num = (m.number ?? "").trim();
+    const instr = (m.instructions ?? "").trim();
+    return num.length >= 3 || instr.length >= 8;
+  });
   const method = displayMethods.find((m) => m.key === selected) ?? null;
 
   const copyNumber = (num: string) => {
@@ -110,7 +98,11 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
             <div className="mt-4 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
           ) : (
             <div className="mt-3 grid gap-2">
-              {displayMethods.map((m) => (
+              {displayMethods.length === 0 ? (
+                <p className="col-span-full rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                  لا توجد وسائل دفع مفعّلة ومضبوطة حاليًا. تواصل مع الإدارة. الدفع يخضع لمراجعة يدوية بعد إرسال الإثبات.
+                </p>
+              ) : displayMethods.map((m) => (
                 <button
                   key={m.key}
                   onClick={() => setSelected(m.key)}

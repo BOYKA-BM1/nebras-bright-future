@@ -46,7 +46,7 @@ function LearnPage() {
   const { data: completionThreshold = 90 } = useCompletionThreshold();
   const { data: profile } = useProfile();
   const { user } = useAuth();
-  const { obscured } = useContentProtection();
+  const { obscured } = useContentProtection({ courseId });
   const watermark = useMemo(() => {
     const name = profile?.full_name?.trim() || user?.email?.split("@")[0] || "طالب";
     const contact = profile?.phone?.trim() || user?.email || "";

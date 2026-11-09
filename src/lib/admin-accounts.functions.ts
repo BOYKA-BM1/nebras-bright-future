@@ -1,9 +1,21 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { writeAudit, getClientIp, getUserAgent } from "@/lib/security.server";
+import { maskEmail } from "@/lib/mask";
 
-/** يتحقّق إن المستخدم أدمن (كامل أو ثانوي) ويرجّع نوعه. */
-async function assertAdmin(context: { supabase: any; userId: string }): Promise<{ full: boolean }> {
+type Ctx = { supabase: any; userId: string };
+
+async function requireFullAdmin(context: Ctx): Promise<void> {
+  const { data: full, error } = await context.supabase.rpc("has_role", {
+    _user_id: context.userId,
+    _role: "admin",
+  });
+  if (error) throw new Error("تعذّر التحقق من الصلاحيات.");
+  if (!full) throw new Error("غير مصرّح: هذه العملية للأدمن الكامل فقط.");
+}
+
+async function requireAnyAdmin(context: Ctx): Promise<{ full: boolean }> {
   const [{ data: full, error: e1 }, { data: secondary, error: e2 }] = await Promise.all([
     context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin" }),
     context.supabase.rpc("has_role", { _user_id: context.userId, _role: "admin_secondary" }),
@@ -16,7 +28,6 @@ async function assertAdmin(context: { supabase: any; userId: string }): Promise<
 export type AccountRow = {
   id: string;
   email: string;
-  /** البريد الحقيقي — للأدمن الكامل فقط، وnull للأدمن الثانوي */
   real_email: string | null;
   created_at: string;
   full_name: string | null;
@@ -30,7 +41,7 @@ export type AccountRow = {
 export const listAccounts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<AccountRow[]> => {
-    await assertAdmin(context);
+    const { full } = await requireAnyAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: usersData, error: usersErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -52,70 +63,140 @@ export const listAccounts = createServerFn({ method: "GET" })
       roleMap.set(r.user_id, arr);
     }
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
-    const bannedSet = new Set((banned ?? []).map((b: any) => b.email.toLowerCase()));
+    const bannedSet = new Set((banned ?? []).map((b: any) => String(b.email).toLowerCase()));
 
     return usersData.users.map((u) => {
       const p = profileMap.get(u.id) as any;
+      const rawEmail = u.email ?? "";
       return {
         id: u.id,
-        real_email: u.email ?? "",
-        email: u.email ?? "",
+        real_email: full ? rawEmail : null,
+        email: full ? rawEmail : maskEmail(rawEmail),
         created_at: u.created_at,
         full_name: p?.full_name ?? (u.user_metadata?.full_name as string) ?? null,
-        phone: p?.phone ?? null,
+        phone: full ? (p?.phone ?? null) : p?.phone ? "***" : null,
         roles: roleMap.get(u.id) ?? ["student"],
-        banned: bannedSet.has((u.email ?? "").toLowerCase()),
+        banned: bannedSet.has(rawEmail.toLowerCase()),
         device_label: p?.device_label ?? null,
         device_registered_at: p?.device_registered_at ?? null,
       };
     });
   });
 
+async function trustedEmail(userId: string): Promise<string> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+  if (error || !data?.user?.email) throw new Error("الحساب غير موجود.");
+  return data.user.email;
+}
+
+async function targetRoles(userId: string): Promise<string[]> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("user_roles").select("role").eq("user_id", userId);
+  return (data ?? []).map((r) => r.role);
+}
+
+function isAdminRole(roles: string[]): boolean {
+  return roles.includes("admin") || roles.includes("admin_secondary");
+}
+
+async function countFullAdmins(): Promise<number> {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin.from("user_roles").select("user_id").eq("role", "admin");
+  return new Set((data ?? []).map((r) => r.user_id)).size;
+}
+
+/** عمليات يومية: أي أدمن — مع منع المساس بالحسابات الإدارية من الثانوي */
+async function assertCanManageTarget(context: Ctx, full: boolean, targetUserId: string) {
+  if (targetUserId === context.userId) throw new Error("لا يمكنك تنفيذ هذه العملية على حسابك.");
+  const roles = await targetRoles(targetUserId);
+  if (isAdminRole(roles) && !full) {
+    throw new Error("غير مصرّح: لا يمكن للأدمن الثانوي تعديل حسابات الإدارة.");
+  }
+  if (roles.includes("admin") && (await countFullAdmins()) <= 1 && full) {
+    // still allow full admin to act on others, but not remove last — checked per op
+  }
+}
+
 export const banAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ userId: z.string().uuid(), email: z.string().email(), reason: z.string().optional() }).parse(d),
+    z.object({ userId: z.string().uuid(), reason: z.string().max(500).optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await requireAnyAdmin(context);
+    await assertCanManageTarget(context, full, data.userId);
+    const roles = await targetRoles(data.userId);
+    if (roles.includes("admin") && (await countFullAdmins()) <= 1) {
+      throw new Error("لا يمكن حظر آخر أدمن كامل.");
+    }
+    const email = await trustedEmail(data.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin
       .from("banned_emails")
-      .upsert({ email: data.email.toLowerCase(), reason: data.reason ?? null });
-    // إنهاء جلسات الحساب فورًا
+      .upsert({ email: email.toLowerCase(), reason: data.reason ?? null });
     await supabaseAdmin.auth.admin.updateUserById(data.userId, { ban_duration: "876000h" });
-    return { ok: true };
+    await writeAudit({
+      userId: context.userId,
+      action: "ban_account",
+      entity: data.userId,
+      metadata: { reason: data.reason ?? null },
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
   });
 
 export const unbanAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ userId: z.string().uuid(), email: z.string().email() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await requireAnyAdmin(context);
+    await assertCanManageTarget(context, full, data.userId);
+    const email = await trustedEmail(data.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("banned_emails").delete().eq("email", data.email.toLowerCase());
+    await supabaseAdmin.from("banned_emails").delete().eq("email", email.toLowerCase());
     await supabaseAdmin.auth.admin.updateUserById(data.userId, { ban_duration: "none" });
-    return { ok: true };
+    await writeAudit({
+      userId: context.userId,
+      action: "unban_account",
+      entity: data.userId,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
   });
 
 export const deleteAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ userId: z.string().uuid(), email: z.string().email(), alsoBan: z.boolean().optional() }).parse(d),
+    z.object({ userId: z.string().uuid(), alsoBan: z.boolean().optional() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await requireAnyAdmin(context);
+    await assertCanManageTarget(context, full, data.userId);
+    const roles = await targetRoles(data.userId);
+    if (roles.includes("admin") && (await countFullAdmins()) <= 1) {
+      throw new Error("لا يمكن حذف آخر أدمن كامل.");
+    }
+    const email = await trustedEmail(data.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     if (data.alsoBan) {
       await supabaseAdmin
         .from("banned_emails")
-        .upsert({ email: data.email.toLowerCase(), reason: "تم حذف الحساب بواسطة الإدارة" });
+        .upsert({ email: email.toLowerCase(), reason: "تم حذف الحساب بواسطة الإدارة" });
     }
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error("تعذّر حذف الحساب.");
-    return { ok: true };
+    await writeAudit({
+      userId: context.userId,
+      action: "delete_account",
+      entity: data.userId,
+      metadata: { alsoBan: !!data.alsoBan },
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
   });
 
 export const ASSIGNABLE_ROLES = [
@@ -141,34 +222,80 @@ export const setUserRole = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
-    if (data.userId === context.userId && data.role !== "admin") {
-      throw new Error("لا يمكنك تغيير صلاحيتك بنفسك.");
+    const { full } = await requireAnyAdmin(context);
+    if (data.userId === context.userId) throw new Error("لا يمكنك تغيير صلاحيتك بنفسك.");
+
+    // Secondary cannot assign or modify administrative roles
+    if (!full && (data.role === "admin" || data.role === "admin_secondary")) {
+      await writeAudit({
+        userId: context.userId,
+        action: "set_user_role_denied",
+        entity: data.userId,
+        metadata: { role: data.role, reason: "secondary_cannot_assign_admin" },
+        ip: getClientIp(),
+        userAgent: getUserAgent(),
+      });
+      throw new Error("غير مصرّح: تعيين الأدوار الإدارية للأدمن الكامل فقط.");
     }
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    // "تعيين" يستبدل صلاحيات الحساب بالصلاحية المختارة
-    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId);
-    if (data.role !== "student") {
-      const { error } = await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: data.userId, role: data.role });
-      if (error) throw new Error("تعذّر تعيين الصلاحية.");
+
+    const existing = await targetRoles(data.userId);
+    if (isAdminRole(existing) && !full) {
+      await writeAudit({
+        userId: context.userId,
+        action: "set_user_role_denied",
+        entity: data.userId,
+        metadata: { role: data.role, reason: "secondary_cannot_modify_admin_account" },
+        ip: getClientIp(),
+        userAgent: getUserAgent(),
+      });
+      throw new Error("غير مصرّح: لا يمكن تعديل حساب إداري.");
     }
-    return { ok: true };
+
+    if (existing.includes("admin") && data.role !== "admin" && (await countFullAdmins()) <= 1) {
+      throw new Error("لا يمكن إزالة صلاحية آخر أدمن كامل.");
+    }
+
+    // Atomic RPC (transaction inside Postgres)
+    const { error } = await context.supabase.rpc("admin_set_user_role", {
+      _target: data.userId,
+      _new_role: data.role,
+    });
+    if (error) {
+      const msg = error.message || "";
+      if (/secondary_cannot/i.test(msg)) throw new Error("غير مصرّح: لا يمكن تعديل أدوار الإدارة.");
+      if (/last_full_admin/i.test(msg)) throw new Error("لا يمكن إزالة آخر أدمن كامل.");
+      if (/not_authorized|invalid_role/i.test(msg)) throw new Error("تعذّر تعيين الصلاحية.");
+      throw new Error("تعذّر تعيين الصلاحية.");
+    }
+    await writeAudit({
+      userId: context.userId,
+      action: "set_user_role",
+      entity: data.userId,
+      metadata: { role: data.role },
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
   });
 
 export const resetAccountDevice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ userId: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context);
+    const { full } = await requireAnyAdmin(context);
+    await assertCanManageTarget(context, full, data.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({ device_id: null, device_label: null, device_registered_at: null })
       .eq("id", data.userId);
     if (error) throw new Error("تعذّر إعادة تعيين الجهاز.");
-    return { ok: true };
+    await writeAudit({
+      userId: context.userId,
+      action: "reset_device",
+      entity: data.userId,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
   });
-
-

@@ -2,12 +2,22 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { auditEvent } from "@/lib/audit";
+import { useServerFn } from "@tanstack/react-start";
+import { createManualPaymentRequest } from "@/lib/payment.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 export type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 export type PaymentRequest = Database["public"]["Tables"]["payment_requests"]["Row"];
 
 /* ============ طرق الدفع المتاحة ============ */
+function isMethodReady(m: PaymentMethod): boolean {
+  if (!m.is_active) return false;
+  const num = (m.number ?? "").trim();
+  const instr = (m.instructions ?? "").trim();
+  return num.length >= 3 || instr.length >= 8;
+}
+
+/** activeOnly=true ⇒ مفعّلة ومكتملة الإعداد فقط (لا placeholders) */
 export function usePaymentMethods(activeOnly = true) {
   return useQuery({
     queryKey: ["payment-methods", activeOnly],
@@ -16,7 +26,8 @@ export function usePaymentMethods(activeOnly = true) {
       if (activeOnly) query = query.eq("is_active", true);
       const { data, error } = await query;
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+      return activeOnly ? rows.filter(isMethodReady) : rows;
     },
   });
 }
@@ -43,10 +54,11 @@ export function useMyPaymentRequests() {
 export function useSubmitPaymentRequest() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const createReq = useServerFn(createManualPaymentRequest);
   return useMutation({
     mutationFn: async (input: {
       courseId: string;
-      amount: number;
+      amount: number; // ignored server-side; kept for call-site compatibility
       method: string;
       senderReference: string;
       couponId?: string | null;
@@ -54,37 +66,38 @@ export function useSubmitPaymentRequest() {
     }) => {
       if (!user) throw new Error("not_authenticated");
 
-      let receiptUrl: string | null = null;
+      let receiptPath: string | null = null;
       if (input.receipt) {
         const ext = input.receipt.name.split(".").pop()?.toLowerCase() || "jpg";
+        if (!["jpg", "jpeg", "png", "webp", "pdf"].includes(ext)) {
+          throw new Error("نوع ملف الإيصال غير مدعوم.");
+        }
+        if (input.receipt.size > 5 * 1024 * 1024) {
+          throw new Error("حجم الإيصال كبير (الحد 5 ميجا).");
+        }
         const path = `${user.id}/${input.courseId}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("payment-receipts")
           .upload(path, input.receipt, { upsert: true, contentType: input.receipt.type });
         if (upErr) throw upErr;
-        const { data, error: signErr } = await supabase.storage
-          .from("payment-receipts")
-          .createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
-        if (signErr) throw signErr;
-        receiptUrl = data.signedUrl;
+        receiptPath = path;
       }
 
-      const { error } = await supabase.from("payment_requests").insert({
-        user_id: user.id,
-        course_id: input.courseId,
-        amount: input.amount,
-        method: input.method,
-        sender_reference: input.senderReference,
-        coupon_id: input.couponId ?? null,
-        receipt_url: receiptUrl,
-        status: "pending",
+      const result = await createReq({
+        data: {
+          courseId: input.courseId,
+          methodKey: input.method,
+          senderReference: input.senderReference,
+          couponCode: null,
+          receiptPath,
+        },
       });
-      if (error) throw error;
       auditEvent("course_purchase_request", "course", {
         courseId: input.courseId,
-        amount: input.amount,
+        amount: result.amount,
         method: input.method,
       });
+      return result;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-payment-requests"] }),
   });
