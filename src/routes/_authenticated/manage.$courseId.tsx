@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Loader2, Plus, Pencil, Trash2, ChevronRight, Video, FileText, Layers, GripVertical,
-  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2, Wand2, Sparkles, BarChart3, ClipboardList,
+  Radio, Play, Square, Eye, EyeOff, Tv, Upload, CheckCircle2, Wand2, Sparkles, BarChart3, ClipboardList, FileQuestion,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -25,7 +25,6 @@ import { useCourseAdmin } from "@/hooks/use-catalog";
 import { useLiveSessions, useLiveAdmin, type LiveSession } from "@/hooks/use-live";
 import { useUploadMontageVideo, useUploadLessonPdf } from "@/hooks/use-staff";
 import { transcribeVideo } from "@/lib/ai-tutor.functions";
-import { Logo } from "@/components/site/Logo";
 import { getLessonPdfs, type Section, type Lesson, type LessonPdf } from "@/lib/catalog";
 
 export const Route = createFileRoute("/_authenticated/manage/$courseId")({
@@ -135,7 +134,7 @@ function ManageCourse() {
   const openEditSec = (s: Section) => { setEditSec(s); setSecTitle(s.title); setSecPrice(String((s as any).price ?? 0)); setSecOpen(true); };
   const saveSec = () => {
     if (!secTitle.trim()) { toast.error("اسم الوحدة مطلوب."); return; }
-    const onErr = () => toast.error("حصل خطأ.");
+    const onErr = (e: unknown) => toast.error(e instanceof Error ? e.message : "حصل خطأ.");
     if (editSec) {
       sectionAdmin.update.mutate({ id: editSec.id, title: secTitle.trim(), price: Math.max(0, Number(secPrice) || 0) } as any, { onSuccess: () => { toast.success("تم التحديث."); setSecOpen(false); }, onError: onErr });
     } else {
@@ -167,7 +166,7 @@ function ManageCourse() {
       is_free: lesForm.is_free,
       transcript: lesForm.transcript.trim() || null,
     };
-    const onErr = () => toast.error("حصل خطأ.");
+    const onErr = (e: unknown) => toast.error(e instanceof Error ? e.message : "حصل خطأ.");
     if (editLes) {
       // المدرّس: لو غيّر/أضاف فيديو، الدرس يرجع للمونتاج للمراجعة قبل النشر
       const needsReview = !isAdmin && !!payload.video_url && payload.video_url !== editLes.video_url;
@@ -212,7 +211,7 @@ function ManageCourse() {
       description: liveForm.description.trim() || null,
       embed_url: liveForm.embed_url.trim() || null,
     };
-    const onErr = () => toast.error("حصل خطأ.");
+    const onErr = (e: unknown) => toast.error(e instanceof Error ? e.message : "حصل خطأ.");
     if (editLive) {
       liveAdmin.update.mutate({ id: editLive.id, ...payload }, { onSuccess: () => { toast.success("تم التحديث."); setLiveOpen(false); }, onError: onErr });
     } else {
@@ -271,16 +270,22 @@ function ManageCourse() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <Logo />
-          <div className="flex items-center gap-2">
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
+          <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/manage/$courseId/assignments"
               params={{ courseId }}
-              className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
+              className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
             >
               <ClipboardList className="h-4 w-4" /> الواجبات
+            </Link>
+            <Link
+              to="/manage/$courseId/assignments"
+              params={{ courseId }}
+              className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
+            >
+              <FileQuestion className="h-4 w-4" /> الامتحانات
             </Link>
             <Link
               to="/manage/$courseId/analytics"
@@ -289,10 +294,13 @@ function ManageCourse() {
             >
               <BarChart3 className="h-4 w-4" /> تحليلات المشاهدة
             </Link>
-            <Link to={isAdmin ? "/admin/courses" : "/teacher"} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-              <ChevronRight className="h-4 w-4" /> رجوع
-            </Link>
           </div>
+          <Link
+            to={isAdmin ? "/admin/courses" : "/teacher"}
+            className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
+          >
+            <ChevronRight className="h-4 w-4" /> رجوع
+          </Link>
         </div>
       </header>
 

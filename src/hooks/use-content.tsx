@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { adminCreateSection, adminUpdateSection } from "@/lib/catalog-admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { auditEvent } from "@/lib/audit";
@@ -382,18 +384,32 @@ export function useFavorites() {
 export function useSectionAdmin(courseId: string | undefined) {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: ["sections", courseId] });
+  const createFn = useServerFn(adminCreateSection);
+  const updateFn = useServerFn(adminUpdateSection);
 
   const create = useMutation({
-    mutationFn: async (input: SectionInput) => {
-      const { error } = await supabase.from("sections").insert(input);
-      if (error) throw error;
+    mutationFn: async (input: SectionInput & { price?: number }) => {
+      await createFn({
+        data: {
+          course_id: (input as any).course_id,
+          title: input.title,
+          sort_order: (input as any).sort_order ?? 0,
+          price: (input as any).price ?? 0,
+        },
+      });
     },
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: async ({ id, ...input }: Partial<SectionInput> & { id: string }) => {
-      const { error } = await supabase.from("sections").update(input).eq("id", id);
-      if (error) throw error;
+    mutationFn: async ({ id, ...input }: Partial<SectionInput> & { id: string; price?: number }) => {
+      await updateFn({
+        data: {
+          id,
+          title: input.title,
+          sort_order: (input as any).sort_order,
+          price: (input as any).price,
+        },
+      });
     },
     onSuccess: invalidate,
   });

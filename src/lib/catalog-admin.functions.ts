@@ -293,3 +293,84 @@ export const adminUpdateCourse = createServerFn({ method: "POST" })
     });
     return { ok: true as const };
   });
+
+
+async function assertCanManageCourse(userId: string, courseId: string) {
+  try {
+    await assertAnyAdmin(userId);
+    return;
+  } catch {
+    /* ليس أدمن — تحقق ملكية المدرّس */
+  }
+  const { data: course } = await supabaseAdmin
+    .from("courses")
+    .select("id, teacher_id")
+    .eq("id", courseId)
+    .maybeSingle();
+  if (!course?.teacher_id) throw new Error("غير مصرّح بإدارة هذه الدورة");
+  const { data: teacher } = await supabaseAdmin
+    .from("teachers")
+    .select("user_id")
+    .eq("id", course.teacher_id)
+    .maybeSingle();
+  if (teacher?.user_id !== userId) throw new Error("غير مصرّح بإدارة هذه الدورة");
+}
+
+export const adminCreateSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        course_id: z.string().uuid(),
+        title: z.string().min(1).max(200),
+        sort_order: z.number().int().optional(),
+        price: z.number().int().min(0).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCanManageCourse(context.userId, data.course_id);
+    const base = {
+      course_id: data.course_id,
+      title: data.title.trim(),
+      sort_order: data.sort_order ?? 0,
+    };
+    // جرّب مع السعر؛ لو العمود مش موجود في القاعدة ارجع بدون سعر
+    let { data: row, error } = await supabaseAdmin
+      .from("sections")
+      .insert({ ...base, price: data.price ?? 0 } as any)
+      .select("id")
+      .single();
+    if (error && /price|column/i.test(error.message || "")) {
+      ({ data: row, error } = await supabaseAdmin.from("sections").insert(base).select("id").single());
+    }
+    if (error) throw new Error(error.message || "تعذّرت إضافة الوحدة");
+    return { ok: true as const, id: row!.id };
+  });
+
+export const adminUpdateSection = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        title: z.string().min(1).max(200).optional(),
+        sort_order: z.number().int().optional(),
+        price: z.number().int().min(0).optional(),
+        course_id: z.string().uuid().optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: sec } = await supabaseAdmin.from("sections").select("course_id").eq("id", data.id).maybeSingle();
+    if (!sec) throw new Error("الوحدة غير موجودة");
+    await assertCanManageCourse(context.userId, sec.course_id);
+    const { id, course_id: _c, ...rest } = data;
+    let { error } = await supabaseAdmin.from("sections").update(rest as any).eq("id", id);
+    if (error && /price|column/i.test(error.message || "")) {
+      const { price: _p, ...noPrice } = rest as any;
+      ({ error } = await supabaseAdmin.from("sections").update(noPrice).eq("id", id));
+    }
+    if (error) throw new Error(error.message || "تعذّر تحديث الوحدة");
+    return { ok: true as const };
+  });

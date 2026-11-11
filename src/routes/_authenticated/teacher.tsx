@@ -16,6 +16,8 @@ import {
   UserRound,
   
   ClipboardList,
+  FileQuestion,
+  FileText,
   Loader2,
 } from "lucide-react";
 import { ComplaintButton } from "@/components/site/ComplaintButton";
@@ -151,19 +153,35 @@ function TeacherDashboard() {
 
             <button
               type="button"
-              onClick={() => toast.message("يتوفر لاحقًا", { description: "قسم الواجبات للمدرّس قيد التجهيز." })}
+              onClick={() => {
+                const first = myCourses[0];
+                if (first) {
+                  window.location.href = `/manage/${first.id}/assignments`;
+                } else {
+                  toast.message("أضف دورة أولًا", { description: "بعد إنشاء دورة تقدر تضيف واجبات وامتحانات." });
+                }
+              }}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
-              <ClipboardList className="h-4 w-4" /> الواجبات
+              <ClipboardList className="h-4 w-4" /> إضافة واجب
             </button>
-
-            <ComplaintButton />
 
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-3 py-2 text-sm font-bold hover:bg-accent"
+              onClick={() => {
+                const first = myCourses[0];
+                if (first) {
+                  window.location.href = `/manage/${first.id}/assignments`;
+                } else {
+                  toast.message("أضف دورة أولًا");
+                }
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
+              <FileQuestion className="h-4 w-4" /> إضافة امتحان
             </button>
+
+            <ComplaintButton />
           </div>
         </div>
 
@@ -185,6 +203,56 @@ function TeacherDashboard() {
             </div>
           ))}
         </div>
+
+        
+        <section className="mt-8 rounded-2xl border border-border bg-card p-5 shadow-card">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 text-lg font-extrabold">
+              <Users className="h-5 w-5 text-primary" /> طلابي واشتراكاتهم
+            </h2>
+            <p className="text-xs text-muted-foreground">اختَر دورة لعرض الطلاب المسجّلين وتقدّمهم</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {myCourses.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setAnalyticsCourseId(c.id)}
+                className={`rounded-xl border px-3 py-2 text-sm font-bold transition ${
+                  analyticsCourseId === c.id
+                    ? "border-primary bg-primary/15 text-primary"
+                    : "border-border hover:bg-accent"
+                }`}
+              >
+                {c.title}
+              </button>
+            ))}
+            {myCourses.length === 0 && (
+              <p className="text-sm text-muted-foreground">لا توجد دورات بعد.</p>
+            )}
+          </div>
+          {analyticsCourseId && (
+            <div className="mt-4 max-h-72 space-y-2 overflow-y-auto border-t border-border/60 pt-4">
+              {attLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : (attendance?.students?.length ?? 0) === 0 ? (
+                <p className="text-sm text-muted-foreground">لا يوجد طلاب مشتركين في هذه الدورة بعد.</p>
+              ) : (
+                attendance!.students.map((s) => (
+                  <div key={s.userId} className="flex items-center justify-between rounded-xl border border-border/60 bg-background/50 px-3 py-2 text-sm">
+                    <span className="font-bold">{s.fullName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {s.lessonsWatched}/{s.totalLessons} درس
+                      {s.totalLessons > 0 ? ` · ${Math.round((s.lessonsWatched / s.totalLessons) * 100)}%` : ""}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </section>
 
         {myCoupons.length > 0 && (
           <section className="mt-8">
