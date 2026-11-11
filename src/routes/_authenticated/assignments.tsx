@@ -1,139 +1,207 @@
-import { useState, useRef } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { Loader2, ClipboardList, Clock, CheckCircle2, Upload, LogOut, Paperclip } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Loader2, ClipboardList, FileQuestion, Upload, CheckCircle2, AlertCircle, Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
-import { Logo } from "@/components/site/Logo";
-import { NotificationBell } from "@/components/site/NotificationBell";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  useMyAssignments, useMySubmission, useSubmitAssignment, type Assignment,
+} from "@/hooks/use-assignments";
+import { useUploadFile } from "@/hooks/use-files";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "@tanstack/react-router";
-import { useMyAssignments, useMySubmission, useSubmitAssignment, type Assignment } from "@/hooks/use-assignments";
-import { useUploadFile, type UploadedFile } from "@/hooks/use-files";
+import { Textarea } from "@/components/ui/textarea";
+import { LoadingState, EmptyState } from "@/components/shared/ui-states";
 
 export const Route = createFileRoute("/_authenticated/assignments")({
-  component: StudentAssignments,
+  component: StudentAssignmentsPage,
 });
 
-function StudentAssignments() {
-  const { confirmSignOut } = useAuth();
-  const navigate = useNavigate();
-  const { data: assignments = [], isLoading } = useMyAssignments();
-  const [active, setActive] = useState<(Assignment & { courseTitle: string }) | null>(null);
+function StudentAssignmentsPage() {
+  const { data: all = [], isLoading } = useMyAssignments();
+  const [tab, setTab] = useState<"homework" | "exam">("homework");
+
+  const filtered = useMemo(() => {
+    return all.filter((a) => {
+      const k = (a as any).kind ?? "homework";
+      return tab === "exam" ? k === "exam" : k !== "exam";
+    });
+  }, [all, tab]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><ClipboardList className="h-5 w-5" /></span>
-          <div>
-            <h1 className="text-2xl font-extrabold sm:text-3xl">واجباتي</h1>
-            <p className="text-sm text-muted-foreground">الواجبات المفتوحة في كل الدورات المشترك فيها.</p>
-          </div>
+    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold">واجباتي وامتحاناتي</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          سلّم إجابتك نصًا (وملف إن حابب) — التصحيح الذكي يظهر فورًا مع ذكر الأخطاء.
+        </p>
+      </div>
+
+      <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl border border-border bg-card p-1">
+        <button
+          type="button"
+          onClick={() => setTab("homework")}
+          className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition ${
+            tab === "homework" ? "bg-primary text-primary-foreground shadow" : "hover:bg-accent"
+          }`}
+        >
+          <ClipboardList className="h-4 w-4" /> الواجبات
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab("exam")}
+          className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold transition ${
+            tab === "exam" ? "bg-primary text-primary-foreground shadow" : "hover:bg-accent"
+          }`}
+        >
+          <FileQuestion className="h-4 w-4" /> الامتحانات
+        </button>
+      </div>
+
+      {isLoading ? (
+        <LoadingState label="جاري التحميل…" />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={tab === "exam" ? "لا توجد امتحانات الآن" : "لا توجد واجبات الآن"}
+          description="لما المدرّس ينشر واجب أو امتحان على دوراتك هيظهر هنا."
+        />
+      ) : (
+        <div className="space-y-4">
+          {filtered.map((a) => (
+            <AssignmentCard key={a.id} assignment={a} />
+          ))}
         </div>
-
-        {isLoading ? (
-          <div className="mt-10 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : assignments.length === 0 ? (
-          <div className="mt-8 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-muted-foreground">لا يوجد واجبات مفتوحة حاليًا 🎉</div>
-        ) : (
-          <div className="mt-6 grid gap-3">
-            {assignments.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => setActive(a)}
-                className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card p-5 text-right shadow-card hover:bg-accent"
-              >
-                <div>
-                  <p className="font-extrabold">{a.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{a.courseTitle}</p>
-                </div>
-                {a.due_at && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5" /> {new Date(a.due_at).toLocaleDateString("ar-EG")}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {active && <SubmitDialog assignment={active} onClose={() => setActive(null)} />}
+      )}
     </div>
   );
 }
 
-function SubmitDialog({ assignment, onClose }: { assignment: Assignment & { courseTitle: string }; onClose: () => void }) {
+function AssignmentCard({ assignment }: { assignment: Assignment & { courseTitle?: string } }) {
   const { data: submission, isLoading } = useMySubmission(assignment.id);
   const submit = useSubmitAssignment();
-  const uploadFile = useUploadFile();
+  const upload = useUploadFile();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
-  const [note, setNote] = useState("");
+  const [note, setNote] = useState(submission?.note ?? "");
+  const [filePath, setFilePath] = useState<string | null>(submission?.file_url ?? null);
+  const [lastGrade, setLastGrade] = useState<{ score: number; feedback: string; maxScore: number } | null>(null);
 
-  const handlePickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
-    if (!file) return;
-    uploadFile.mutate(
-      { file, context: "assignment_submission" },
+  const kind = (assignment as any).kind === "exam" ? "exam" : "homework";
+  const maxScore = Number(assignment.max_score) || 100;
+  const graded = submission?.status === "graded" || lastGrade != null;
+  const score = lastGrade?.score ?? submission?.score;
+  const feedback = lastGrade?.feedback ?? submission?.feedback;
+
+  const onPickFile = (file: File) => {
+    upload.mutate(
+      { file, context: "assignment_submission", relatedId: assignment.id },
       {
-        onSuccess: (f) => { setUploadedFile(f); toast.success("تم رفع الملف ✅"); },
-        onError: (err) => toast.error(err instanceof Error ? err.message : "تعذّر رفع الملف."),
+        onSuccess: (row) => {
+          setFilePath(row.storage_path);
+          toast.success("تم رفع الملف");
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر الرفع"),
       },
     );
   };
 
-  const handleSubmit = () => {
+  const onSubmit = () => {
+    if (!note.trim() && !filePath) {
+      toast.error("اكتب إجابتك أو ارفع ملفًا.");
+      return;
+    }
+    if (!note.trim()) {
+      toast.error("اكتب ملخص إجابتك نصًا ليتم التصحيح الذكي.");
+      return;
+    }
     submit.mutate(
-      { assignmentId: assignment.id, fileUrl: uploadedFile ? uploadedFile.storage_path : null, note: note.trim() || null },
-      { onSuccess: () => toast.success("تم تسليم الواجب ✅"), onError: () => toast.error("تعذّر التسليم.") },
+      { assignmentId: assignment.id, note: note.trim(), fileUrl: filePath, autoGrade: true },
+      {
+        onSuccess: (res: any) => {
+          if (res?.grade) {
+            setLastGrade(res.grade);
+            toast.success(`النتيجة: ${res.grade.score} / ${res.grade.maxScore}`);
+          } else {
+            toast.success("تم التسليم — التصحيح الآلي غير متاح حاليًا.");
+          }
+        },
+        onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر التسليم"),
+      },
     );
   };
 
   return (
-    <Dialog open onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>{assignment.title}</DialogTitle></DialogHeader>
-        {assignment.description && <p className="text-sm text-muted-foreground">{assignment.description}</p>}
-
-        {isLoading ? (
-          <div className="flex justify-center py-6"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-        ) : submission?.status === "graded" ? (
-          <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4">
-            <p className="flex items-center gap-2 font-bold text-green-500"><CheckCircle2 className="h-4 w-4" /> تم التصحيح</p>
-            <p className="mt-2 text-lg font-extrabold">{submission.score} / {assignment.max_score}</p>
-            {submission.feedback && <p className="mt-2 text-sm text-muted-foreground">{submission.feedback}</p>}
-          </div>
-        ) : (
-          <>
-            {submission && (
-              <p className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-2 text-sm text-primary">
-                <CheckCircle2 className="h-4 w-4" /> تم تسليم الواجب، تقدر تعدّل التسليم قبل التصحيح.
-              </p>
-            )}
-            <div className="space-y-3">
-              <input ref={fileRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" className="hidden" onChange={handlePickFile} />
-              <button
-                onClick={() => fileRef.current?.click()}
-                disabled={uploadFile.isPending}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-border px-4 py-3 text-sm font-bold text-muted-foreground hover:bg-accent disabled:opacity-60"
-              >
-                {uploadFile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
-                {uploadedFile ? uploadedFile.original_filename : "إرفاق ملف (PDF, صورة, Word)"}
-              </button>
-              <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="ملاحظة أو إجابة نصية (اختياري)" rows={4} />
-            </div>
-            <DialogFooter>
-              <Button onClick={handleSubmit} disabled={submit.isPending} className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold">
-                {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {submission ? "تحديث التسليم" : "تسليم"}
-              </Button>
-            </DialogFooter>
-          </>
+    <article className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${
+            kind === "exam" ? "bg-violet-500/15 text-violet-400" : "bg-primary/15 text-primary"
+          }`}>
+            {kind === "exam" ? "امتحان" : "واجب"}
+          </span>
+          <h2 className="mt-1 text-lg font-extrabold">{assignment.title}</h2>
+          <p className="text-xs text-muted-foreground">{assignment.courseTitle ?? "دورة"}</p>
+        </div>
+        {assignment.due_at && (
+          <p className="text-xs font-bold text-muted-foreground">
+            التسليم: {new Date(assignment.due_at).toLocaleString("ar-EG")}
+          </p>
         )}
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {assignment.description && (
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{assignment.description}</p>
+      )}
+
+      {isLoading ? (
+        <Loader2 className="mt-4 h-5 w-5 animate-spin text-primary" />
+      ) : (
+        <div className="mt-4 space-y-3">
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={4}
+            placeholder="اكتب إجابتك هنا بوضوح…"
+            disabled={graded && submission?.status === "graded"}
+          />
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) onPickFile(f);
+              }}
+            />
+            <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => fileRef.current?.click()} disabled={upload.isPending}>
+              {upload.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {filePath ? "ملف مرفق ✓" : "إرفاق ملف"}
+            </Button>
+            <Button type="button" size="sm" className="gap-1.5" onClick={onSubmit} disabled={submit.isPending}>
+              {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              تسليم وتصحيح ذكي
+            </Button>
+          </div>
+
+          {(graded || feedback) && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+              <div className="flex items-center gap-2 text-sm font-extrabold text-primary">
+                <CheckCircle2 className="h-4 w-4" />
+                النتيجة: {score != null ? `${score} / ${maxScore}` : "—"}
+              </div>
+              {feedback && (
+                <pre className="mt-2 whitespace-pre-wrap text-xs leading-relaxed text-foreground/90">{feedback}</pre>
+              )}
+            </div>
+          )}
+
+          {!graded && submission && (
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <AlertCircle className="h-3.5 w-3.5" /> تم التسليم سابقًا — تقدر تعدّل وتعيد الإرسال.
+            </p>
+          )}
+        </div>
+      )}
+    </article>
   );
 }

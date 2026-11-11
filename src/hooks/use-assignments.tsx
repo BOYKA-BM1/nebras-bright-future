@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { gradeSubmissionWithAI } from "@/lib/assignment-grade.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 export type Assignment = Database["public"]["Tables"]["assignments"]["Row"];
@@ -70,15 +72,28 @@ export function useAssignmentActions() {
   };
 
   const create = useMutation({
-    mutationFn: async (input: { course_id: string; title: string; description?: string; due_at?: string | null; max_score?: number; lesson_id?: string | null }) => {
-      const { error } = await supabase.from("assignments").insert(input);
-      if (error) { console.warn(error); return []; }
+    mutationFn: async (input: {
+      course_id: string;
+      title: string;
+      description?: string;
+      due_at?: string | null;
+      max_score?: number;
+      lesson_id?: string | null;
+      kind?: "homework" | "exam";
+      file_url?: string | null;
+      answer_key_url?: string | null;
+      answer_key_text?: string | null;
+      unlock_after_lesson?: boolean;
+    }) => {
+      const payload = { ...input, kind: input.kind ?? "homework" };
+      const { error } = await supabase.from("assignments").insert(payload as any);
+      if (error) throw new Error(error.message || "تعذّر إنشاء الواجب");
     },
     onSuccess: (_d, v) => invalidate(v.course_id),
   });
 
   const update = useMutation({
-    mutationFn: async ({ id, courseId, ...patch }: { id: string; courseId: string } & Partial<Pick<Assignment, "title" | "description" | "due_at" | "max_score" | "status">>) => {
+    mutationFn: async ({ id, courseId, ...patch }: { id: string; courseId: string } & Partial<Assignment>) => {
       const { error } = await supabase.from("assignments").update(patch).eq("id", id);
       if (error) { console.warn(error); return []; }
     },
@@ -99,16 +114,52 @@ export function useAssignmentActions() {
 export function useSubmitAssignment() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const gradeAI = useServerFn(gradeSubmissionWithAI);
   return useMutation({
-    mutationFn: async ({ assignmentId, fileUrl, note }: { assignmentId: string; fileUrl?: string | null; note?: string | null }) => {
+    mutationFn: async ({
+      assignmentId,
+      fileUrl,
+      note,
+      autoGrade = true,
+    }: {
+      assignmentId: string;
+      fileUrl?: string | null;
+      note?: string | null;
+      autoGrade?: boolean;
+    }) => {
       if (!user) throw new Error("auth required");
-      const { error } = await supabase.from("assignment_submissions").upsert(
-        { assignment_id: assignmentId, student_id: user.id, file_url: fileUrl ?? null, note: note ?? null, submitted_at: new Date().toISOString() },
-        { onConflict: "assignment_id,student_id" },
-      );
-      if (error) { console.warn(error); return []; }
+      const { data: row, error } = await supabase
+        .from("assignment_submissions")
+        .upsert(
+          {
+            assignment_id: assignmentId,
+            student_id: user.id,
+            file_url: fileUrl ?? null,
+            note: note ?? null,
+            submitted_at: new Date().toISOString(),
+            status: "submitted",
+          },
+          { onConflict: "assignment_id,student_id" },
+        )
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message || "تعذّر التسليم");
+
+      let gradeResult: { score: number; feedback: string; maxScore: number } | null = null;
+      if (autoGrade && row?.id) {
+        try {
+          gradeResult = await gradeAI({ data: { submissionId: row.id, assignmentId } });
+        } catch (e) {
+          // التسليم نجح حتى لو فشل التصحيح الآلي
+          console.warn("AI grade failed", e);
+        }
+      }
+      return { submissionId: row.id, grade: gradeResult };
     },
-    onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ["assignment-submission", v.assignmentId] }),
+    onSuccess: (_d, v) => {
+      void qc.invalidateQueries({ queryKey: ["assignment-submission", v.assignmentId] });
+      void qc.invalidateQueries({ queryKey: ["my-assignments"] });
+    },
   });
 }
 

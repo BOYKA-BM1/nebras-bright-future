@@ -1,19 +1,18 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Loader2, ChevronRight, Plus, ClipboardList, Users, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Loader2, ChevronRight, Plus, ClipboardList, Users, CheckCircle2, Clock, XCircle, Upload, FileQuestion } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/site/Logo";
 import { useCourse } from "@/hooks/use-content";
 import {
   useCourseAssignments, useAssignmentActions, useAssignmentSubmissions, useGradeSubmission,
   type Assignment,
 } from "@/hooks/use-assignments";
-import { useFileDownloadUrl } from "@/hooks/use-files";
+import { useFileDownloadUrl, useUploadFile } from "@/hooks/use-files";
 
 export const Route = createFileRoute("/_authenticated/manage/$courseId/assignments")({
   component: CourseAssignments,
@@ -28,8 +27,7 @@ function CourseAssignments() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-          <Logo />
+        <div className="mx-auto flex max-w-5xl items-center justify-end px-4 py-3 sm:px-6">
           <Link to="/manage/$courseId" params={{ courseId }} className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
             <ChevronRight className="h-4 w-4" /> رجوع لإدارة الدورة
           </Link>
@@ -39,7 +37,7 @@ function CourseAssignments() {
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm text-muted-foreground">الواجبات</p>
+            <p className="text-sm text-muted-foreground">الواجبات والامتحانات</p>
             <h1 className="text-2xl font-extrabold sm:text-3xl">{course?.title ?? "..."}</h1>
           </div>
           <CreateAssignmentDialog courseId={courseId} />
@@ -79,14 +77,46 @@ function CourseAssignments() {
 
 function CreateAssignmentDialog({ courseId }: { courseId: string }) {
   const [open, setOpen] = useState(false);
+  const [kind, setKind] = useState<"homework" | "exam">("homework");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [maxScore, setMaxScore] = useState("100");
+  const [answerKeyText, setAnswerKeyText] = useState("");
+  const [filePath, setFilePath] = useState<string | null>(null);
+  const [answerKeyPath, setAnswerKeyPath] = useState<string | null>(null);
+  const [unlockAfter, setUnlockAfter] = useState(true);
   const { create } = useAssignmentActions();
+  const upload = useUploadFile();
+
+  const uploadOne = (file: File, which: "task" | "key") => {
+    upload.mutate(
+      { file, context: "assignment" as any, relatedId: courseId },
+      {
+        onSuccess: (row: any) => {
+          const path = row?.storage_path ?? null;
+          if (!path) {
+            toast.error("تعذّر حفظ الملف");
+            return;
+          }
+          if (which === "task") setFilePath(path);
+          else setAnswerKeyPath(path);
+          toast.success(which === "task" ? "تم رفع ملف الواجب" : "تم رفع نموذج الإجابة");
+        },
+        onError: () => toast.error("تعذّر رفع الملف"),
+      },
+    );
+  };
 
   const submit = () => {
-    if (!title.trim()) { toast.error("اكتب عنوان الواجب."); return; }
+    if (!title.trim()) {
+      toast.error("اكتب العنوان.");
+      return;
+    }
+    if (!answerKeyText.trim() && !answerKeyPath) {
+      toast.error("ارفع نموذج الإجابة أو اكتبه نصًا — مطلوب للتصحيح الذكي.");
+      return;
+    }
     create.mutate(
       {
         course_id: courseId,
@@ -94,14 +124,26 @@ function CreateAssignmentDialog({ courseId }: { courseId: string }) {
         description: description.trim() || undefined,
         due_at: dueAt ? new Date(dueAt).toISOString() : null,
         max_score: Number(maxScore) || 100,
-      },
+        kind,
+        file_url: filePath,
+        answer_key_url: answerKeyPath,
+        answer_key_text: answerKeyText.trim() || null,
+        unlock_after_lesson: unlockAfter,
+      } as any,
       {
         onSuccess: () => {
-          toast.success("تم إنشاء الواجب ✅");
+          toast.success(kind === "exam" ? "تم إنشاء الامتحان ✅" : "تم إنشاء الواجب ✅");
           setOpen(false);
-          setTitle(""); setDescription(""); setDueAt(""); setMaxScore("100");
+          setTitle("");
+          setDescription("");
+          setDueAt("");
+          setMaxScore("100");
+          setAnswerKeyText("");
+          setFilePath(null);
+          setAnswerKeyPath(null);
+          setKind("homework");
         },
-        onError: () => toast.error("تعذّر إنشاء الواجب."),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر الإنشاء."),
       },
     );
   };
@@ -109,18 +151,38 @@ function CreateAssignmentDialog({ courseId }: { courseId: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold"><Plus className="h-4 w-4" /> واجب جديد</Button>
+        <Button className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold">
+          <Plus className="h-4 w-4" /> واجب / امتحان
+        </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>واجب جديد</DialogTitle></DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>رفع واجب أو امتحان</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setKind("homework")}
+              className={`rounded-xl border px-3 py-2 text-sm font-bold ${kind === "homework" ? "border-primary bg-primary/15 text-primary" : "border-border"}`}
+            >
+              <ClipboardList className="mb-1 inline h-4 w-4" /> واجب
+            </button>
+            <button
+              type="button"
+              onClick={() => setKind("exam")}
+              className={`rounded-xl border px-3 py-2 text-sm font-bold ${kind === "exam" ? "border-primary bg-primary/15 text-primary" : "border-border"}`}
+            >
+              <FileQuestion className="mb-1 inline h-4 w-4" /> امتحان
+            </button>
+          </div>
           <div>
             <Label>العنوان</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثلاً: تمارين الوحدة الأولى" />
           </div>
           <div>
-            <Label>الوصف</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+            <Label>وصف للطلاب</Label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -132,10 +194,58 @@ function CreateAssignmentDialog({ courseId }: { courseId: string }) {
               <Input type="number" value={maxScore} onChange={(e) => setMaxScore(e.target.value)} />
             </div>
           </div>
+
+          <div className="rounded-xl border border-border/60 bg-secondary/30 p-3">
+            <p className="mb-2 text-sm font-bold">1) رفع ملف {kind === "exam" ? "الامتحان" : "الواجب"} للطلاب</p>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent">
+              <Upload className="h-4 w-4" />
+              {filePath ? "تم الرفع ✓ — تغيير الملف" : "اختيار ملف"}
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadOne(f, "task");
+                }}
+              />
+            </label>
+          </div>
+
+          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <p className="mb-2 text-sm font-bold">2) رفع نموذج الإجابة (للذكاء الاصطناعي)</p>
+            <Textarea
+              value={answerKeyText}
+              onChange={(e) => setAnswerKeyText(e.target.value)}
+              rows={4}
+              placeholder="اكتب نموذج الإجابة هنا بوضوح… كل نقطة أو حل نموذجي"
+            />
+            <label className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent">
+              <Upload className="h-4 w-4" />
+              {answerKeyPath ? "تم رفع ملف النموذج ✓" : "أو ارفع ملف نموذج الإجابة"}
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.txt"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadOne(f, "key");
+                }}
+              />
+            </label>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              التصحيح الذكي يعتمد أساسًا على النص. الملف اختياري للأرشيف.
+            </p>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm font-bold">
+            <input type="checkbox" checked={unlockAfter} onChange={(e) => setUnlockAfter(e.target.checked)} />
+            يظهر للطالب بعد مشاهدة دروس الدورة
+          </label>
         </div>
         <DialogFooter>
-          <Button onClick={submit} disabled={create.isPending} className="gap-2">
-            {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} إنشاء
+          <Button onClick={submit} disabled={create.isPending || upload.isPending} className="gap-2">
+            {create.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} نشر
           </Button>
         </DialogFooter>
       </DialogContent>

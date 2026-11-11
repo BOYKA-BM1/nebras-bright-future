@@ -23,6 +23,7 @@ import { useIsBookmarked, useToggleBookmark } from "@/hooks/use-bookmarks";
 import { useLiveSessions } from "@/hooks/use-live";
 import { toEmbedUrl, getLessonPdfs, type Lesson } from "@/lib/catalog";
 import { ProtectedVideo } from "@/components/site/ProtectedVideo";
+import { useCourseAssignments } from "@/hooks/use-assignments";
 import { useContentProtection } from "@/hooks/use-content-protection";
 import { useProfile } from "@/hooks/use-profile";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,6 +38,7 @@ function LearnPage() {
   const router = useRouter();
   const { data: course, isLoading } = useCourse(courseId);
   const { sections, lessons, isLoading: contentLoading } = useCourseContent(courseId);
+  const { data: courseAssignments = [] } = useCourseAssignments(courseId);
   const { isEnrolled, isLoading: enrollLoading } = useEnrollment(courseId);
   const { data: progress = [] } = useProgress(courseId);
   const { data: liveSessions = [] } = useLiveSessions(courseId);
@@ -249,8 +251,22 @@ function LearnPage() {
                       </p>
                     </div>
                   )}
-                  <BookmarkButton targetType="lesson" targetId={active.id} />
+<BookmarkButton targetType="lesson" targetId={active.id} />
                 </div>
+                {courseAssignments.filter((a) => a.status === "open").length > 0 && (
+                  <div className="mt-5 rounded-xl border border-primary/25 bg-primary/5 p-4">
+                    <p className="text-sm font-extrabold text-primary">واجبات وامتحانات مرتبطة بالدورة</p>
+                    <ul className="mt-2 space-y-1.5">
+                      {courseAssignments.filter((a) => a.status === "open").slice(0, 5).map((a) => (
+                        <li key={a.id}>
+                          <Link to="/assignments" className="text-sm font-bold hover:underline">
+                            {(a as any).kind === "exam" ? "امتحان: " : "واجب: "}{a.title}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 {getLessonPdfs(active).length > 0 && (
                   <div className="mt-4 grid gap-2">
                     <p className="text-sm font-bold text-muted-foreground">ملفات المحاضرة</p>

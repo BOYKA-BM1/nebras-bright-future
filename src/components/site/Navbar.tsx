@@ -324,7 +324,7 @@ export function Navbar() {
                 {showStudentLinks && (
                   <>
                     <Link to="/assignments" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/assignments"))} aria-current={isNavActive(pathname, "/assignments") ? "page" : undefined}>
-                      <ClipboardList className="h-4 w-4" /> واجباتي
+                      <ClipboardList className="h-4 w-4" /> واجباتي وامتحاناتي
                     </Link>
                     <Link to="/certificates" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/certificates"))} aria-current={isNavActive(pathname, "/certificates") ? "page" : undefined}>
                       <Award className="h-4 w-4" /> شهاداتي

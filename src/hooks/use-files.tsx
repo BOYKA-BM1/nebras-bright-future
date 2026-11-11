@@ -23,7 +23,7 @@ export function useUploadFile() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file, context, relatedId }: { file: File; context: "assignment_submission"; relatedId?: string }): Promise<UploadedFile> => {
+    mutationFn: async ({ file, context, relatedId }: { file: File; context: "assignment_submission" | "assignment" | "exam"; relatedId?: string }): Promise<UploadedFile> => {
       if (!user) throw new Error("auth required");
       if (file.size > MAX_SIZE_BYTES) throw new Error("حجم الملف أكبر من الحد المسموح (20 ميجا).");
       if (file.type && !ALLOWED_MIME.includes(file.type)) throw new Error("نوع الملف غير مدعوم.");
