@@ -331,6 +331,10 @@ export type StudentActivity = {
   activeLast7Days: boolean;
   lessonsWatched: number;
   totalLessons: number;
+  examAvg: number | null;
+  homeworkAvg: number | null;
+  examCount: number;
+  homeworkCount: number;
 };
 
 export const getCourseAttendance = createServerFn({ method: "GET" })
@@ -368,6 +372,21 @@ export const getCourseAttendance = createServerFn({ method: "GET" })
     const nameMap = new Map((profiles ?? []).map((p) => [p.id, p.full_name ?? "طالب"]));
 
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const { data: courseAssignments } = await supabaseAdmin
+      .from("assignments")
+      .select("id, kind, max_score")
+      .eq("course_id", courseId);
+    const assignmentIds = (courseAssignments ?? []).map((a) => a.id);
+    const kindById = new Map((courseAssignments ?? []).map((a) => [a.id, (a as { kind?: string }).kind ?? "homework"]));
+
+    const { data: submissions } = assignmentIds.length
+      ? await supabaseAdmin
+          .from("assignment_submissions")
+          .select("student_id, assignment_id, score, status")
+          .in("assignment_id", assignmentIds)
+          .in("student_id", studentIds.length ? studentIds : ["00000000-0000-0000-0000-000000000000"])
+      : { data: [] as { student_id: string; assignment_id: string; score: number | null; status: string }[] };
+
     const students: StudentActivity[] = studentIds.map((id) => {
       const rows = (progress ?? []).filter((p) => p.user_id === id);
       const lastActiveAt = rows.reduce<string | null>((max, r) => {
@@ -375,6 +394,13 @@ export const getCourseAttendance = createServerFn({ method: "GET" })
         if (!max || new Date(r.last_watched_at) > new Date(max)) return r.last_watched_at;
         return max;
       }, null);
+
+      const mine = (submissions ?? []).filter((s) => s.student_id === id && s.score != null);
+      const exams = mine.filter((s) => kindById.get(s.assignment_id) === "exam");
+      const homeworks = mine.filter((s) => kindById.get(s.assignment_id) !== "exam");
+      const avg = (arr: typeof mine) =>
+        arr.length ? Math.round((arr.reduce((sum, s) => sum + Number(s.score ?? 0), 0) / arr.length) * 10) / 10 : null;
+
       return {
         userId: id,
         fullName: nameMap.get(id) ?? "طالب",
@@ -382,6 +408,10 @@ export const getCourseAttendance = createServerFn({ method: "GET" })
         activeLast7Days: !!lastActiveAt && new Date(lastActiveAt).getTime() >= sevenDaysAgo,
         lessonsWatched: rows.filter((r) => r.completed).length,
         totalLessons,
+        examAvg: avg(exams),
+        homeworkAvg: avg(homeworks),
+        examCount: exams.length,
+        homeworkCount: homeworks.length,
       };
     });
 

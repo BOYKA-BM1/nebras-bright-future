@@ -35,7 +35,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourses, useTeachers } from "@/hooks/use-catalog";
 import { useCoupons } from "@/hooks/use-admin";
-import { getMyTeacherDashboard, getCourseAttendance } from "@/lib/teacher.functions";
+import { getMyTeacherDashboard } from "@/lib/teacher.functions";
 import { resolveImage } from "@/lib/catalog";
 import { LoadingState } from "@/components/shared/ui-states";
 
@@ -50,8 +50,7 @@ function TeacherDashboard() {
   const { data: teachers = [] } = useTeachers();
   const { data: coupons = [] } = useCoupons();
   const callDashboard = useServerFn(getMyTeacherDashboard);
-  const callAttendance = useServerFn(getCourseAttendance);
-  const [analyticsCourseId, setAnalyticsCourseId] = useState<string | null>(null);
+
   const navigate = useNavigate();
 
   const { data: stats } = useQuery({
@@ -61,11 +60,6 @@ function TeacherDashboard() {
     staleTime: 30_000,
   });
 
-  const { data: attendance, isLoading: attLoading } = useQuery({
-    queryKey: ["course-attendance", analyticsCourseId],
-    enabled: !!analyticsCourseId,
-    queryFn: () => callAttendance({ data: { courseId: analyticsCourseId! } }),
-  });
 
   const fmt = (n: number) => new Intl.NumberFormat("ar-EG").format(Math.round(n));
   const myTeacherId =
@@ -179,7 +173,7 @@ function TeacherDashboard() {
               onClick={() => openTeacherSection("analytics")}
               className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
             >
-              <TrendingUp className="h-4 w-4" /> تحليلات المشاهدة
+              <Users className="h-4 w-4" /> المشتركين
             </button>
 
             <ComplaintButton />
@@ -205,55 +199,6 @@ function TeacherDashboard() {
           ))}
         </div>
 
-        
-        <section className="mt-8 rounded-2xl border border-border bg-card p-5 shadow-card">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="flex items-center gap-2 text-lg font-extrabold">
-              <Users className="h-5 w-5 text-primary" /> طلابي واشتراكاتهم
-            </h2>
-            <p className="text-xs text-muted-foreground">اختَر دورة لعرض الطلاب المسجّلين وتقدّمهم</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {myCourses.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setAnalyticsCourseId(c.id)}
-                className={`rounded-xl border px-3 py-2 text-sm font-bold transition ${
-                  analyticsCourseId === c.id
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border hover:bg-accent"
-                }`}
-              >
-                {c.title}
-              </button>
-            ))}
-            {myCourses.length === 0 && (
-              <p className="text-sm text-muted-foreground">لا توجد دورات بعد.</p>
-            )}
-          </div>
-          {analyticsCourseId && (
-            <div className="mt-4 max-h-72 space-y-2 overflow-y-auto border-t border-border/60 pt-4">
-              {attLoading ? (
-                <div className="flex justify-center py-6">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              ) : (attendance?.students?.length ?? 0) === 0 ? (
-                <p className="text-sm text-muted-foreground">لا يوجد طلاب مشتركين في هذه الدورة بعد.</p>
-              ) : (
-                attendance!.students.map((s) => (
-                  <div key={s.userId} className="flex items-center justify-between rounded-xl border border-border/60 bg-background/50 px-3 py-2 text-sm">
-                    <span className="font-bold">{s.fullName}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {s.lessonsWatched}/{s.totalLessons} درس
-                      {s.totalLessons > 0 ? ` · ${Math.round((s.lessonsWatched / s.totalLessons) * 100)}%` : ""}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </section>
 
         {myCoupons.length > 0 && (
           <section className="mt-8">
@@ -330,8 +275,8 @@ function TeacherDashboard() {
                         <button
                           type="button"
                           className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
-                          title="تحليلات المشاهدة"
-                          onClick={() => navigate({ to: "/manage/$courseId/analytics", params: { courseId: c.id } })}
+                          title="المشتركين"
+                          onClick={() => navigate({ to: "/teacher/analytics" as any })}
                         >
                           <TrendingUp className="h-4 w-4" />
                         </button>
@@ -344,47 +289,6 @@ function TeacherDashboard() {
           )}
         </section>
       </main>
-
-      <Dialog open={!!analyticsCourseId} onOpenChange={(o) => !o && setAnalyticsCourseId(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>تحليل المشاهدات</DialogTitle>
-            <DialogDescription>
-              عدد الطلاب اللي شافوا الكورس، وأسمائهم، وقدّام وصلوا لحد فين.
-            </DialogDescription>
-          </DialogHeader>
-          {attLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : !attendance?.authorized ? (
-            <p className="text-sm text-muted-foreground">غير مصرّح أو لا توجد بيانات.</p>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm font-bold">
-                إجمالي الطلاب المسجّلين: {attendance.students.length}
-              </p>
-              <div className="max-h-80 space-y-2 overflow-y-auto">
-                {attendance.students.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">لا يوجد طلاب مسجّلين بعد.</p>
-                ) : (
-                  attendance.students.map((s) => (
-                    <div key={s.userId} className="rounded-xl border border-border bg-card px-3 py-2 text-sm">
-                      <p className="font-bold">{s.fullName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        شاهد {s.lessonsWatched} من {s.totalLessons} درس
-                        {s.totalLessons > 0
-                          ? ` (${Math.round((s.lessonsWatched / s.totalLessons) * 100)}%)`
-                          : ""}
-                      </p>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
