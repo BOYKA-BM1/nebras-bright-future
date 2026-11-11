@@ -31,7 +31,7 @@ export function ProtectedVideo({
   onTimeUpdate?: (t: number, duration: number) => void;
   onEnded?: () => void;
   onPlay?: () => void;
-  emptyLabel?: React.ReactNode;
+  emptyLabel?: import('react').ReactNode;
   seekToSeconds?: number | null;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -165,7 +165,7 @@ export function ProtectedVideo({
     bumpControls();
   };
 
-  const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onSeek = (e: { target: { value: string } }) => {
     const v = videoRef.current;
     if (!v || !duration) return;
     const t = (Number(e.target.value) / 1000) * duration;

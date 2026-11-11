@@ -5,7 +5,6 @@ import {
   ArrowRight, GraduationCap, ChevronLeft, FileText, Ticket, X, XCircle, Star, Briefcase} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Logo } from "@/components/site/Logo";
 import { useAuth } from "@/hooks/use-auth";
 import { useRoles } from "@/hooks/use-roles";
 import { useCourse, useCourseContent, useEnrollment, useEnroll, useUnenroll, useFavorites } from "@/hooks/use-content";
@@ -399,9 +398,6 @@ function CourseDetail() {
         </div>
       </main>
 
-      {showPayment && (
-        
-      {/* اختيار نوع الاشتراك */}
       {showPurchaseChoice && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
           <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl">
@@ -410,7 +406,12 @@ function CourseDetail() {
             <div className="mt-4 grid gap-2">
               <button
                 type="button"
-                onClick={() => { setPurchaseMode("full"); setSelectedSectionId(null); setShowPurchaseChoice(false); setShowPayment(true); }}
+                onClick={() => {
+                  setPurchaseMode("full");
+                  setSelectedSectionId(null);
+                  setShowPurchaseChoice(false);
+                  setShowPayment(true);
+                }}
                 className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-right text-sm font-bold hover:bg-primary/15"
               >
                 الدورة بالكامل
@@ -418,7 +419,7 @@ function CourseDetail() {
               </button>
               <button
                 type="button"
-                onClick={() => { setPurchaseMode("unit"); }}
+                onClick={() => setPurchaseMode("unit")}
                 className="rounded-xl border border-border px-4 py-3 text-right text-sm font-bold hover:bg-accent"
               >
                 وحدة واحدة فقط
@@ -427,31 +428,56 @@ function CourseDetail() {
             </div>
             {purchaseMode === "unit" && (
               <div className="mt-3 max-h-48 space-y-1 overflow-y-auto">
-                {(courseSections ?? []).map((s: any) => (
+                {courseSections.map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => { setSelectedSectionId(s.id); setShowPurchaseChoice(false); setShowPayment(true); }}
+                    onClick={() => {
+                      setSelectedSectionId(s.id);
+                      setShowPurchaseChoice(false);
+                      setShowPayment(true);
+                    }}
                     className="flex w-full items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm font-bold hover:bg-accent"
                   >
                     <span>{s.title}</span>
-                    <span className="text-primary">{Number(s.price) > 0 ? `${s.price} ج.م` : "مجاني"}</span>
+                    <span className="text-primary">
+                      {Number((s as { price?: number }).price) > 0
+                        ? `${(s as { price?: number }).price} ج.م`
+                        : "مجاني"}
+                    </span>
                   </button>
                 ))}
-                {(courseSections ?? []).length === 0 && (
-                  <p className="text-xs text-muted-foreground">لا توجد وحدات مسعّرة بعد — اشترك في الدورة كاملة.</p>
+                {courseSections.length === 0 && (
+                  <p className="text-xs text-muted-foreground">لا توجد وحدات بعد — اشترك في الدورة كاملة.</p>
                 )}
               </div>
             )}
-            <button type="button" onClick={() => setShowPurchaseChoice(false)} className="mt-4 w-full rounded-xl border border-border py-2 text-sm font-bold">إلغاء</button>
+            <button
+              type="button"
+              onClick={() => setShowPurchaseChoice(false)}
+              className="mt-4 w-full rounded-xl border border-border py-2 text-sm font-bold"
+            >
+              إلغاء
+            </button>
           </div>
         </div>
       )}
-<PaymentDialog
+
+      {showPayment && (
+        <PaymentDialog
           courseId={course.id}
-          courseTitle={course.title}
-          amount={finalPrice}
-          couponId={coupon?.id ?? null}
+          sectionId={selectedSectionId}
+          courseTitle={
+            purchaseMode === "unit" && selectedSectionId
+              ? `${course.title} — ${courseSections.find((s) => s.id === selectedSectionId)?.title ?? "وحدة"}`
+              : course.title
+          }
+          amount={
+            purchaseMode === "unit" && selectedSectionId
+              ? Number((courseSections.find((s) => s.id === selectedSectionId) as { price?: number } | undefined)?.price ?? finalPrice)
+              : finalPrice
+          }
+          couponId={purchaseMode === "full" ? (coupon?.id ?? null) : null}
           onClose={() => setShowPayment(false)}
           onSubmitted={() => setShowPayment(false)}
         />

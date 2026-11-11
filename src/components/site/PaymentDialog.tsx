@@ -13,8 +13,7 @@ type Props = {
   onSubmitted: () => void;
 };
 
-export function PaymentDialog({ courseId, courseTitle,
-  sectionId, amount, couponId, onClose, onSubmitted }: Props) {
+export function PaymentDialog({ courseId, courseTitle, sectionId, amount, couponId, onClose, onSubmitted }: Props) {
   const { data: methods = [], isLoading } = usePaymentMethods();
   const submit = useSubmitPaymentRequest();
   const [selected, setSelected] = useState<string | null>(null);

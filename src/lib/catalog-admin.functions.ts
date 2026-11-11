@@ -210,7 +210,7 @@ export const adminEnsurePaymentMethods = createServerFn({ method: "POST" })
 /** إنشاء/تحديث مدرّس عبر service role (يشتغل للأدمن الثانوي) */
 export const adminCreateTeacher = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.record(z.any()).parse(d))
+  .inputValidator((d: unknown) => z.record(z.string(), z.any()).parse(d))
   .handler(async ({ data, context }) => {
     await assertAnyAdmin(context.userId);
     const payload = { ...data } as Record<string, unknown>;
@@ -253,7 +253,7 @@ export const adminUpdateTeacher = createServerFn({ method: "POST" })
 
 export const adminCreateCourse = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.record(z.any()).parse(d))
+  .inputValidator((d: unknown) => z.record(z.string(), z.any()).parse(d))
   .handler(async ({ data, context }) => {
     await assertAnyAdmin(context.userId);
     const payload = { ...data } as Record<string, unknown>;
