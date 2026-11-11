@@ -270,50 +270,13 @@ function ManageCourse() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/90 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/manage/$courseId/assignments"
-              params={{ courseId }}
-              className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
-            >
-              <ClipboardList className="h-4 w-4" /> الواجبات
-            </Link>
-            <Link
-              to="/manage/$courseId/assignments"
-              params={{ courseId }}
-              className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
-            >
-              <FileQuestion className="h-4 w-4" /> الامتحانات
-            </Link>
-            <Link
-              to="/manage/$courseId/analytics"
-              params={{ courseId }}
-              className="flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
-            >
-              <BarChart3 className="h-4 w-4" /> تحليلات المشاهدة
-            </Link>
-          </div>
-          <Link
-            to={isAdmin ? "/admin/courses" : "/teacher"}
-            className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent"
-          >
-            <ChevronRight className="h-4 w-4" /> رجوع
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+<main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-sm text-muted-foreground">إدارة محتوى الدورة</p>
             <h1 className="text-2xl font-extrabold sm:text-3xl">{course?.title ?? "..."}</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={togglePublish} variant="outline" disabled={courseAdmin.update.isPending} className="gap-2">
-              {course?.is_published ? <><EyeOff className="h-4 w-4" /> إخفاء</> : <><Eye className="h-4 w-4" /> نشر الدورة</>}
-            </Button>
             <Button onClick={openCreateSec} className="gap-2 bg-gradient-gold text-primary-foreground shadow-gold hover:opacity-90">
               <Plus className="h-4 w-4" /> وحدة
             </Button>

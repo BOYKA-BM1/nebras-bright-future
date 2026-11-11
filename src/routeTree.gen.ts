@@ -34,6 +34,9 @@ import { Route as AuthenticatedParentLinkRouteImport } from './routes/_authentic
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedPsychRouteImport } from './routes/_authenticated/psych'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
+import { Route as AuthenticatedTeacherHomeworkRouteImport } from './routes/_authenticated/teacher.homework'
+import { Route as AuthenticatedTeacherExamsRouteImport } from './routes/_authenticated/teacher.exams'
+import { Route as AuthenticatedTeacherAnalyticsRouteImport } from './routes/_authenticated/teacher.analytics'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
@@ -200,6 +203,23 @@ const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
   path: '/staff',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+
+const AuthenticatedTeacherHomeworkRoute = AuthenticatedTeacherHomeworkRouteImport.update({
+  id: '/teacher/homework',
+  path: '/teacher/homework',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTeacherExamsRoute = AuthenticatedTeacherExamsRouteImport.update({
+  id: '/teacher/exams',
+  path: '/teacher/exams',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedTeacherAnalyticsRoute = AuthenticatedTeacherAnalyticsRouteImport.update({
+  id: '/teacher/analytics',
+  path: '/teacher/analytics',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+
 const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
@@ -420,6 +440,9 @@ export interface FileRoutesByFullPath {
   '/psych': typeof AuthenticatedPsychRoute
   '/staff': typeof AuthenticatedStaffRouteWithChildren
   '/teacher': typeof AuthenticatedTeacherRoute
+  '/teacher/analytics': typeof AuthenticatedTeacherAnalyticsRoute
+  '/teacher/exams': typeof AuthenticatedTeacherExamsRoute
+  '/teacher/homework': typeof AuthenticatedTeacherHomeworkRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
@@ -477,6 +500,9 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/psych': typeof AuthenticatedPsychRoute
   '/teacher': typeof AuthenticatedTeacherRoute
+  '/teacher/analytics': typeof AuthenticatedTeacherAnalyticsRoute
+  '/teacher/exams': typeof AuthenticatedTeacherExamsRoute
+  '/teacher/homework': typeof AuthenticatedTeacherHomeworkRoute
   '/api/tts': typeof ApiTtsRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/stages/$level': typeof StagesLevelRoute
@@ -1321,6 +1347,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPsychRoute: AuthenticatedPsychRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRouteWithChildren,
   AuthenticatedTeacherRoute: AuthenticatedTeacherRoute,
+  AuthenticatedTeacherHomeworkRoute: AuthenticatedTeacherHomeworkRoute,
+  AuthenticatedTeacherExamsRoute: AuthenticatedTeacherExamsRoute,
+  AuthenticatedTeacherAnalyticsRoute: AuthenticatedTeacherAnalyticsRoute,
   AuthenticatedLearnCourseIdRoute: AuthenticatedLearnCourseIdRoute,
   AuthenticatedManageCourseIdRoute:
     AuthenticatedManageCourseIdRouteWithChildren,

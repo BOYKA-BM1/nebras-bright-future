@@ -52,7 +52,6 @@ function TeacherDashboard() {
   const callDashboard = useServerFn(getMyTeacherDashboard);
   const callAttendance = useServerFn(getCourseAttendance);
   const [analyticsCourseId, setAnalyticsCourseId] = useState<string | null>(null);
-  const [coursePick, setCoursePick] = useState<null | "homework" | "exam" | "analytics">(null);
   const navigate = useNavigate();
 
   const { data: stats } = useQuery({
@@ -94,31 +93,16 @@ function TeacherDashboard() {
     return fromStats as typeof courses;
   }, [courses, myTeacherId, stats?.courses]);
 
-  const goCourseAction = (courseId: string, action: "homework" | "exam" | "analytics") => {
-    setCoursePick(null);
-    if (action === "analytics") {
-      navigate({ to: "/manage/$courseId/analytics", params: { courseId } });
+  const openTeacherSection = (action: "homework" | "exam" | "analytics") => {
+    if (action === "homework") {
+      navigate({ to: "/teacher/homework" as any });
       return;
     }
-    navigate({
-      to: "/manage/$courseId/assignments",
-      params: { courseId },
-      search: { kind: action === "exam" ? "exam" : "homework" } as any,
-    });
-  };
-
-  const openCoursePick = (action: "homework" | "exam" | "analytics") => {
-    if (myCourses.length === 0) {
-      toast.message("أضف دورة أولًا", {
-        description: "بعد ربط دورة بحسابك تقدر تفتح الواجبات والامتحانات والتحليلات.",
-      });
+    if (action === "exam") {
+      navigate({ to: "/teacher/exams" as any });
       return;
     }
-    if (myCourses.length === 1) {
-      goCourseAction(myCourses[0].id, action);
-      return;
-    }
-    setCoursePick(action);
+    navigate({ to: "/teacher/analytics" as any });
   };
 
 
@@ -177,7 +161,7 @@ function TeacherDashboard() {
 
             <button
               type="button"
-              onClick={() => openCoursePick("homework")}
+              onClick={() => openTeacherSection("homework")}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
               <ClipboardList className="h-4 w-4" /> الواجبات
@@ -185,14 +169,14 @@ function TeacherDashboard() {
 
             <button
               type="button"
-              onClick={() => openCoursePick("exam")}
+              onClick={() => openTeacherSection("exam")}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
               <FileQuestion className="h-4 w-4" /> الامتحانات
             </button>
             <button
               type="button"
-              onClick={() => openCoursePick("analytics")}
+              onClick={() => openTeacherSection("analytics")}
               className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
             >
               <TrendingUp className="h-4 w-4" /> تحليلات المشاهدة
@@ -360,34 +344,6 @@ function TeacherDashboard() {
           )}
         </section>
       </main>
-
-      <Dialog open={!!coursePick} onOpenChange={(o) => !o && setCoursePick(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>اختَر الدورة</DialogTitle>
-            <DialogDescription>
-              {coursePick === "analytics"
-                ? "تحليلات المشاهدة"
-                : coursePick === "exam"
-                  ? "إدارة الامتحانات"
-                  : "إدارة الواجبات"}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="max-h-72 space-y-2 overflow-y-auto">
-            {myCourses.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => coursePick && goCourseAction(c.id, coursePick)}
-                className="flex w-full items-center justify-between rounded-xl border border-border px-3 py-2.5 text-sm font-bold hover:bg-accent"
-              >
-                <span className="line-clamp-1 text-start">{c.title}</span>
-                <ChevronRight className="h-4 w-4 shrink-0 opacity-50" />
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={!!analyticsCourseId} onOpenChange={(o) => !o && setAnalyticsCourseId(null)}>
         <DialogContent className="max-w-lg">
