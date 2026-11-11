@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
-import { adminDeleteCourse, adminDeleteTeacher, adminCreateStage, adminUpdateStage } from "@/lib/catalog-admin.functions";
+import { adminDeleteCourse, adminDeleteTeacher, adminCreateStage, adminUpdateStage, adminCreateTeacher, adminUpdateTeacher, adminCreateCourse, adminUpdateCourse } from "@/lib/catalog-admin.functions";
 import { auditEvent } from "@/lib/audit";
 import type {
   Stage,
@@ -182,17 +182,17 @@ export function useTeacherAdmin() {
     qc.invalidateQueries({ queryKey: ["courses"] });
   };
 
+  const createTeacherFn = useServerFn(adminCreateTeacher);
+  const updateTeacherFn = useServerFn(adminUpdateTeacher);
   const create = useMutation({
     mutationFn: async (input: TeacherInput) => {
-      const { error } = await supabase.from("teachers").insert(input);
-      if (error) throw error;
+      await createTeacherFn({ data: input as any });
     },
     onSuccess: invalidate,
   });
   const update = useMutation({
     mutationFn: async ({ id, ...input }: TeacherInput & { id: string }) => {
-      const { error } = await supabase.from("teachers").update(input).eq("id", id);
-      if (error) throw error;
+      await updateTeacherFn({ data: { id, ...input } as any });
     },
     onSuccess: invalidate,
   });
@@ -226,17 +226,17 @@ export function useCourseAdmin() {
   const qc = useQueryClient();
   const invalidate = () => qc.invalidateQueries({ queryKey: ["courses"] });
 
+  const createCourseFn = useServerFn(adminCreateCourse);
+  const updateCourseFn = useServerFn(adminUpdateCourse);
   const create = useMutation({
     mutationFn: async (input: CourseInput) => {
-      const { error } = await supabase.from("courses").insert(input);
-      if (error) throw error;
+      await createCourseFn({ data: input as any });
     },
     onSuccess: invalidate,
   });
   const update = useMutation({
     mutationFn: async ({ id, ...input }: Partial<CourseInput> & { id: string }) => {
-      const { error } = await supabase.from("courses").update(input).eq("id", id);
-      if (error) throw error;
+      await updateCourseFn({ data: { id, ...input } as any });
     },
     onSuccess: invalidate,
   });

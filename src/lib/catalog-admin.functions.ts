@@ -205,3 +205,91 @@ export const adminEnsurePaymentMethods = createServerFn({ method: "POST" })
     }
     return { ok: true as const };
   });
+
+
+/** إنشاء/تحديث مدرّس عبر service role (يشتغل للأدمن الثانوي) */
+export const adminCreateTeacher = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.record(z.any()).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const payload = { ...data } as Record<string, unknown>;
+    delete payload.id;
+    const { data: row, error } = await supabaseAdmin
+      .from("teachers")
+      .insert(payload)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message || "تعذّرت إضافة المدرّس");
+    await writeAudit({
+      userId: context.userId,
+      action: "create_teacher",
+      entity: row.id,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const, id: row.id };
+  });
+
+export const adminUpdateTeacher = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid() }).passthrough().parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const { id, ...rest } = data as { id: string } & Record<string, unknown>;
+    const { error } = await supabaseAdmin.from("teachers").update(rest).eq("id", id);
+    if (error) throw new Error(error.message || "تعذّر تحديث المدرّس");
+    await writeAudit({
+      userId: context.userId,
+      action: "update_teacher",
+      entity: id,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
+  });
+
+export const adminCreateCourse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.record(z.any()).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const payload = { ...data } as Record<string, unknown>;
+    delete payload.id;
+    const { data: row, error } = await supabaseAdmin
+      .from("courses")
+      .insert(payload)
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message || "تعذّرت إضافة الدورة");
+    await writeAudit({
+      userId: context.userId,
+      action: "create_course",
+      entity: row.id,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const, id: row.id };
+  });
+
+export const adminUpdateCourse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid() }).passthrough().parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAnyAdmin(context.userId);
+    const { id, ...rest } = data as { id: string } & Record<string, unknown>;
+    const { error } = await supabaseAdmin.from("courses").update(rest).eq("id", id);
+    if (error) throw new Error(error.message || "تعذّر تحديث الدورة");
+    await writeAudit({
+      userId: context.userId,
+      action: "update_course",
+      entity: id,
+      ip: getClientIp(),
+      userAgent: getUserAgent(),
+    });
+    return { ok: true as const };
+  });

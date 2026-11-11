@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useAdminTeachers, useTeacherAdmin, useUploadImage } from "@/hooks/use-catalog";
+import { useBaccalaureateTracks } from "@/hooks/use-baccalaureate";
 import { resolveImage, type Teacher } from "@/lib/catalog";
 import { createTeacherAccount } from "@/lib/teacher-admin.functions";
 import { stages } from "@/data/site";
@@ -165,7 +166,7 @@ function AdminTeachers() {
       user_id: form.user_id.trim() || null,
     };
 
-    const onErr = () => toast.error("حصل خطأ، حاول تاني.");
+    const onErr = (e: any) => toast.error(e?.message || "حصل خطأ، حاول تاني.");
     if (editing) {
       update.mutate(
         { id: editing.id, ...payload },
@@ -487,6 +488,18 @@ function StageGradeFields({
 }) {
   const grades = gradesForStage(stage);
   const isBacc = stage === "baccalaureate";
+  const { data: baccTracks = [] } = useBaccalaureateTracks();
+  // نفس مسارات صفحة الدورات (من قاعدة البيانات) + قيم ثابتة احتياطية
+  const fallbackTracks = [
+    { id: "medicine_life_sciences", name_ar: "الطب وعلوم الحياة" },
+    { id: "engineering_computer_science", name_ar: "الهندسة وعلوم الحاسب" },
+    { id: "business", name_ar: "الأعمال" },
+    { id: "arts_humanities", name_ar: "الآداب والفنون" },
+  ];
+  const trackOptions = baccTracks.length
+    ? baccTracks.map((tr) => ({ id: tr.id, name_ar: tr.name_ar }))
+    : fallbackTracks;
+
   return (
     <div className="grid gap-4">
       <div className="grid grid-cols-2 gap-4">
@@ -519,17 +532,10 @@ function StageGradeFields({
       {isBacc && onTrack && (
         <Field label="المسار">
           <select className={selectCls} value={track ?? ""} onChange={(e) => onTrack(e.target.value)}>
-            <option value="">اختر المسار</option>
-            <option value="medicine">طب</option>
-            <option value="engineering">هندسة</option>
-            <option value="pharmacy">صيدلة</option>
-            <option value="cs">حاسبات ومعلومات</option>
-            <option value="commerce">تجارة</option>
-            <option value="law">حقوق</option>
-            <option value="science_sci">علمي علوم</option>
-            <option value="science_math">علمي رياضة</option>
-            <option value="literary">أدبي</option>
-            <option value="other">أخرى</option>
+            <option value="">كل المسارات</option>
+            {trackOptions.map((tr) => (
+              <option key={tr.id} value={tr.id}>{tr.name_ar}</option>
+            ))}
           </select>
         </Field>
       )}

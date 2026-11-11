@@ -155,7 +155,7 @@ function AdminCourses() {
       academic_year_id: form.academic_year_id || null,
     };
 
-    const onErr = () => toast.error("حصل خطأ، حاول تاني.");
+    const onErr = (e: any) => toast.error(e?.message || "حصل خطأ، حاول تاني.");
     if (editing) {
       update.mutate({ id: editing.id, ...payload }, { onSuccess: () => { toast.success("تم تحديث الدورة."); setOpen(false); }, onError: onErr });
     } else {
