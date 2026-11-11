@@ -11,7 +11,7 @@ import {
   Bot,
   MessageCircle,
   LifeBuoy,
-  ClipboardList,
+  ClipboardList, FileQuestion,
   Award,
   CalendarDays,
   StickyNote,
@@ -324,7 +324,10 @@ export function Navbar() {
                 {showStudentLinks && (
                   <>
                     <Link to="/assignments" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/assignments"))} aria-current={isNavActive(pathname, "/assignments") ? "page" : undefined}>
-                      <ClipboardList className="h-4 w-4" /> واجباتي وامتحاناتي
+                      <ClipboardList className="h-4 w-4" /> واجباتي
+                    </Link>
+                    <Link to="/exams" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/exams"))} aria-current={isNavActive(pathname, "/exams") ? "page" : undefined}>
+                      <FileQuestion className="h-4 w-4" /> امتحاناتي
                     </Link>
                     <Link to="/certificates" onClick={() => setOpen(false)} className={navItemClass(isNavActive(pathname, "/certificates"))} aria-current={isNavActive(pathname, "/certificates") ? "page" : undefined}>
                       <Award className="h-4 w-4" /> شهاداتي

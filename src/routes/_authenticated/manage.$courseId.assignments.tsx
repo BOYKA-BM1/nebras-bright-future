@@ -16,13 +16,18 @@ import { useFileDownloadUrl, useUploadFile } from "@/hooks/use-files";
 
 export const Route = createFileRoute("/_authenticated/manage/$courseId/assignments")({
   component: CourseAssignments,
+  validateSearch: (s: Record<string, unknown>) => ({
+    kind: s.kind === "exam" ? ("exam" as const) : ("homework" as const),
+  }),
 });
 
 function CourseAssignments() {
   const { courseId } = Route.useParams();
+  const { kind: defaultKind } = Route.useSearch();
   const { data: course } = useCourse(courseId);
   const { data: assignments = [], isLoading } = useCourseAssignments(courseId);
   const [openAssignment, setOpenAssignment] = useState<Assignment | null>(null);
+  const [filter, setFilter] = useState<"all" | "homework" | "exam">(defaultKind === "exam" ? "exam" : "all");
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,16 +45,32 @@ function CourseAssignments() {
             <p className="text-sm text-muted-foreground">الواجبات والامتحانات</p>
             <h1 className="text-2xl font-extrabold sm:text-3xl">{course?.title ?? "..."}</h1>
           </div>
-          <CreateAssignmentDialog courseId={courseId} />
+          <CreateAssignmentDialog courseId={courseId} defaultKind={defaultKind} />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {([
+            ["all", "الكل"],
+            ["homework", "واجبات"],
+            ["exam", "امتحانات"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setFilter(id)}
+              className={`rounded-full px-3 py-1 text-xs font-bold ${filter === id ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {isLoading ? (
           <div className="mt-10 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-        ) : assignments.length === 0 ? (
+        ) : (filter === "all" ? assignments : assignments.filter((a) => ((a as any).kind ?? "homework") === filter)).length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center text-muted-foreground">لسه معملتش أي واجب لهذه الدورة.</div>
         ) : (
           <div className="mt-6 grid gap-3">
-            {assignments.map((a) => (
+            {(filter === "all" ? assignments : assignments.filter((a) => ((a as any).kind ?? "homework") === filter)).map((a) => (
               <button
                 key={a.id}
                 onClick={() => setOpenAssignment(a)}
@@ -75,9 +96,9 @@ function CourseAssignments() {
   );
 }
 
-function CreateAssignmentDialog({ courseId }: { courseId: string }) {
+function CreateAssignmentDialog({ courseId, defaultKind = "homework" }: { courseId: string; defaultKind?: "homework" | "exam" }) {
   const [open, setOpen] = useState(false);
-  const [kind, setKind] = useState<"homework" | "exam">("homework");
+  const [kind, setKind] = useState<"homework" | "exam">(defaultKind);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueAt, setDueAt] = useState("");

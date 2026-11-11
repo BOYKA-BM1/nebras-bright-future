@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -13,6 +13,7 @@ import {
   Users,
   Star,
   TrendingUp,
+  ChevronRight,
   UserRound,
   
   ClipboardList,
@@ -51,6 +52,8 @@ function TeacherDashboard() {
   const callDashboard = useServerFn(getMyTeacherDashboard);
   const callAttendance = useServerFn(getCourseAttendance);
   const [analyticsCourseId, setAnalyticsCourseId] = useState<string | null>(null);
+  const [coursePick, setCoursePick] = useState<null | "homework" | "exam" | "analytics">(null);
+  const navigate = useNavigate();
 
   const { data: stats } = useQuery({
     queryKey: ["my-teacher-dashboard", user?.id],
@@ -76,27 +79,48 @@ function TeacherDashboard() {
   }, [coupons, isAdmin, myTeacherId]);
 
   const myCourses = useMemo(() => {
-    if (isAdmin) {
-      return courses.map((c) => ({
-        id: c.id,
-        title: c.title,
-        subject: c.subject ?? null,
-        image_url: c.image_url ?? null,
-        is_published: !!c.is_published,
-        lessons: Number(c.lessons_count || 0),
-        teacherImage: c.teacher?.image_url ?? null,
-      }));
-    }
-    return (stats?.courses ?? []).map((c) => ({
+    // دورات مربوطة بالمدرّس من الكتالوج أو من لوحة السيرفر
+    const fromCatalog = courses.filter((c) => myTeacherId && c.teacher_id === myTeacherId);
+    if (fromCatalog.length) return fromCatalog;
+    const fromStats = (stats?.courses ?? []).map((c) => ({
       id: c.id,
       title: c.title,
-      subject: c.subject,
+      price: c.price,
       image_url: c.image_url,
       is_published: c.is_published,
-      lessons: c.lessons,
-      teacherImage: null as string | null,
+      subject: c.subject,
+      teacher_id: myTeacherId,
     }));
-  }, [courses, isAdmin, stats?.courses]);
+    return fromStats as typeof courses;
+  }, [courses, myTeacherId, stats?.courses]);
+
+  const goCourseAction = (courseId: string, action: "homework" | "exam" | "analytics") => {
+    setCoursePick(null);
+    if (action === "analytics") {
+      navigate({ to: "/manage/$courseId/analytics", params: { courseId } });
+      return;
+    }
+    navigate({
+      to: "/manage/$courseId/assignments",
+      params: { courseId },
+      search: { kind: action === "exam" ? "exam" : "homework" } as any,
+    });
+  };
+
+  const openCoursePick = (action: "homework" | "exam" | "analytics") => {
+    if (myCourses.length === 0) {
+      toast.message("أضف دورة أولًا", {
+        description: "بعد ربط دورة بحسابك تقدر تفتح الواجبات والامتحانات والتحليلات.",
+      });
+      return;
+    }
+    if (myCourses.length === 1) {
+      goCourseAction(myCourses[0].id, action);
+      return;
+    }
+    setCoursePick(action);
+  };
+
 
   if (isLoading) {
     return (
@@ -153,32 +177,25 @@ function TeacherDashboard() {
 
             <button
               type="button"
-              onClick={() => {
-                const first = myCourses[0];
-                if (first) {
-                  window.location.href = `/manage/${first.id}/assignments`;
-                } else {
-                  toast.message("أضف دورة أولًا", { description: "بعد إنشاء دورة تقدر تضيف واجبات وامتحانات." });
-                }
-              }}
+              onClick={() => openCoursePick("homework")}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
-              <ClipboardList className="h-4 w-4" /> إضافة واجب
+              <ClipboardList className="h-4 w-4" /> الواجبات
             </button>
 
             <button
               type="button"
-              onClick={() => {
-                const first = myCourses[0];
-                if (first) {
-                  window.location.href = `/manage/${first.id}/assignments`;
-                } else {
-                  toast.message("أضف دورة أولًا");
-                }
-              }}
+              onClick={() => openCoursePick("exam")}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold hover:bg-accent"
             >
-              <FileQuestion className="h-4 w-4" /> إضافة امتحان
+              <FileQuestion className="h-4 w-4" /> الامتحانات
+            </button>
+            <button
+              type="button"
+              onClick={() => openCoursePick("analytics")}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
+            >
+              <TrendingUp className="h-4 w-4" /> تحليلات المشاهدة
             </button>
 
             <ComplaintButton />
@@ -328,9 +345,9 @@ function TeacherDashboard() {
                         </Link>
                         <button
                           type="button"
-                          onClick={() => setAnalyticsCourseId(c.id)}
                           className="flex items-center justify-center gap-2 rounded-xl border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/20"
                           title="تحليلات المشاهدة"
+                          onClick={() => navigate({ to: "/manage/$courseId/analytics", params: { courseId: c.id } })}
                         >
                           <TrendingUp className="h-4 w-4" />
                         </button>
@@ -343,6 +360,34 @@ function TeacherDashboard() {
           )}
         </section>
       </main>
+
+      <Dialog open={!!coursePick} onOpenChange={(o) => !o && setCoursePick(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>اختَر الدورة</DialogTitle>
+            <DialogDescription>
+              {coursePick === "analytics"
+                ? "تحليلات المشاهدة"
+                : coursePick === "exam"
+                  ? "إدارة الامتحانات"
+                  : "إدارة الواجبات"}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-72 space-y-2 overflow-y-auto">
+            {myCourses.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => coursePick && goCourseAction(c.id, coursePick)}
+                className="flex w-full items-center justify-between rounded-xl border border-border px-3 py-2.5 text-sm font-bold hover:bg-accent"
+              >
+                <span className="line-clamp-1 text-start">{c.title}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 opacity-50" />
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!analyticsCourseId} onOpenChange={(o) => !o && setAnalyticsCourseId(null)}>
         <DialogContent className="max-w-lg">
