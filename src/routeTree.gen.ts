@@ -38,6 +38,7 @@ import { Route as AuthenticatedTeacherHomeworkRouteImport } from './routes/_auth
 import { Route as AuthenticatedTeacherExamsRouteImport } from './routes/_authenticated/teacher.exams'
 import { Route as AuthenticatedTeacherAnalyticsRouteImport } from './routes/_authenticated/teacher.analytics'
 import { Route as AuthenticatedTeacherRouteImport } from './routes/_authenticated/teacher'
+import { Route as AuthenticatedTeacherIndexRouteImport } from './routes/_authenticated/teacher.index'
 import { Route as ApiTtsRouteImport } from './routes/api/tts'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
@@ -205,19 +206,24 @@ const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
 } as any)
 
 const AuthenticatedTeacherHomeworkRoute = AuthenticatedTeacherHomeworkRouteImport.update({
-  id: '/teacher/homework',
-  path: '/teacher/homework',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/homework',
+  path: '/homework',
+  getParentRoute: () => AuthenticatedTeacherRoute,
+} as any)
+const AuthenticatedTeacherIndexRoute = AuthenticatedTeacherIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedTeacherRoute,
 } as any)
 const AuthenticatedTeacherExamsRoute = AuthenticatedTeacherExamsRouteImport.update({
-  id: '/teacher/exams',
-  path: '/teacher/exams',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/exams',
+  path: '/exams',
+  getParentRoute: () => AuthenticatedTeacherRoute,
 } as any)
 const AuthenticatedTeacherAnalyticsRoute = AuthenticatedTeacherAnalyticsRouteImport.update({
-  id: '/teacher/analytics',
-  path: '/teacher/analytics',
-  getParentRoute: () => AuthenticatedRoute,
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => AuthenticatedTeacherRoute,
 } as any)
 
 const AuthenticatedTeacherRoute = AuthenticatedTeacherRouteImport.update({
@@ -1325,6 +1331,25 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
 }
 
+
+interface AuthenticatedTeacherRouteChildren {
+  AuthenticatedTeacherIndexRoute: typeof AuthenticatedTeacherIndexRoute
+  AuthenticatedTeacherHomeworkRoute: typeof AuthenticatedTeacherHomeworkRoute
+  AuthenticatedTeacherExamsRoute: typeof AuthenticatedTeacherExamsRoute
+  AuthenticatedTeacherAnalyticsRoute: typeof AuthenticatedTeacherAnalyticsRoute
+}
+
+const AuthenticatedTeacherRouteChildren: AuthenticatedTeacherRouteChildren = {
+  AuthenticatedTeacherIndexRoute: AuthenticatedTeacherIndexRoute,
+  AuthenticatedTeacherHomeworkRoute: AuthenticatedTeacherHomeworkRoute,
+  AuthenticatedTeacherExamsRoute: AuthenticatedTeacherExamsRoute,
+  AuthenticatedTeacherAnalyticsRoute: AuthenticatedTeacherAnalyticsRoute,
+}
+
+const AuthenticatedTeacherRouteWithChildren = AuthenticatedTeacherRoute._addFileChildren(
+  AuthenticatedTeacherRouteChildren,
+)
+
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountTypeRoute: AuthenticatedAccountTypeRoute,
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
@@ -1346,7 +1371,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedPsychRoute: AuthenticatedPsychRoute,
   AuthenticatedStaffRoute: AuthenticatedStaffRouteWithChildren,
-  AuthenticatedTeacherRoute: AuthenticatedTeacherRoute,
+  AuthenticatedTeacherRoute: AuthenticatedTeacherRouteWithChildren,
   AuthenticatedTeacherHomeworkRoute: AuthenticatedTeacherHomeworkRoute,
   AuthenticatedTeacherExamsRoute: AuthenticatedTeacherExamsRoute,
   AuthenticatedTeacherAnalyticsRoute: AuthenticatedTeacherAnalyticsRoute,
