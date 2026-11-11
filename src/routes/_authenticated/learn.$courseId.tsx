@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/site/Logo";
 import {
   useCompletionThreshold,
   useCourse,
@@ -58,9 +57,11 @@ function LearnPage() {
   const watchRef = useRef({ lessonId: "", maxPercent: 0, lastSentAt: 0, autoCompleted: false });
   const currentTimeRef = useRef(0);
   const [seekTarget, setSeekTarget] = useState<number | null>(null);
+  const [watchPercent, setWatchPercent] = useState(0);
 
   useEffect(() => {
     watchRef.current = { lessonId: activeId ?? "", maxPercent: 0, lastSentAt: 0, autoCompleted: false };
+    setWatchPercent(0);
   }, [activeId]);
 
   const downloadPdf = async (url: string, title: string) => {
@@ -146,15 +147,6 @@ function LearnPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
-          <Logo />
-          <Link to="/dashboard" className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-bold hover:bg-accent">
-            <ChevronRight className="h-4 w-4" /> لوحتي
-          </Link>
-        </div>
-      </header>
-
       {liveNow && (
         <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
           <div className="overflow-hidden rounded-2xl border border-destructive/40 bg-card shadow-card">
@@ -165,7 +157,7 @@ function LearnPage() {
             <ProtectedVideo
               embed={liveEmbed}
               title={liveNow.title}
-              watermark={watermark}
+              watermark=""
               autoPlay
               obscured={obscured}
               emptyLabel="البث المباشر هيبدأ قريبًا."
@@ -187,7 +179,7 @@ function LearnPage() {
               <ProtectedVideo
                 embed={embed}
                 title={active?.title}
-                watermark={watermark}
+                watermark=""
                 obscured={obscured}
                 onPlay={() => active && recordWatchEvent.mutate({ lessonId: active.id, event: "play", position: 0, duration: 0 })}
                 onTimeUpdate={(t, duration) => {
@@ -196,6 +188,7 @@ function LearnPage() {
                   const w = watchRef.current;
                   const percent = duration > 0 ? Math.min(100, (t / duration) * 100) : 0;
                   if (percent > w.maxPercent) w.maxPercent = percent;
+                  setWatchPercent(Math.round(w.maxPercent));
 
                   const now = Date.now();
                   const dueForTick = Math.round(t) % 15 === 0 && t > 0 && now - w.lastSentAt > 5000;
@@ -236,15 +229,25 @@ function LearnPage() {
 
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   {!locked && (
-                    <button
-                      onClick={() => updateProgress.mutate({ lessonId: active.id, completed: !completedIds.has(active.id) })}
-                      className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
-                        completedIds.has(active.id) ? "bg-primary/15 text-primary" : "bg-gradient-gold text-primary-foreground shadow-gold"
-                      }`}
-                    >
-                      {completedIds.has(active.id) ? <CheckCircle2 className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-                      {completedIds.has(active.id) ? "تم الإكمال" : "تحديد كمكتمل"}
-                    </button>
+                    <div className="flex min-w-[12rem] flex-1 flex-col gap-1.5 sm:max-w-xs">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-muted-foreground">تقدّم مشاهدة الدرس</span>
+                        <span className="text-primary">
+                          {completedIds.has(active.id) ? 100 : watchPercent}%
+                        </span>
+                      </div>
+                      <div className="h-2 overflow-hidden rounded-full bg-secondary">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-l from-primary to-amber-400 transition-all duration-300"
+                          style={{ width: `${completedIds.has(active.id) ? 100 : watchPercent}%` }}
+                        />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">
+                        {completedIds.has(active.id)
+                          ? "تم إكمال الدرس تلقائيًا بعد مشاهدة النسبة المطلوبة"
+                          : "يكتمل الدرس تلقائيًا أثناء المشاهدة — لا حاجة للضغط"}
+                      </p>
+                    </div>
                   )}
                   <BookmarkButton targetType="lesson" targetId={active.id} />
                 </div>

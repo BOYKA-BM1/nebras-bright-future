@@ -106,6 +106,7 @@ function ManageCourse() {
   const [secOpen, setSecOpen] = useState(false);
   const [editSec, setEditSec] = useState<Section | null>(null);
   const [secTitle, setSecTitle] = useState("");
+  const [secPrice, setSecPrice] = useState("0");
 
   const [lesOpen, setLesOpen] = useState(false);
   const [editLes, setEditLes] = useState<Lesson | null>(null);
@@ -130,15 +131,15 @@ function ManageCourse() {
 
   const realSections = sections.filter((s) => s.id !== "__orphan__");
 
-  const openCreateSec = () => { setEditSec(null); setSecTitle(""); setSecOpen(true); };
-  const openEditSec = (s: Section) => { setEditSec(s); setSecTitle(s.title); setSecOpen(true); };
+  const openCreateSec = () => { setEditSec(null); setSecTitle(""); setSecPrice("0"); setSecOpen(true); };
+  const openEditSec = (s: Section) => { setEditSec(s); setSecTitle(s.title); setSecPrice(String((s as any).price ?? 0)); setSecOpen(true); };
   const saveSec = () => {
     if (!secTitle.trim()) { toast.error("اسم الوحدة مطلوب."); return; }
     const onErr = () => toast.error("حصل خطأ.");
     if (editSec) {
-      sectionAdmin.update.mutate({ id: editSec.id, title: secTitle.trim() }, { onSuccess: () => { toast.success("تم التحديث."); setSecOpen(false); }, onError: onErr });
+      sectionAdmin.update.mutate({ id: editSec.id, title: secTitle.trim(), price: Math.max(0, Number(secPrice) || 0) } as any, { onSuccess: () => { toast.success("تم التحديث."); setSecOpen(false); }, onError: onErr });
     } else {
-      sectionAdmin.create.mutate({ course_id: courseId, title: secTitle.trim(), sort_order: realSections.length }, { onSuccess: () => { toast.success("تمت الإضافة."); setSecOpen(false); }, onError: onErr });
+      sectionAdmin.create.mutate({ course_id: courseId, title: secTitle.trim(), sort_order: realSections.length, price: Math.max(0, Number(secPrice) || 0) } as any, { onSuccess: () => { toast.success("تمت الإضافة."); setSecOpen(false); }, onError: onErr });
     }
   };
 
@@ -425,6 +426,8 @@ function ManageCourse() {
           <div className="grid gap-1.5 py-2">
             <Label>اسم الوحدة</Label>
             <Input value={secTitle} onChange={(e) => setSecTitle(e.target.value)} placeholder="الوحدة الأولى: المقدمة" />
+            <Label className="mt-3 block">سعر الوحدة (ج.م) — 0 = مجاني ضمن الاشتراك الكامل فقط</Label>
+            <Input type="number" min={0} value={secPrice} onChange={(e) => setSecPrice(e.target.value)} dir="ltr" />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSecOpen(false)}>إلغاء</Button>

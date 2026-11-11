@@ -42,6 +42,7 @@ function CourseDetail() {
   const { user } = useAuth();
   const { data: course, isLoading } = useCourse(courseId);
   const { sections, lessons, isLoading: contentLoading } = useCourseContent(courseId);
+  const courseSections = sections.filter((s) => s.id !== "__orphan__");
   const { isEnrolled } = useEnrollment(courseId);
   const enroll = useEnroll();
   const unenroll = useUnenroll();
@@ -54,6 +55,9 @@ function CourseDetail() {
   const [applying, setApplying] = useState(false);
   const [coupon, setCoupon] = useState<{ id: string; label: string; finalPrice: number } | null>(null);
   const [showPayment, setShowPayment] = useState(false);
+  const [showPurchaseChoice, setShowPurchaseChoice] = useState(false);
+  const [purchaseMode, setPurchaseMode] = useState<"full" | "unit">("full");
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const { data: myRequests = [] } = useMyPaymentRequests();
   const pendingRequest = myRequests.find((r) => r.course_id === courseId && r.status === "pending");
 
@@ -159,8 +163,10 @@ function CourseDetail() {
       );
       return;
     }
-    // Paid: open manual payment request dialog (admin approves → enrollment)
-    setShowPayment(true);
+    // مدفوع: اختَر دورة كاملة أو وحدة ثم نافذة الدفع
+    setPurchaseMode("full");
+    setSelectedSectionId(null);
+    setShowPurchaseChoice(true);
   };
 
   const handleUnenroll = () => {
@@ -394,7 +400,54 @@ function CourseDetail() {
       </main>
 
       {showPayment && (
-        <PaymentDialog
+        
+      {/* اختيار نوع الاشتراك */}
+      {showPurchaseChoice && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 sm:items-center">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl">
+            <h3 className="text-lg font-extrabold">اختر نوع الاشتراك</h3>
+            <p className="mt-1 text-sm text-muted-foreground">تقدر تشترك في الدورة كاملة أو في وحدة واحدة بسعرها.</p>
+            <div className="mt-4 grid gap-2">
+              <button
+                type="button"
+                onClick={() => { setPurchaseMode("full"); setSelectedSectionId(null); setShowPurchaseChoice(false); setShowPayment(true); }}
+                className="rounded-xl border border-primary/40 bg-primary/10 px-4 py-3 text-right text-sm font-bold hover:bg-primary/15"
+              >
+                الدورة بالكامل
+                <span className="mt-0.5 block text-xs font-normal text-muted-foreground">كل الوحدات والدروس</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => { setPurchaseMode("unit"); }}
+                className="rounded-xl border border-border px-4 py-3 text-right text-sm font-bold hover:bg-accent"
+              >
+                وحدة واحدة فقط
+                <span className="mt-0.5 block text-xs font-normal text-muted-foreground">اختَر الوحدة بعدين وأكمل الدفع</span>
+              </button>
+            </div>
+            {purchaseMode === "unit" && (
+              <div className="mt-3 max-h-48 space-y-1 overflow-y-auto">
+                {(courseSections ?? []).map((s: any) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => { setSelectedSectionId(s.id); setShowPurchaseChoice(false); setShowPayment(true); }}
+                    className="flex w-full items-center justify-between rounded-lg border border-border/60 px-3 py-2 text-sm font-bold hover:bg-accent"
+                  >
+                    <span>{s.title}</span>
+                    <span className="text-primary">{Number(s.price) > 0 ? `${s.price} ج.م` : "مجاني"}</span>
+                  </button>
+                ))}
+                {(courseSections ?? []).length === 0 && (
+                  <p className="text-xs text-muted-foreground">لا توجد وحدات مسعّرة بعد — اشترك في الدورة كاملة.</p>
+                )}
+              </div>
+            )}
+            <button type="button" onClick={() => setShowPurchaseChoice(false)} className="mt-4 w-full rounded-xl border border-border py-2 text-sm font-bold">إلغاء</button>
+          </div>
+        </div>
+      )}
+<PaymentDialog
           courseId={course.id}
           courseTitle={course.title}
           amount={finalPrice}

@@ -17,16 +17,41 @@ export function Courses({ hideHeader = false }: { hideHeader?: boolean }) {
   const [level, setLevel] = useState<string>("all");
   const [track, setTrack] = useState<TrackId>("all");
 
-  // الطالب يشوف دورات مرحلته وسنته فقط
+  // الطالب يشوف دورات مرحلته/نظامه التعليمي (ابتدائي/إعدادي/ثانوي/بكالوريا)
   const isStudent = !isAdmin && !isTeacher && !isMontage && !isCustomerService && !isSecretary;
-  const scoped = isStudent && !!profile?.stage_id;
+  const scoped = isStudent && !!(profile?.stage_id || profile?.grade || (profile as any)?.education_system_id);
   const courses = useMemo(() => {
-    if (!scoped) return allCourses;
-    return allCourses.filter(
-      (c) =>
-        c.stage_id === profile!.stage_id &&
-        (!profile!.grade || !c.grade || c.grade === profile!.grade),
-    );
+    if (!scoped || !profile) return allCourses;
+    return allCourses.filter((c) => {
+      // مطابقة stage_id إن وُجدت عند الطالب والدورة
+      if (profile.stage_id && c.stage_id && c.stage_id === profile.stage_id) {
+        if (profile.grade && c.grade && c.grade !== profile.grade) return false;
+        return true;
+      }
+      // مطابقة مستوى المرحلة (مثل baccalaureate) عبر stage.level
+      const studentLevel = (profile as any).stage_level || c.stage?.level;
+      if (profile.stage_id && c.stage_id && profile.stage_id !== c.stage_id) {
+        // لو المستويات متطابقة بالاسم/المستوى نسمح
+        const pStageName = (profile as any).stage_name as string | undefined;
+        if (c.stage?.level === "baccalaureate" && (pStageName?.includes("بكالور") || c.stage?.level === studentLevel)) {
+          return true;
+        }
+        // لا تطابق stage_id مختلفة بدون بكالوريا
+        if (!(c.stage?.level === "baccalaureate")) return false;
+      }
+      // لو الدورة بكالوريا والطالب مرحلته بكالوريا بالاسم في grade
+      if (c.stage?.level === "baccalaureate") {
+        const g = (profile.grade || "").toLowerCase();
+        const isBaccStudent =
+          g.includes("بكالور") ||
+          (profile as any).education_system_code === "egyptian_baccalaureate" ||
+          !!(profile as any).baccalaureate_track_id;
+        return isBaccStudent;
+      }
+      // fallback: نفس الصف
+      if (profile.grade && c.grade) return c.grade === profile.grade;
+      return !profile.stage_id; // بدون تحديد مرحلة: اعرض الكل
+    });
   }, [allCourses, scoped, profile]);
 
 

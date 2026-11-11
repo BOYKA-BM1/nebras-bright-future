@@ -5,6 +5,7 @@ import { usePaymentMethods, useSubmitPaymentRequest } from "@/hooks/use-payments
 
 type Props = {
   courseId: string;
+  sectionId?: string | null;
   courseTitle: string;
   amount: number;
   couponId?: string | null;
@@ -12,7 +13,8 @@ type Props = {
   onSubmitted: () => void;
 };
 
-export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose, onSubmitted }: Props) {
+export function PaymentDialog({ courseId, courseTitle,
+  sectionId, amount, couponId, onClose, onSubmitted }: Props) {
   const { data: methods = [], isLoading } = usePaymentMethods();
   const submit = useSubmitPaymentRequest();
   const [selected, setSelected] = useState<string | null>(null);
@@ -55,7 +57,8 @@ export function PaymentDialog({ courseId, courseTitle, amount, couponId, onClose
         senderReference: reference.trim(),
         couponId: couponId ?? null,
         receipt,
-      },
+        sectionId: sectionId ?? null,
+      } as any,
       {
         onSuccess: () => {
           toast.success("تم استلام طلب الدفع! هيتم مراجعته وتفعيل اشتراكك قريبًا ✅");

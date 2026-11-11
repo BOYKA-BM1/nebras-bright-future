@@ -1,23 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ShieldAlert, Settings2, Maximize, Volume2 } from "lucide-react";
+import { Volume2, VolumeX, Gauge, Settings2, Play, Pause } from "lucide-react";
 
 export type VideoEmbed = { kind: "iframe" | "video" | "none"; src: string };
 
 type QualityOption = { id: number; label: string };
 
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
 /**
- * مشغّل فيديو محمي:
- * - اختيار جودة الفيديو (تلقائي + كل الجودات المتاحة) لتوفير الإنترنت
- * - زر تشغيل بملء الشاشة أفقيًا (الموبايل بالعرض)
- * - تحسين وضوح الصوت (تعزيز + ضغط ديناميكي) بدون تشويش
- * - علامة مائية متحركة + مبلّطة تحمل هوية الطالب
- * - منع التحميل والزر الأيمن و Picture-in-Picture
- * - تعتيم الفيديو فورًا عند إخفاء التبويب أو فقدان التركيز
+ * مشغّل فيديو نظيف: تشغيل/إيقاف + شريط تقدّم + صوت + جودة + سرعة فقط.
+ * بدون علامة مائية، بدون أزرار إضافية.
  */
 export function ProtectedVideo({
   embed,
   title,
-  watermark,
+  watermark: _watermark,
   autoPlay,
   obscured,
   onTimeUpdate,
@@ -28,321 +25,387 @@ export function ProtectedVideo({
 }: {
   embed: VideoEmbed;
   title?: string;
-  watermark: string;
+  watermark?: string;
   autoPlay?: boolean;
   obscured?: boolean;
   onTimeUpdate?: (t: number, duration: number) => void;
   onEnded?: () => void;
-  /** يُستدعى عند كل بدء تشغيل (Play) — لحساب عدد مرّات المشاهدة */
   onPlay?: () => void;
   emptyLabel?: React.ReactNode;
-  /** غيّر القيمة دي (حتى لو نفس الرقم، زوّد بيها micro-increment) عشان تنقل التشغيل لثانية معيّنة — يُستخدم للقفز لملاحظة محفوظة */
   seekToSeconds?: number | null;
 }) {
-  const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<{ destroy: () => void; currentLevel: number } | null>(null);
-  const audioRef = useRef<{ ctx: AudioContext; gain: GainNode } | null>(null);
-
-  const [pos, setPos] = useState({ top: "12%", left: "10%" });
+  const hlsRef = useRef<{ destroy: () => void; currentLevel: number; levels?: { height?: number; bitrate?: number }[] } | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [speed, setSpeed] = useState(1);
   const [qualities, setQualities] = useState<QualityOption[]>([]);
-  const [quality, setQuality] = useState<number>(-1); // -1 = تلقائي
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [boost, setBoost] = useState(false);
+  const [quality, setQuality] = useState<number>(-1);
+  const [showSpeed, setShowSpeed] = useState(false);
+  const [showQuality, setShowQuality] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showControls, setShowControls] = useState(true);
+  const hideTimer = useRef<number | null>(null);
 
   const isHls = embed.kind === "video" && /\.m3u8(\?|$)/i.test(embed.src);
+  const isNativeVideo = embed.kind === "video";
 
-  // حرّك العلامة المائية دوريًا لمنع اقتصاصها
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setPos({ top: `${8 + Math.random() * 78}%`, left: `${6 + Math.random() * 72}%` });
-    }, 3500);
-    return () => window.clearInterval(id);
+  const bumpControls = useCallback(() => {
+    setShowControls(true);
+    if (hideTimer.current) window.clearTimeout(hideTimer.current);
+    hideTimer.current = window.setTimeout(() => setShowControls(false), 3200);
   }, []);
 
   useEffect(() => {
-    if (obscured && videoRef.current) videoRef.current.pause();
+    if (obscured && videoRef.current) {
+      videoRef.current.pause();
+      setPlaying(false);
+    }
   }, [obscured]);
 
   useEffect(() => {
     if (seekToSeconds == null || !videoRef.current) return;
-    videoRef.current.currentTime = seekToSeconds;
-    videoRef.current.play().catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    try {
+      videoRef.current.currentTime = seekToSeconds;
+    } catch {
+      /* ignore */
+    }
   }, [seekToSeconds]);
 
-  /* ===== HLS: تحميل المستويات وإتاحة اختيار الجودة ===== */
+  // HLS setup
   useEffect(() => {
-    hlsRef.current?.destroy();
-    hlsRef.current = null;
-    setQualities([]);
-    setQuality(-1);
-
+    if (!isNativeVideo || !videoRef.current) return;
     const video = videoRef.current;
-    if (!video || embed.kind !== "video") return;
+    let destroyed = false;
 
-    if (!isHls) {
-      // MP4 مرفوع بالجودة الأصلية — نعرض الجودة الحقيقية للملف بعد قراءة الأبعاد
-      const onMeta = () => {
-        const h = video.videoHeight;
-        if (h) setQualities([{ id: -1, label: `الأصلية ${h}p` }]);
-      };
-      video.addEventListener("loadedmetadata", onMeta);
-      return () => video.removeEventListener("loadedmetadata", onMeta);
-    }
-
-    let cancelled = false;
-    (async () => {
-      const canNative = video.canPlayType("application/vnd.apple.mpegurl");
-      const { default: Hls } = await import("hls.js");
-      if (cancelled) return;
-      if (Hls.isSupported()) {
-        const hls = new Hls({ capLevelToPlayerSize: false, enableWorker: true });
-        hls.loadSource(embed.src);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          setQualities(
-            hls.levels
-              .map((l, i) => ({
-                id: i,
-                height: l.height || Math.round((l.bitrate || 0) / 1000),
-                label: `${l.height || Math.round((l.bitrate || 0) / 1000)}p`,
-              }))
-              // من أقل جودة لأعلى جودة زي اليوتيوب
-              .sort((a, b) => a.height - b.height)
-              .map(({ id, label }) => ({ id, label })),
-          );
-        });
-
-        hlsRef.current = hls as unknown as { destroy: () => void; currentLevel: number };
-      } else if (canNative) {
-        video.src = embed.src;
+    const setup = async () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
       }
-    })();
+      setQualities([]);
+      setQuality(-1);
 
-    return () => {
-      cancelled = true;
-      hlsRef.current?.destroy();
-      hlsRef.current = null;
+      if (isHls) {
+        try {
+          const Hls = (await import("hls.js")).default;
+          if (destroyed) return;
+          if (Hls.isSupported()) {
+            const hls = new Hls({
+              enableWorker: true,
+              maxBufferLength: 30,
+            });
+            hls.loadSource(embed.src);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              const levels = hls.levels ?? [];
+              const opts: QualityOption[] = levels.map((l, i) => ({
+                id: i,
+                label: l.height ? `${l.height}p` : `${Math.round((l.bitrate || 0) / 1000)}kbps`,
+              }));
+              setQualities(opts);
+            });
+            hlsRef.current = hls as any;
+            if (autoPlay) void video.play().catch(() => undefined);
+            return;
+          }
+        } catch {
+          /* fallback below */
+        }
+      }
+
+      video.src = embed.src;
+      if (autoPlay) void video.play().catch(() => undefined);
     };
-  }, [embed.src, embed.kind, isHls]);
 
-  const pickQuality = (id: number) => {
-    setQuality(id);
-    setMenuOpen(false);
-    if (hlsRef.current) hlsRef.current.currentLevel = id;
+    void setup();
+    return () => {
+      destroyed = true;
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [embed.src, isHls, isNativeVideo, autoPlay]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.playbackRate = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.volume = volume;
+    v.muted = muted;
+  }, [volume, muted]);
+
+  useEffect(() => {
+    if (quality === -1) {
+      if (hlsRef.current) hlsRef.current.currentLevel = -1;
+      return;
+    }
+    if (hlsRef.current) hlsRef.current.currentLevel = quality;
+  }, [quality]);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (v.paused) {
+      void v.play();
+      setPlaying(true);
+      onPlay?.();
+    } else {
+      v.pause();
+      setPlaying(false);
+    }
+    bumpControls();
   };
 
-  /* ===== وضوح الصوت: تعزيز + ضغط ديناميكي ===== */
-  const toggleBoost = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    try {
-      if (!audioRef.current) {
-        const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        const ctx = new Ctx();
-        const source = ctx.createMediaElementSource(video);
-        const comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -22;
-        comp.knee.value = 26;
-        comp.ratio.value = 3;
-        comp.attack.value = 0.004;
-        comp.release.value = 0.22;
-        const gain = ctx.createGain();
-        gain.gain.value = 1;
-        source.connect(comp);
-        comp.connect(gain);
-        gain.connect(ctx.destination);
-        audioRef.current = { ctx, gain };
-      }
-      const { ctx, gain } = audioRef.current;
-      void ctx.resume();
-      const next = !boost;
-      gain.gain.value = next ? 1.9 : 1;
-      setBoost(next);
-    } catch {
-      /* المتصفح مش مدعّم — نتجاهل بهدوء */
-    }
-  }, [boost]);
+  const onSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = videoRef.current;
+    if (!v || !duration) return;
+    const t = (Number(e.target.value) / 1000) * duration;
+    v.currentTime = t;
+    setCurrent(t);
+  };
 
-  /* ===== ملء الشاشة أفقيًا ===== */
-  const goFullscreenLandscape = useCallback(async () => {
-    const el = wrapRef.current;
-    const video = videoRef.current;
-    try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        return;
-      }
-      if (el?.requestFullscreen) await el.requestFullscreen();
-      else if (video && (video as unknown as { webkitEnterFullscreen?: () => void }).webkitEnterFullscreen)
-        (video as unknown as { webkitEnterFullscreen: () => void }).webkitEnterFullscreen();
-      const orientation = (screen as unknown as { orientation?: { lock?: (o: string) => Promise<void> } }).orientation;
-      await orientation?.lock?.("landscape").catch(() => undefined);
-      void video?.play().catch(() => undefined);
-    } catch {
-      /* بعض المتصفحات ترفض القفل — نكمل عادي */
-    }
-  }, []);
+  const fmt = (s: number) => {
+    if (!Number.isFinite(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  };
 
-  useEffect(() => {
-    const onChange = () => {
-      if (!document.fullscreenElement) {
-        const orientation = (screen as unknown as { orientation?: { unlock?: () => void } }).orientation;
-        orientation?.unlock?.();
-      }
-    };
-    document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
-  }, []);
+  if (embed.kind === "none" || !embed.src) {
+    return (
+      <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 bg-zinc-950 text-zinc-400">
+        {emptyLabel ?? <span className="text-sm">لا يوجد فيديو.</span>}
+      </div>
+    );
+  }
+
+  // iframe (YouTube/Bunny embed) — حاوية نظيفة بدون أزرار إضافية فوقها
+  if (embed.kind === "iframe") {
+    return (
+      <div className="relative aspect-video w-full overflow-hidden bg-black">
+        <iframe
+          src={embed.src}
+          title={title || "فيديو"}
+          className="h-full w-full"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+        {obscured && <div className="absolute inset-0 bg-black/80" />}
+      </div>
+    );
+  }
+
+  const progressPct = duration > 0 ? (current / duration) * 100 : 0;
 
   return (
     <div
-      ref={wrapRef}
-      className="relative aspect-video w-full select-none overflow-hidden bg-black"
+      className="group relative aspect-video w-full overflow-hidden bg-black select-none"
+      onMouseMove={bumpControls}
+      onClick={togglePlay}
       onContextMenu={(e) => e.preventDefault()}
     >
-      {embed.kind === "iframe" ? (
-        <iframe
-          src={embed.src}
-          title={title}
-          className="h-full w-full"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-          allowFullScreen
-        />
-      ) : embed.kind === "video" ? (
-        <video
-          ref={videoRef}
-          {...(isHls ? {} : { src: embed.src })}
-          controls
-          playsInline
-          preload="metadata"
-          autoPlay={autoPlay}
-          controlsList="nodownload noremoteplayback"
-          disablePictureInPicture
-          onContextMenu={(e) => e.preventDefault()}
-          className="h-full w-full"
-          onTimeUpdate={(e) => {
-            const el = e.target as HTMLVideoElement;
-            onTimeUpdate?.(el.currentTime, el.duration || 0);
+      <video
+        ref={videoRef}
+        className="h-full w-full object-contain"
+        playsInline
+        controls={false}
+        controlsList="nodownload noplaybackrate noremoteplayback"
+        disablePictureInPicture
+        onPlay={() => {
+          setPlaying(true);
+          onPlay?.();
+        }}
+        onPause={() => setPlaying(false)}
+        onTimeUpdate={() => {
+          const v = videoRef.current;
+          if (!v) return;
+          setCurrent(v.currentTime);
+          setDuration(v.duration || 0);
+          onTimeUpdate?.(v.currentTime, v.duration || 0);
+        }}
+        onEnded={() => {
+          setPlaying(false);
+          onEnded?.();
+        }}
+        onLoadedMetadata={() => {
+          const v = videoRef.current;
+          if (v) setDuration(v.duration || 0);
+        }}
+      />
+
+      {obscured && <div className="absolute inset-0 z-20 bg-black/85" />}
+
+      {/* زر تشغيل وسط الشاشة عند الإيقاف */}
+      {!playing && !obscured && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            togglePlay();
           }}
-          onEnded={() => onEnded?.()}
-          onPlay={() => onPlay?.()}
-        />
-      ) : (
-        <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-          {emptyLabel ?? "لا يوجد فيديو بعد."}
-        </div>
+          className="absolute inset-0 z-10 flex items-center justify-center"
+          aria-label="تشغيل"
+        >
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg backdrop-blur-sm transition hover:scale-105">
+            <Play className="h-7 w-7 fill-current" />
+          </span>
+        </button>
       )}
 
-      {/* أدوات المشغّل: الجودة + الصوت + ملء الشاشة أفقيًا */}
-      {embed.kind === "video" && (
-        <div className="absolute left-2 top-2 z-40 flex items-center gap-1.5">
+      {/* شريط التحكم السفلي — صوت + جودة + سرعة فقط */}
+      <div
+        className={`absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/90 via-black/55 to-transparent px-3 pb-3 pt-10 transition-opacity duration-300 ${
+          showControls || !playing ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* شريط التقدّم */}
+        <input
+          type="range"
+          min={0}
+          max={1000}
+          value={Math.round(progressPct * 10)}
+          onChange={onSeek}
+          className="mb-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-primary [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+          aria-label="التقدّم"
+        />
+
+        <div className="flex items-center gap-2 text-white">
+          <button
+            type="button"
+            onClick={togglePlay}
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/10"
+            aria-label={playing ? "إيقاف" : "تشغيل"}
+          >
+            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+          </button>
+
+          <span className="min-w-[5.5rem] text-[11px] font-semibold tabular-nums text-white/90">
+            {fmt(current)} / {fmt(duration)}
+          </span>
+
+          <div className="flex-1" />
+
+          {/* الصوت */}
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setMuted((m) => !m)}
+              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/10"
+              aria-label={muted || volume === 0 ? "تشغيل الصوت" : "كتم"}
+            >
+              {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={muted ? 0 : Math.round(volume * 100)}
+              onChange={(e) => {
+                const v = Number(e.target.value) / 100;
+                setVolume(v);
+                setMuted(v === 0);
+              }}
+              className="hidden h-1 w-20 cursor-pointer appearance-none rounded-full bg-white/25 accent-primary sm:block"
+              aria-label="مستوى الصوت"
+            />
+          </div>
+
+          {/* السرعة */}
           <div className="relative">
             <button
               type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              title="جودة الفيديو"
-              className="flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[11px] font-bold text-white backdrop-blur-sm hover:bg-black/80"
+              onClick={() => {
+                setShowSpeed((s) => !s);
+                setShowQuality(false);
+              }}
+              className="flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold hover:bg-white/10"
+              aria-label="سرعة التشغيل"
             >
-              <Settings2 className="h-3.5 w-3.5" />
-              {quality === -1
-                ? qualities.length > 1
-                  ? "تلقائي"
-                  : (qualities[0]?.label ?? "الجودة")
-                : (qualities.find((q) => q.id === quality)?.label ?? "الجودة")}
+              <Gauge className="h-4 w-4" />
+              {speed === 1 ? "1x" : `${speed}x`}
             </button>
-            {menuOpen && (
-              <div className="absolute left-0 top-full mt-1 min-w-28 overflow-hidden rounded-lg border border-white/10 bg-black/90 text-right backdrop-blur-md">
-                {qualities.length > 1 && (
+            {showSpeed && (
+              <div className="absolute bottom-11 left-0 min-w-[5.5rem] overflow-hidden rounded-xl border border-white/10 bg-zinc-900/95 py-1 shadow-xl backdrop-blur">
+                {SPEEDS.map((s) => (
                   <button
-                    onClick={() => pickQuality(-1)}
-                    className={`block w-full px-3 py-1.5 text-[11px] font-bold text-white hover:bg-white/10 ${quality === -1 ? "bg-white/10" : ""}`}
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      setSpeed(s);
+                      setShowSpeed(false);
+                    }}
+                    className={`block w-full px-3 py-1.5 text-left text-xs font-bold hover:bg-white/10 ${
+                      speed === s ? "bg-white/10 text-primary" : "text-white"
+                    }`}
                   >
-                    تلقائي (حسب الإنترنت)
+                    {s === 1 ? "عادي" : `${s}x`}
                   </button>
-                )}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* الجودة */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setShowQuality((q) => !q);
+                setShowSpeed(false);
+              }}
+              className="flex h-9 items-center gap-1 rounded-full px-2.5 text-xs font-bold hover:bg-white/10"
+              aria-label="جودة الفيديو"
+            >
+              <Settings2 className="h-4 w-4" />
+              {quality === -1 ? "تلقائي" : qualities.find((q) => q.id === quality)?.label ?? "جودة"}
+            </button>
+            {showQuality && (
+              <div className="absolute bottom-11 left-0 min-w-[6.5rem] overflow-hidden rounded-xl border border-white/10 bg-zinc-900/95 py-1 shadow-xl backdrop-blur">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuality(-1);
+                    setShowQuality(false);
+                  }}
+                  className={`block w-full px-3 py-1.5 text-left text-xs font-bold hover:bg-white/10 ${
+                    quality === -1 ? "bg-white/10 text-primary" : "text-white"
+                  }`}
+                >
+                  تلقائي
+                </button>
                 {qualities.map((q) => (
                   <button
                     key={q.id}
-                    onClick={() => pickQuality(q.id)}
-                    className={`block w-full px-3 py-1.5 text-[11px] font-bold text-white hover:bg-white/10 ${quality === q.id ? "bg-white/10" : ""}`}
+                    type="button"
+                    onClick={() => {
+                      setQuality(q.id);
+                      setShowQuality(false);
+                    }}
+                    className={`block w-full px-3 py-1.5 text-left text-xs font-bold hover:bg-white/10 ${
+                      quality === q.id ? "bg-white/10 text-primary" : "text-white"
+                    }`}
                   >
                     {q.label}
                   </button>
                 ))}
                 {qualities.length === 0 && (
-                  <span className="block px-3 py-1.5 text-[11px] text-white/60">الجودة الأصلية</span>
+                  <p className="px-3 py-1.5 text-[11px] text-white/50">الجودة من المصدر</p>
                 )}
               </div>
             )}
           </div>
-
-          <button
-            type="button"
-            onClick={toggleBoost}
-            title="تحسين وضوح الصوت"
-            className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold text-white backdrop-blur-sm ${boost ? "bg-primary/80" : "bg-black/60 hover:bg-black/80"}`}
-          >
-            <Volume2 className="h-3.5 w-3.5" /> {boost ? "صوت مُعزّز" : "وضوح الصوت"}
-          </button>
-
-          <button
-            type="button"
-            onClick={goFullscreenLandscape}
-            title="ملء الشاشة أفقيًا"
-            className="flex items-center gap-1 rounded-lg bg-black/60 px-2 py-1 text-[11px] font-bold text-white backdrop-blur-sm hover:bg-black/80"
-          >
-            <Maximize className="h-3.5 w-3.5" /> شاشة كاملة
-          </button>
         </div>
-      )}
-
-      {/* علامة مائية مبلّطة خافتة على كامل المساحة */}
-      {embed.kind !== "none" && watermark && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-10 overflow-hidden opacity-[0.10]"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(-30deg, transparent 0 60px, rgba(255,255,255,0.04) 60px 62px)",
-          }}
-        >
-          <div className="flex h-full w-full flex-wrap content-around justify-around gap-2 p-6">
-            {Array.from({ length: 18 }).map((_, i) => (
-              <span
-                key={i}
-                className="whitespace-nowrap text-[11px] font-bold text-white"
-                style={{ transform: "rotate(-30deg)" }}
-              >
-                {watermark}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* علامة مائية متحركة واضحة */}
-      {embed.kind !== "none" && watermark && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute z-20 whitespace-nowrap rounded-md bg-black/30 px-2 py-1 text-[11px] font-bold text-white/80 backdrop-blur-sm transition-all duration-1000 ease-in-out"
-          style={{ top: pos.top, left: pos.left }}
-        >
-          {watermark}
-        </div>
-      )}
-
-      {/* طبقة التعتيم عند محاولة التصوير / فقدان التركيز */}
-      {obscured && embed.kind !== "none" && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-black/95 text-center backdrop-blur-2xl">
-          <ShieldAlert className="h-10 w-10 text-primary" />
-          <p className="px-6 text-sm font-bold text-white/90">
-            تم إيقاف العرض مؤقتًا لحماية المحتوى.
-          </p>
-          <p className="px-6 text-xs text-white/60">ارجع للتبويب لاستئناف المشاهدة.</p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
