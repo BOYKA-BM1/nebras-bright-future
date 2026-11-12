@@ -59,14 +59,14 @@ export function TeacherSimpleTaskPage({ kind }: { kind: "homework" | "exam" }) {
       return;
     }
     upload.mutate(
-      { file, context: "assignment", relatedId: activeCourseId || undefined },
+      { file, context: "assignment_submission", relatedId: activeCourseId || undefined },
       {
         onSuccess: (row) => {
           if (which === "q") setQuestionsPath(row.storage_path);
           else setAnswerPath(row.storage_path);
           toast.success(which === "q" ? "تم رفع صورة الأسئلة" : "تم رفع صورة الإجابة");
         },
-        onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر الرفع"),
+        onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر رفع الملف. تأكد من تسجيل الدخول ونوع الصورة (JPG/PNG/PDF)."),
       },
     );
   };

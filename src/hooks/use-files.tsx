@@ -10,6 +10,9 @@ const ALLOWED_MIME = [
   "application/pdf",
   "image/png",
   "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/gif",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
@@ -23,23 +26,25 @@ export function useUploadFile() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ file, context, relatedId }: { file: File; context: "assignment_submission" | "assignment" | "exam"; relatedId?: string }): Promise<UploadedFile> => {
+    mutationFn: async ({ file, context, relatedId }: { file: File; context: "assignment_submission"; relatedId?: string }): Promise<UploadedFile> => {
       if (!user) throw new Error("auth required");
       if (file.size > MAX_SIZE_BYTES) throw new Error("حجم الملف أكبر من الحد المسموح (20 ميجا).");
-      if (file.type && !ALLOWED_MIME.includes(file.type)) throw new Error("نوع الملف غير مدعوم.");
+      if (file.type && !ALLOWED_MIME.includes(file.type) && !file.type.startsWith("image/")) {
+        throw new Error("نوع الملف غير مدعوم. استخدم صورة JPG/PNG أو PDF.");
+      }
 
       const safeName = file.name.replace(/[^\w.\-]+/g, "_");
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
 
       const { error: upErr } = await supabase.storage.from("submission-files").upload(path, file, { contentType: file.type || undefined });
-      if (upErr) throw upErr;
+      if (upErr) throw new Error(upErr.message || "تعذّر الرفع إلى التخزين. تحقق من صلاحياتك أو أن الـ bucket submission-files موجود.");
 
       const { data, error } = await supabase
         .from("files")
         .insert({ owner_id: user.id, storage_path: path, original_filename: file.name, mime_type: file.type || null, size_bytes: file.size, context, related_id: relatedId ?? null })
         .select()
         .single();
-      if (error) throw error;
+      if (error) throw new Error(error.message || "تعذّر حفظ سجل الملف.");
       return data;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["my-files"] }),

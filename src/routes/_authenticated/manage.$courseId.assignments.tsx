@@ -112,7 +112,7 @@ function CreateAssignmentDialog({ courseId, defaultKind = "homework" }: { course
 
   const uploadOne = (file: File, which: "task" | "key") => {
     upload.mutate(
-      { file, context: "assignment" as any, relatedId: courseId },
+      { file, context: "assignment_submission", relatedId: courseId },
       {
         onSuccess: (row: any) => {
           const path = row?.storage_path ?? null;
