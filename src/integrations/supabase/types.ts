@@ -149,6 +149,12 @@ export type Database = {
       }
       assignments: {
         Row: {
+          answer_key_text: string | null
+          answer_key_url: string | null
+          file_url: string | null
+          kind: string
+          unlock_after_lesson: boolean
+
           course_id: string
           created_at: string
           created_by: string | null

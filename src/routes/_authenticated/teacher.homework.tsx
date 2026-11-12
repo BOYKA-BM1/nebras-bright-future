@@ -112,7 +112,14 @@ export function TeacherSimpleTaskPage({ kind }: { kind: "homework" | "exam" }) {
           setQuestionsPath(null);
           setAnswerPath(null);
         },
-        onError: (e) => toast.error(e instanceof Error ? e.message : "تعذّر النشر"),
+        onError: (e) => {
+            const msg = e instanceof Error ? e.message : "تعذّر النشر";
+            if (msg.includes("answer_key") || msg.includes("schema cache") || msg.includes("column")) {
+              toast.error("أعمدة الامتحانات غير مفعّلة في قاعدة البيانات. نفّذ SQL الإصلاح من لوحة Supabase.");
+            } else {
+              toast.error(msg);
+            }
+          },
       },
     );
   };
